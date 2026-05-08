@@ -2,6 +2,8 @@ package com.weekendgo.common.exception;
 
 import com.weekendgo.common.api.ApiResponse;
 import com.weekendgo.common.api.ErrorResponse;
+import com.weekendgo.auth.DuplicateUsernameException;
+import com.weekendgo.auth.InvalidCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,36 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(DuplicateUsernameException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleDuplicateUsername(
+            DuplicateUsernameException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "USERNAME_ALREADY_EXISTS",
+                "Username already exists",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "UNAUTHORIZED",
+                "Invalid username or password",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.fail(error.code(), error.message(), error));
     }
 
