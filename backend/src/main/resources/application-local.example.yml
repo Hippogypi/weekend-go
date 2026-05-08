@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/weekend_go?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:weekend_go}
+    password: ${DB_PASSWORD:change-me}
+
+weekend-go:
+  amap:
+    api-key: ${AMAP_API_KEY:replace-with-local-amap-key}
