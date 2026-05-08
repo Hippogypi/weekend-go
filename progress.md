@@ -43,3 +43,11 @@ second feature batch merged
 - 数据库 schema 尚未执行真实 MySQL 建表验证。
 - 主仓库存在本地未跟踪 `.codex/` 配置目录，暂不纳入版本控制。
 - 后端和前端仍只有基础骨架，尚未实现业务能力。
+
+## 2026-05-09 place-discovery coordinator review
+
+- 已审查并合并 `place-discovery` 到 `main`。
+- 审查确认：后端公开查询接口、Amap 查询复用、`places` 表 JDBC 持久化、`amap_poi_id` 去重入库、详情 links 符合当前验收标准。
+- 范围确认：本 feature 未包含前端页面，`docs/` 未修改，未发现真实 Key/IP/密码。
+- 验证记录：`backend/.\\mvnw.cmd test` 通过，21 tests, 0 failures；`feature_list.json` JSON 校验通过；`git diff --check` 通过。
+- 非阻塞注意点：`GET /api/workspaces/search` 和 `GET /api/workspaces/nearby` 的搜索参数名为 `keyword`，后续前端联调需按此契约使用，或另行统一为 `keywords`。

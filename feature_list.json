@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "second feature batch merged",
+  "currentPhase": "place-discovery merged",
   "features": [
     {
       "id": "requirements-analysis",
@@ -207,7 +207,7 @@
     {
       "id": "place-discovery",
       "title": "地点发现与详情接口",
-      "status": "ready-for-merge",
+      "status": "completed",
       "branch": "place-discovery",
       "worktree": ".worktrees/place-discovery",
       "scope": "实现附近地点查询、关键词搜索、地点去重入库和地点详情查询，合并高德基础数据与本地共建数据。",
@@ -227,7 +227,7 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "worker 已完成后端接口、Amap 查询复用、places 表 MySQL 持久化、amapPoiId 去重入库和详情 links；未包含前端页面，等待 coordinator 审查合并。"
+      "notes": "已合并到 main。coordinator 审查确认：后端接口、Amap 查询复用、places 表 MySQL 持久化、amapPoiId 去重入库和详情 links 符合验收；未包含前端页面。非阻塞注意点：搜索接口参数名为 keyword。合并后后端完整测试通过。"
     },
     {
       "id": "workspace-profile-contribution",
