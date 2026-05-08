@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-second feature batch allocated
+second feature batch in progress
 
 ## 已完成
 
@@ -19,15 +19,16 @@ second feature batch allocated
 - 已完成本地高德地图 Key 配置，并验证前端 JS API 与后端 Web服务 API 可用。
 - 已补充本地高德配置相关文档，未提交真实密钥。
 - 已分配第二批 feature：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
+- 已创建第二批隔离 worktree，并完成 baseline 验证。
 
 ## 进行中
 
-- 为第二批 feature 创建独立 worktree。
+- 第二批 feature 开发中：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
 - 继续保留第一批 worktree，等待后续清理或复用决策。
 
 ## 下一步
 
-- 启动第二批 worker：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
+- 分配或启动第二批 worker，在各自 worktree 内实现对应 feature。
 - 决定是否清理已合并的第一批 worktree。
 - 将 main 推送到远端。
 
