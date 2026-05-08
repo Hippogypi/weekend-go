@@ -2,19 +2,17 @@ package com.weekendgo.place;
 
 import com.weekendgo.amap.dto.AmapPoi;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
 @Repository
@@ -49,18 +47,12 @@ public class JdbcPlaceRepository implements PlaceRepository {
             WHERE id = ?
             """;
 
-    private final ConnectionFactory connectionFactory;
+    private final JdbcTemplate jdbcTemplate;
+    private final TransactionTemplate transactionTemplate;
 
-    public JdbcPlaceRepository(
-            @Value("${spring.datasource.url}") String url,
-            @Value("${spring.datasource.username:}") String username,
-            @Value("${spring.datasource.password:}") String password
-    ) {
-        this(() -> DriverManager.getConnection(url, username, password));
-    }
-
-    JdbcPlaceRepository(ConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
+    public JdbcPlaceRepository(JdbcTemplate jdbcTemplate, TransactionTemplate transactionTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Override
@@ -70,68 +62,48 @@ public class JdbcPlaceRepository implements PlaceRepository {
             return List.of();
         }
 
-        try (Connection connection = connectionFactory.open()) {
-            boolean previousAutoCommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
-            try {
-                upsertPois(connection, poisById.values());
-                List<Place> places = findByAmapPoiIds(connection, poisById.keySet().stream().toList());
-                connection.commit();
-                return places;
-            } catch (SQLException exception) {
-                connection.rollback();
-                throw exception;
-            } finally {
-                connection.setAutoCommit(previousAutoCommit);
-            }
-        } catch (SQLException exception) {
+        try {
+            List<Place> places = transactionTemplate.execute(status -> {
+                upsertPois(poisById.values().stream().toList());
+                return findByAmapPoiIds(poisById.keySet().stream().toList());
+            });
+            return places == null ? List.of() : places;
+        } catch (DataAccessException exception) {
             throw new PlaceStorageException("Failed to persist Amap places", exception);
         }
     }
 
     @Override
     public Optional<Place> findById(long id) {
-        try (Connection connection = connectionFactory.open();
-             PreparedStatement statement = connection.prepareStatement(SELECT_BY_ID_SQL)) {
-            statement.setLong(1, id);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? Optional.of(mapPlace(resultSet)) : Optional.empty();
-            }
-        } catch (SQLException exception) {
+        try {
+            return jdbcTemplate.query(SELECT_BY_ID_SQL, this::mapPlace, id).stream().findFirst();
+        } catch (DataAccessException exception) {
             throw new PlaceStorageException("Failed to load place", exception);
         }
     }
 
-    private void upsertPois(Connection connection, Iterable<AmapPoi> pois) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(UPSERT_SQL)) {
-            for (AmapPoi poi : pois) {
-                Coordinates coordinates = Coordinates.parse(poi.location());
-                statement.setString(1, poi.id());
-                statement.setString(2, poi.name());
-                statement.setString(3, poi.address());
-                statement.setBigDecimal(4, coordinates.longitude());
-                statement.setBigDecimal(5, coordinates.latitude());
-                statement.setString(6, poi.type());
-                statement.setString(7, poi.district());
-                statement.addBatch();
-            }
-            statement.executeBatch();
-        }
+    private void upsertPois(List<AmapPoi> pois) {
+        jdbcTemplate.batchUpdate(
+                UPSERT_SQL,
+                pois,
+                pois.size(),
+                (statement, poi) -> {
+                    Coordinates coordinates = Coordinates.parse(poi.location());
+                    statement.setString(1, poi.id());
+                    statement.setString(2, poi.name());
+                    statement.setString(3, poi.address());
+                    statement.setBigDecimal(4, coordinates.longitude());
+                    statement.setBigDecimal(5, coordinates.latitude());
+                    statement.setString(6, poi.type());
+                    statement.setString(7, poi.district());
+                }
+        );
     }
 
-    private List<Place> findByAmapPoiIds(Connection connection, List<String> amapPoiIds) throws SQLException {
-        List<Place> places = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(SELECT_BY_AMAP_POI_ID_SQL)) {
-            for (String amapPoiId : amapPoiIds) {
-                statement.setString(1, amapPoiId);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        places.add(mapPlace(resultSet));
-                    }
-                }
-            }
-        }
-        return places;
+    private List<Place> findByAmapPoiIds(List<String> amapPoiIds) {
+        return amapPoiIds.stream()
+                .flatMap(amapPoiId -> jdbcTemplate.query(SELECT_BY_AMAP_POI_ID_SQL, this::mapPlace, amapPoiId).stream())
+                .toList();
     }
 
     private Map<String, AmapPoi> deduplicate(List<AmapPoi> pois) {
@@ -144,7 +116,7 @@ public class JdbcPlaceRepository implements PlaceRepository {
         return poisById;
     }
 
-    private Place mapPlace(ResultSet resultSet) throws SQLException {
+    private Place mapPlace(ResultSet resultSet, int rowNum) throws SQLException {
         return new Place(
                 resultSet.getLong("id"),
                 resultSet.getString("amap_poi_id"),
@@ -160,11 +132,6 @@ public class JdbcPlaceRepository implements PlaceRepository {
                 PlaceSource.valueOf(resultSet.getString("source")),
                 WorkspaceStatus.valueOf(resultSet.getString("workspace_status"))
         );
-    }
-
-    @FunctionalInterface
-    interface ConnectionFactory {
-        Connection open() throws SQLException;
     }
 
     private record Coordinates(BigDecimal longitude, BigDecimal latitude) {
