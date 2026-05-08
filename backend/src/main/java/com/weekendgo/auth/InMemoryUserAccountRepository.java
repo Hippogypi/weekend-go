@@ -6,9 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import org.springframework.stereotype.Repository;
 
-@Repository
 public class InMemoryUserAccountRepository implements UserAccountRepository {
 
     private final AtomicLong ids = new AtomicLong(1);
