@@ -23,15 +23,16 @@ second feature batch merged
 - 已审查第二批 worker 输出，三个 feature 均进入 `ready-for-merge`。
 - 已合并第二批 feature：`database-mysql-verification`、`auth-and-role`、`amap-service-integration`。
 - 合并后验证通过：后端完整测试 15 项通过。
+- `place-discovery` worker 已完成后端接口、Amap 查询复用、places 表 MySQL 持久化、amapPoiId 去重入库和详情 links。
 
 ## 进行中
 
-- 启动 `place-discovery`，由 worker 负责完整后端实现。
+- `place-discovery` 已进入 `ready-for-merge`，等待 coordinator 审查与合并。
 - 继续保留第一批 worktree，等待后续清理或复用决策。
 
 ## 下一步
 
-- 等待 `place-discovery` worker 完成后端接口和 MySQL 持久化实现。
+- coordinator 审查 `place-discovery` worker 输出并决定是否合并。
 - 决定是否清理已合并的第一批 worktree。
 - 决定是否清理已合并的第二批 worktree。
 - 将 main 推送到远端。

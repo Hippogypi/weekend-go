@@ -5,6 +5,8 @@ import com.weekendgo.common.api.ErrorResponse;
 import com.weekendgo.auth.DuplicateUsernameException;
 import com.weekendgo.auth.InvalidCredentialsException;
 import com.weekendgo.amap.exception.AmapServiceException;
+import com.weekendgo.place.PlaceNotFoundException;
+import com.weekendgo.place.PlaceStorageException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -72,6 +74,36 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity
                 .status(HttpStatus.BAD_GATEWAY)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(PlaceNotFoundException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handlePlaceNotFound(
+            PlaceNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "PLACE_NOT_FOUND",
+                "Place not found",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(PlaceStorageException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handlePlaceStorageException(
+            PlaceStorageException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "PLACE_STORAGE_ERROR",
+                "Place storage is unavailable",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ApiResponse.fail(error.code(), error.message(), error));
     }
 
