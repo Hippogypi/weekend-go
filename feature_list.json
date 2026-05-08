@@ -207,7 +207,7 @@
     {
       "id": "place-discovery",
       "title": "地点发现与详情接口",
-      "status": "in-progress",
+      "status": "ready-for-merge",
       "branch": "place-discovery",
       "worktree": ".worktrees/place-discovery",
       "scope": "实现附近地点查询、关键词搜索、地点去重入库和地点详情查询，合并高德基础数据与本地共建数据。",
@@ -227,7 +227,7 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "已重新分配给 worker；此前 coordinator 越界实现的 place-discovery 分支已丢弃。要求交付完整后端实现，不包含 frontend-core-pages。"
+      "notes": "worker 已完成后端接口、Amap 查询复用、places 表 MySQL 持久化、amapPoiId 去重入库和详情 links；未包含前端页面，等待 coordinator 审查合并。"
     },
     {
       "id": "workspace-profile-contribution",
