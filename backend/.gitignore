@@ -1,0 +1,5 @@
+target/
+src/main/resources/application-local.yml
+.mvn/wrapper/apache-maven-*/
+.mvn/wrapper/apache-maven-*-bin.zip
+.mvn/wrapper/apache-maven-*-bin.tar.gz

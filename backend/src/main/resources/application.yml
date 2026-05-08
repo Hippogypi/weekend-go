@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: weekend-go-backend
+
+server:
+  port: 8080
+
+weekend-go:
+  amap:
+    api-key: ${AMAP_API_KEY:}
