@@ -257,7 +257,7 @@
     {
       "id": "auth-persistence",
       "title": "认证与用户持久化",
-      "status": "in-progress",
+      "status": "completed",
       "branch": "auth-persistence",
       "worktree": ".worktrees/auth-persistence",
       "scope": "将当前内存用户仓储迁移到 MySQL users 表，保持注册、登录、退出、/api/auth/me 和鉴权过滤器行为稳定，并为后续写操作提供稳定 user_id。",
@@ -276,9 +276,10 @@
       ],
       "checkCommands": [
         "cd backend; ./mvnw test",
-        "python -m json.tool feature_list.json"
+        "python -m json.tool feature_list.json",
+        "git diff --check"
       ],
-      "notes": "backend-data-access-standardization 已完成，当前启动独立 worker worktree 实现；coordinator 负责审查与合并。"
+      "notes": "worker 实现完成，等待 coordinator 审查与合并。认证用户已增加 JdbcTemplate + TransactionTemplate 的 users 表仓储；无 spring.datasource.url 时保留内存仓储 fallback；后端完整测试通过：28 tests, 0 failures；JSON 校验和 diff 空白检查通过。"
     },
     {
       "id": "workspace-profile-contribution",

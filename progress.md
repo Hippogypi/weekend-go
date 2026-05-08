@@ -16,18 +16,16 @@ auth persistence in progress
 
 ## 进行中
 
-- `auth-persistence`：正在基于已标准化的数据访问样板，将认证用户从内存仓储迁移到 MySQL `users` 表。
+- `auth-persistence`：worker 实现完成，等待 coordinator 审查与合并。
 
 ## 下一步
 
-- 为 `auth-persistence` 创建独立 worktree 并运行后端 baseline 测试。
-- 分配 worker 实现 `auth-persistence`，coordinator 只负责范围说明、审查和合并。
-- worker 完成后审查 diff、运行测试，再决定是否合并到 `main`。
+- coordinator 审查 `auth-persistence` diff、复跑验证后决定是否合并到 `main`。
 
 ## 阻塞与风险
 
 - 高德 Web 服务 Key 依赖公网出口 IP 白名单，网络变化时可能需要更新。
-- `auth-persistence` 需要保持当前注册、登录、退出、`/api/auth/me` 和鉴权过滤器契约不变。
+- `auth-persistence` 已保持当前注册、登录、退出、`/api/auth/me` 和鉴权过滤器契约不变；真实 MySQL 环境仍建议在后续联调中复验。
 - 真实 MySQL 运行验证仍需在后续接口联调阶段持续补充。
 - 主仓库存在本地未跟踪 `.codex/` 配置目录，暂不纳入版本控制。
 
@@ -45,3 +43,10 @@ auth persistence in progress
 - `auth-persistence` 状态更新为 `in-progress`。
 - 该 feature 将在 `.worktrees/auth-persistence` 独立实现。
 - 范围限制：只处理认证与用户持久化，不实现地点共建、打卡、评价、收藏、图片或前端页面。
+
+## 2026-05-09 auth-persistence worker result
+
+- 已新增 `JdbcUserAccountRepository`，使用 Spring 管理的 `JdbcTemplate + TransactionTemplate` 读写 MySQL `users` 表。
+- 无 `spring.datasource.url` 时通过 `UserAccountRepositoryConfiguration` 保留 `InMemoryUserAccountRepository` fallback，默认测试/本地上下文可启动。
+- 公开注册路径仍由 `AuthService` 固定创建 `USER`，密码仍通过既有 BCrypt encoder 哈希后写入仓储。
+- 验证记录：`cd backend; .\mvnw.cmd test` 通过，28 tests, 0 failures；`python -m json.tool feature_list.json` 通过；`git diff --check` 通过。
