@@ -7,3 +7,4 @@ spring:
 weekend-go:
   amap:
     api-key: ${AMAP_API_KEY:replace-with-local-amap-key}
+    base-url: https://restapi.amap.com
