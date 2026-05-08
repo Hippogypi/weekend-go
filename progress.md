@@ -2,67 +2,39 @@
 
 ## 当前阶段
 
-second feature batch merged
+auth persistence in progress
 
 ## 已完成
 
-- 已读取需求文档，确认项目为城市学习办公空间共建平台。
-- 已确认第一版技术方向：Spring Boot + Vue + MySQL + 高德地图 Web 服务 API。
-- 已确认当前仓库仍处于空壳结构，尚未初始化前后端工程。
-- 已确认后续采用 `feature_list.json + progress.md + git worktree` 协作机制。
-- 已完成 AI 协作规范、feature 清单、进度记录和 README 的初始化。
-- 已完成第一版 feature 队列拆分和依赖梳理。
-- 已创建第一批隔离 worktree：`backend-bootstrap`、`database-schema-design`、`frontend-bootstrap`。
-- 已审查第一批 worker 输出，三个 feature 均进入 `ready-for-merge`。
-- 已合并第一批 feature：`database-schema-design`、`backend-bootstrap`、`frontend-bootstrap`。
-- 合并后验证通过：后端测试、前端测试、前端构建、schema 静态检查。
-- 已完成本地高德地图 Key 配置，并验证前端 JS API 与后端 Web服务 API 可用。
-- 已补充本地高德配置相关文档，未提交真实密钥。
-- 已分配第二批 feature：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
-- 已创建第二批隔离 worktree，并完成 baseline 验证。
-- 已审查第二批 worker 输出，三个 feature 均进入 `ready-for-merge`。
-- 已合并第二批 feature：`database-mysql-verification`、`auth-and-role`、`amap-service-integration`。
-- 合并后验证通过：后端完整测试 15 项通过。
-- `place-discovery` worker 已完成后端接口、Amap 查询复用、places 表 MySQL 持久化、amapPoiId 去重入库和详情 links。
+- 已建立 `feature_list.json + progress.md + git worktree` 协作机制。
+- 已完成项目协作规范、README 和第一版 feature 拆分。
+- 已合并基础工程：`backend-bootstrap`、`frontend-bootstrap`、`database-schema-design`。
+- 已完成本地高德地图 Key 配置与可用性验证；真实 Key 未提交到 git。
+- 已合并第二批后端基础能力：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
+- 已合并 `place-discovery`，提供地点发现、搜索、详情和 places 表持久化能力；该 feature 不包含前端页面。
+- 已合并 `backend-data-access-standardization`，将 places 持久化迁移到 Spring 管理的 `JdbcTemplate + TransactionTemplate`，并保留无数据库配置时的默认可测试行为。
 
 ## 进行中
 
-- `place-discovery` 已进入 `ready-for-merge`，等待 coordinator 审查与合并。
-- 继续保留第一批 worktree，等待后续清理或复用决策。
+- `auth-persistence`：计划基于已标准化的数据访问样板，将认证用户从内存仓储迁移到 MySQL `users` 表。
 
 ## 下一步
 
-- coordinator 审查 `place-discovery` worker 输出并决定是否合并。
-- 决定是否清理已合并的第一批 worktree。
-- 决定是否清理已合并的第二批 worktree。
-- 将 main 推送到远端。
+- 为 `auth-persistence` 创建独立 worktree。
+- 运行后端 baseline 测试。
+- 分配 worker 实现 `auth-persistence`，coordinator 只负责范围说明、审查和合并。
 
 ## 阻塞与风险
 
-- 高德地图本地 Key 已配置；后端 Web服务 Key 依赖公网出口 IP 白名单，网络变化时可能需要更新。
-- 数据库 schema 尚未执行真实 MySQL 建表验证。
+- 高德 Web 服务 Key 依赖公网出口 IP 白名单，网络变化时可能需要更新。
+- `auth-persistence` 需要保持当前注册、登录、退出、`/api/auth/me` 和鉴权过滤器契约不变。
+- 真实 MySQL 运行验证仍需在后续接口联调阶段持续补充。
 - 主仓库存在本地未跟踪 `.codex/` 配置目录，暂不纳入版本控制。
-- 后端和前端仍只有基础骨架，尚未实现业务能力。
 
-## 2026-05-09 place-discovery coordinator review
+## 2026-05-09 backend-data-access-standardization coordinator review
 
-- 已审查并合并 `place-discovery` 到 `main`。
-- 审查确认：后端公开查询接口、Amap 查询复用、`places` 表 JDBC 持久化、`amap_poi_id` 去重入库、详情 links 符合当前验收标准。
-- 范围确认：本 feature 未包含前端页面，`docs/` 未修改，未发现真实 Key/IP/密码。
-- 验证记录：`backend/.\\mvnw.cmd test` 通过，21 tests, 0 failures；`feature_list.json` JSON 校验通过；`git diff --check` 通过。
-- 非阻塞注意点：`GET /api/workspaces/search` 和 `GET /api/workspaces/nearby` 的搜索参数名为 `keyword`，后续前端联调需按此契约使用，或另行统一为 `keywords`。
-
-
-## 2026-05-09 auth-persistence / data-access allocation
-
-- ??? `backend-data-access-standardization`???? `in-progress`??????????????
-- ??? `auth-persistence`??? `backend-data-access-standardization`??????????????? worker?
-- ??????? `place` ?? MySQL?? `auth` ?????????????????????? `user_id` ???
-- ???????????????????????????????? worker ?????
-
-## 2026-05-09 backend-data-access-standardization worker
-
-- `backend-data-access-standardization` 已完成实现，状态建议更新为 `ready-for-merge`。
-- 后端新增 Spring 管理的 DataSource/JdbcTemplate 基础设施，且仅在配置 `spring.datasource.url` 时启用。
+- 已审查并合并 `backend-data-access-standardization` 到 `main`。
+- 审查确认：后端新增 Spring 管理的 DataSource/JdbcTemplate 基础设施，仅在配置 `spring.datasource.url` 时启用。
 - `place` 持久化已从直接 `DriverManager` 连接迁移为 `JdbcTemplate + TransactionTemplate`，保留现有接口行为。
-- 默认无本地 MySQL 配置时仍使用 `UnconfiguredPlaceRepository`，供后续 `auth-persistence` 复用同一数据访问样板。
+- 默认无本地 MySQL 配置时仍使用 `UnconfiguredPlaceRepository`，为 `auth-persistence` 提供统一数据访问样板。
+- 验证记录：worker 分支后端测试通过，23 tests, 0 failures；JSON 校验通过；敏感信息扫描未命中；业务代码未残留直接 `DriverManager/getConnection`。
