@@ -3,27 +3,32 @@ package com.weekendgo.place;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.weekendgo.amap.dto.AmapPoi;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.support.TransactionTemplate;
 
 class JdbcPlaceRepositoryTest {
 
     private static final String JDBC_URL = "jdbc:h2:mem:places;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1";
 
     private JdbcPlaceRepository repository;
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    void setUp() throws Exception {
-        repository = new JdbcPlaceRepository(() -> DriverManager.getConnection(JDBC_URL));
-        try (Connection connection = DriverManager.getConnection(JDBC_URL);
-             Statement statement = connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS places");
-            statement.execute("""
+    void setUp() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource(JDBC_URL);
+        jdbcTemplate = new JdbcTemplate(dataSource);
+        repository = new JdbcPlaceRepository(
+                jdbcTemplate,
+                new TransactionTemplate(new DataSourceTransactionManager(dataSource))
+        );
+
+        jdbcTemplate.execute("DROP TABLE IF EXISTS places");
+        jdbcTemplate.execute("""
                     CREATE TABLE places (
                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
                       amap_poi_id VARCHAR(64) NOT NULL UNIQUE,
@@ -42,7 +47,6 @@ class JdbcPlaceRepositoryTest {
                       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
                     """);
-        }
     }
 
     @Test
@@ -76,12 +80,7 @@ class JdbcPlaceRepositoryTest {
         assertThat(countRows()).isEqualTo(1);
     }
 
-    private int countRows() throws Exception {
-        try (Connection connection = DriverManager.getConnection(JDBC_URL);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT COUNT(*) FROM places")) {
-            resultSet.next();
-            return resultSet.getInt(1);
-        }
+    private int countRows() {
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM places", Integer.class);
     }
 }
