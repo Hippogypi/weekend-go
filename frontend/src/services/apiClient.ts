@@ -38,9 +38,14 @@ export class ApiClient {
     body: TBody,
     init?: RequestInit
   ): Promise<TResponse> {
+    const defaultHeaders: HeadersInit = {
+      'Content-Type': 'application/json'
+    };
+
     return this.request<TResponse>(path, {
       ...init,
       method: 'POST',
+      headers: this.mergeHeaders(defaultHeaders, init?.headers),
       body: JSON.stringify(body)
     });
   }
@@ -66,21 +71,7 @@ export class ApiClient {
   }
 
   private buildHeaders(headers?: HeadersInit): Record<string, string> {
-    const mergedHeaders: Record<string, string> = {
-      Accept: 'application/json'
-    };
-
-    if (headers instanceof Headers) {
-      headers.forEach((value, key) => {
-        mergedHeaders[key] = value;
-      });
-    } else if (Array.isArray(headers)) {
-      headers.forEach(([key, value]) => {
-        mergedHeaders[key] = value;
-      });
-    } else if (headers) {
-      Object.assign(mergedHeaders, headers);
-    }
+    const mergedHeaders = this.mergeHeaders({ Accept: 'application/json' }, headers);
 
     const token = this.accessTokenProvider?.();
     if (token) {
@@ -88,6 +79,34 @@ export class ApiClient {
     }
 
     return mergedHeaders;
+  }
+
+  private mergeHeaders(...headerSets: Array<HeadersInit | undefined>): Record<string, string> {
+    const mergedHeaders: Record<string, string> = {};
+
+    headerSets.forEach((headers) => {
+      if (!headers) {
+        return;
+      }
+
+      this.assignHeaders(mergedHeaders, headers);
+    });
+
+    return mergedHeaders;
+  }
+
+  private assignHeaders(target: Record<string, string>, headers: HeadersInit): void {
+    if (headers instanceof Headers) {
+      headers.forEach((value, key) => {
+        target[key] = value;
+      });
+    } else if (Array.isArray(headers)) {
+      headers.forEach(([key, value]) => {
+        target[key] = value;
+      });
+    } else {
+      Object.assign(target, headers);
+    }
   }
 
   private async readPayload(response: Response): Promise<unknown> {

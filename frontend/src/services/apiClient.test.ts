@@ -48,4 +48,50 @@ describe('ApiClient', () => {
       payload: { message: 'Unauthorized' }
     });
   });
+
+  it('sets JSON content type for post bodies by default', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      calls.push({ input, init });
+      return new Response(JSON.stringify({ id: 'created' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    };
+
+    const client = new ApiClient({
+      baseUrl: 'https://api.example.test',
+      fetcher
+    });
+
+    await client.post('/places', { name: 'Desk spot' });
+
+    expect(calls[0].init?.headers).toMatchObject({
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    });
+    expect(calls[0].init?.body).toBe(JSON.stringify({ name: 'Desk spot' }));
+  });
+
+  it('does not overwrite an explicit content type for post requests', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      calls.push({ input, init });
+      return new Response(undefined, { status: 204 });
+    };
+
+    const client = new ApiClient({
+      baseUrl: 'https://api.example.test',
+      fetcher
+    });
+
+    await client.post('/imports', { rows: [] }, {
+      headers: { 'Content-Type': 'application/vnd.weekend-go.import+json' }
+    });
+
+    expect(calls[0].init?.headers).toMatchObject({
+      Accept: 'application/json',
+      'Content-Type': 'application/vnd.weekend-go.import+json'
+    });
+  });
 });
