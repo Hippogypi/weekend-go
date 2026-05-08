@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-second feature batch in progress
+second feature batch merged
 
 ## 已完成
 
@@ -21,17 +21,19 @@ second feature batch in progress
 - 已分配第二批 feature：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
 - 已创建第二批隔离 worktree，并完成 baseline 验证。
 - 已审查第二批 worker 输出，三个 feature 均进入 `ready-for-merge`。
+- 已合并第二批 feature：`database-mysql-verification`、`auth-and-role`、`amap-service-integration`。
+- 合并后验证通过：后端完整测试 15 项通过。
 
 ## 进行中
 
-- 准备合并第二批 feature：`database-mysql-verification`、`auth-and-role`、`amap-service-integration`。
+- 准备第二批合并后的收尾验证和后续 feature 拆分。
 - 继续保留第一批 worktree，等待后续清理或复用决策。
 
 ## 下一步
 
-- 先合并 `database-mysql-verification`，再合并两个后端 feature。
-- 合并 `auth-and-role` 与 `amap-service-integration` 时，需要手动合并 `GlobalExceptionHandler`。
+- 根据依赖启动下一批：`place-discovery`，并评估是否同步启动认证持久化或数据库接入。
 - 决定是否清理已合并的第一批 worktree。
+- 决定是否清理已合并的第二批 worktree。
 - 将 main 推送到远端。
 
 ## 阻塞与风险
