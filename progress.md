@@ -16,13 +16,13 @@ auth persistence in progress
 
 ## 进行中
 
-- `auth-persistence`：计划基于已标准化的数据访问样板，将认证用户从内存仓储迁移到 MySQL `users` 表。
+- `auth-persistence`：正在基于已标准化的数据访问样板，将认证用户从内存仓储迁移到 MySQL `users` 表。
 
 ## 下一步
 
-- 为 `auth-persistence` 创建独立 worktree。
-- 运行后端 baseline 测试。
+- 为 `auth-persistence` 创建独立 worktree 并运行后端 baseline 测试。
 - 分配 worker 实现 `auth-persistence`，coordinator 只负责范围说明、审查和合并。
+- worker 完成后审查 diff、运行测试，再决定是否合并到 `main`。
 
 ## 阻塞与风险
 
@@ -38,3 +38,10 @@ auth persistence in progress
 - `place` 持久化已从直接 `DriverManager` 连接迁移为 `JdbcTemplate + TransactionTemplate`，保留现有接口行为。
 - 默认无本地 MySQL 配置时仍使用 `UnconfiguredPlaceRepository`，为 `auth-persistence` 提供统一数据访问样板。
 - 验证记录：worker 分支后端测试通过，23 tests, 0 failures；JSON 校验通过；敏感信息扫描未命中；业务代码未残留直接 `DriverManager/getConnection`。
+- 合并后后端完整测试通过：23 tests, 0 failures。
+
+## 2026-05-09 auth-persistence allocation
+
+- `auth-persistence` 状态更新为 `in-progress`。
+- 该 feature 将在 `.worktrees/auth-persistence` 独立实现。
+- 范围限制：只处理认证与用户持久化，不实现地点共建、打卡、评价、收藏、图片或前端页面。

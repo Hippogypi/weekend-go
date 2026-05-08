@@ -257,7 +257,7 @@
     {
       "id": "auth-persistence",
       "title": "认证与用户持久化",
-      "status": "planned",
+      "status": "in-progress",
       "branch": "auth-persistence",
       "worktree": ".worktrees/auth-persistence",
       "scope": "将当前内存用户仓储迁移到 MySQL users 表，保持注册、登录、退出、/api/auth/me 和鉴权过滤器行为稳定，并为后续写操作提供稳定 user_id。",
@@ -278,7 +278,7 @@
         "cd backend; ./mvnw test",
         "python -m json.tool feature_list.json"
       ],
-      "notes": "依赖 backend-data-access-standardization，待创建 worker worktree 并启动实现。"
+      "notes": "backend-data-access-standardization 已完成，当前启动独立 worker worktree 实现；coordinator 负责审查与合并。"
     },
     {
       "id": "workspace-profile-contribution",
