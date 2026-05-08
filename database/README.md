@@ -49,3 +49,26 @@ mysql -u <user> -p <database_name> < database/schema.sql
 ```
 
 脚本不会创建真实用户账号、地点或任何密钥配置；只初始化平台标签和候选搜索词字典。
+
+## MySQL 8.0.43 验证记录
+
+本地默认 `MySQL80` server 正在运行，但未提供可提交的非敏感账号密码；无密码访问 `root@localhost` 被拒绝。因此本 feature 使用同机 `mysqld 8.0.43` 在 worktree 下创建临时 `--initialize-insecure` 数据目录，并在 `127.0.0.1:33307` 短暂启动隔离实例完成真实建表验证。临时实例只用于执行 schema，不包含生产数据、真实账号密码或本地敏感配置。
+
+已执行的核心验证：
+
+```bash
+mysql --protocol=TCP -h 127.0.0.1 -P 33307 -u root \
+  -e "DROP DATABASE IF EXISTS weekend_go_verify; CREATE DATABASE weekend_go_verify CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+
+mysql --protocol=TCP -h 127.0.0.1 -P 33307 -u root \
+  --default-character-set=utf8mb4 weekend_go_verify \
+  -e "source E:/App/service_development/weekend-go/.worktrees/database-mysql-verification/database/schema.sql"
+```
+
+验证结果：
+
+- `schema.sql` 可在 MySQL 8.0.43 执行建表，导入退出码为 0。
+- `information_schema.tables` 统计得到 12 张表。
+- `information_schema.statistics` 覆盖所有核心表索引：`users`、`places`、`workspace_profiles`、`profile_submissions`、`checkins`、`reviews`、`place_images`、`tags`、`place_tags`、`favorites`、`audit_logs`、`search_keywords`。
+- `information_schema.table_constraints` 确认外键约束已创建，包括地点、用户、审核员、标签、收藏和审核日志关系。
+- 初始化字典数据验证通过：`tags` 为 10 条，`search_keywords` 为 9 条。
