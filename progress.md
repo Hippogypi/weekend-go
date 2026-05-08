@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-worktree allocation
+parallel bootstrap ready
 
 ## 已完成
 
@@ -12,12 +12,12 @@ worktree allocation
 - 已确认后续采用 `feature_list.json + progress.md + git worktree` 协作机制。
 - 已完成 AI 协作规范、feature 清单、进度记录和 README 的初始化。
 - 已完成第一版 feature 队列拆分和依赖梳理。
+- 已创建第一批隔离 worktree：`backend-bootstrap`、`database-schema-design`、`frontend-bootstrap`。
 
 ## 进行中
 
-- 为第一批 feature 分配 branch 和 worktree。
-- 创建第一批隔离工作目录。
 - 准备为每个 worker 提供对应 feature 的任务说明。
+- 等待第一批 worker 启动并在各自 worktree 内实现。
 
 ## 下一步
 
@@ -31,5 +31,5 @@ worktree allocation
 - 高德地图 API Key 尚未配置。
 - 数据库表结构和 REST 接口细节尚未设计。
 - Vue 前端和 Spring Boot 后端尚未初始化。
-- 多 worktree 并行开发刚开始分配，尚未进入业务实现。
+- 多 worktree 并行开发已完成第一批准备，尚未进入业务实现。
 - 第一批 worker 需要严格限制在各自 feature scope 内。

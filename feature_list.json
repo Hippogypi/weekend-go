@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "worktree allocation",
+  "currentPhase": "parallel bootstrap ready",
   "features": [
     {
       "id": "requirements-analysis",
