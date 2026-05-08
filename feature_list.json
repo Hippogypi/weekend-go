@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "auth persistence in progress",
+  "currentPhase": "backend p0 feature planning",
   "features": [
     {
       "id": "requirements-analysis",
@@ -279,7 +279,7 @@
         "python -m json.tool feature_list.json",
         "git diff --check"
       ],
-      "notes": "worker 实现完成，等待 coordinator 审查与合并。认证用户已增加 JdbcTemplate + TransactionTemplate 的 users 表仓储；无 spring.datasource.url 时保留内存仓储 fallback；后端完整测试通过：28 tests, 0 failures；JSON 校验和 diff 空白检查通过。"
+      "notes": "已合并到 main。coordinator 审查确认：认证用户已增加 JdbcTemplate + TransactionTemplate 的 users 表仓储；无 spring.datasource.url 时保留内存仓储 fallback；注册、登录、退出、/api/auth/me 和鉴权过滤器契约保持兼容；后端完整测试通过。"
     },
     {
       "id": "workspace-profile-contribution",

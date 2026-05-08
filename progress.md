@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-auth persistence in progress
+backend p0 feature planning
 
 ## 已完成
 
@@ -16,11 +16,12 @@ auth persistence in progress
 
 ## 进行中
 
-- `auth-persistence`：worker 实现完成，等待 coordinator 审查与合并。
+- 规划下一批 P0 后端业务 feature：`workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images`。
 
 ## 下一步
 
-- coordinator 审查 `auth-persistence` diff、复跑验证后决定是否合并到 `main`。
+- 评估 `workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images` 的依赖和并行边界。
+- 决定是否启动下一批 worker。
 
 ## 阻塞与风险
 
@@ -50,3 +51,11 @@ auth persistence in progress
 - 无 `spring.datasource.url` 时通过 `UserAccountRepositoryConfiguration` 保留 `InMemoryUserAccountRepository` fallback，默认测试/本地上下文可启动。
 - 公开注册路径仍由 `AuthService` 固定创建 `USER`，密码仍通过既有 BCrypt encoder 哈希后写入仓储。
 - 验证记录：`cd backend; .\mvnw.cmd test` 通过，28 tests, 0 failures；`python -m json.tool feature_list.json` 通过；`git diff --check` 通过。
+
+## 2026-05-09 auth-persistence coordinator review
+
+- 已审查并合并 `auth-persistence` 到 `main`。
+- 审查确认：JDBC 用户仓储复用 Spring 管理的数据访问基础设施，未在业务仓储中直接创建 `DriverManager/getConnection`。
+- 注册、登录、退出、`/api/auth/me`、鉴权过滤器和 USER/ADMIN 角色契约保持兼容。
+- 验证记录：worker 分支后端测试通过，28 tests, 0 failures；JSON 校验通过；diff 空白检查通过；敏感信息扫描未命中。
+- 剩余风险：本次未连接真实 MySQL 做注册登录端到端验证，后续联调阶段需要补充。
