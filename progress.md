@@ -59,3 +59,9 @@ backend p0 feature planning
 - 注册、登录、退出、`/api/auth/me`、鉴权过滤器和 USER/ADMIN 角色契约保持兼容。
 - 验证记录：worker 分支后端测试通过，28 tests, 0 failures；JSON 校验通过；diff 空白检查通过；敏感信息扫描未命中。
 - 剩余风险：本次未连接真实 MySQL 做注册登录端到端验证，后续联调阶段需要补充。
+
+## 2026-05-09 feature date field
+
+- `feature_list.json` 已新增 `completedAt` 字段，用于机器可读地记录 feature 完成日期。
+- 已完成 feature 回填完成日期；未完成 feature 暂记为 `null`。
+- `AGENTS.md` 已补充 `completedAt` 字段约定。

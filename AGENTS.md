@@ -40,6 +40,7 @@
 ## 文件维护规则
 
 - `feature_list.json` 字段名使用英文，内容可以使用中文。
+- `feature_list.json` 中 feature 的完成日期统一使用 `completedAt` 字段，格式为 `YYYY-MM-DD`；未完成时为 `null`。
 - `progress.md` 保持简洁，优先记录事实、下一步、阻塞项和风险。
 - README 用于说明项目目标、目录结构和当前开发流程。
 - 如果需求文档或关键文件无法读取，应说明原因，不要编造内容。
