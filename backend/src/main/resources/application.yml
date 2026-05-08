@@ -8,3 +8,4 @@ server:
 weekend-go:
   amap:
     api-key: ${AMAP_API_KEY:}
+    base-url: https://restapi.amap.com
