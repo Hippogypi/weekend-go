@@ -2,7 +2,7 @@
 
 weekend-go 是一个基于位置服务的城市学习办公空间共建平台。项目目标是帮助用户发现附近适合学习、阅读、远程办公或临时办公的地点，并通过用户共建补充安静度、Wi-Fi、插座、座位、消费、实时打卡、评价、图片和标签等场景化信息。
 
-当前项目处于 `bootstrap / planning` 阶段，只初始化协作规范和项目说明，尚未初始化前端或后端工程。
+当前项目处于 `first bootstrap merged` 阶段，已完成协作规范、数据库 schema、Spring Boot 后端骨架和 Vue 前端骨架初始化，尚未实现具体业务功能。
 
 ## 技术方向
 
@@ -30,8 +30,9 @@ weekend-go/
 - `feature_list.json`：机器可读 feature 清单，由 coordinator 维护。
 - `progress.md`：人类可读项目进度记录，由 coordinator 维护总览。
 - `docs/`：需求文档和后续设计文档。需求文档原文不得随意修改。
-- `backend/`：后续 Spring Boot 后端工程目录，目前尚未初始化。
-- `frontend/`：后续 Vue 前端工程目录，目前尚未初始化。
+- `database/`：MySQL schema 和数据库说明。
+- `backend/`：Spring Boot 后端工程骨架，包含统一响应、异常处理和健康检查。
+- `frontend/`：Vue 前端工程骨架，包含基础布局、路由占位和 API client。
 
 ## 当前开发流程
 
@@ -43,4 +44,4 @@ weekend-go/
 4. worker 只在自己负责的 worktree 和 feature scope 内实现，不负责合并到 main。
 5. coordinator 负责审查 worker 结果、更新总览、处理合并和后续拆分。
 
-当前阶段暂不创建 git worktree，暂不实现业务功能，暂不初始化 Vue 或 Spring Boot 工程。
+当前阶段已进入多 worktree 协作。后续业务功能应继续按 feature 拆分，在独立 branch/worktree 中实现并由 coordinator 审查合并。
