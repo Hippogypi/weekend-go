@@ -26,12 +26,12 @@ second feature batch merged
 
 ## 进行中
 
-- 准备第二批合并后的收尾验证和后续 feature 拆分。
+- 启动 `place-discovery`，由 worker 负责完整后端实现。
 - 继续保留第一批 worktree，等待后续清理或复用决策。
 
 ## 下一步
 
-- 根据依赖启动下一批：`place-discovery`，并评估是否同步启动认证持久化或数据库接入。
+- 等待 `place-discovery` worker 完成后端接口和 MySQL 持久化实现。
 - 决定是否清理已合并的第一批 worktree。
 - 决定是否清理已合并的第二批 worktree。
 - 将 main 推送到远端。

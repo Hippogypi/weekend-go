@@ -207,9 +207,9 @@
     {
       "id": "place-discovery",
       "title": "地点发现与详情接口",
-      "status": "planned",
-      "branch": null,
-      "worktree": null,
+      "status": "in-progress",
+      "branch": "place-discovery",
+      "worktree": ".worktrees/place-discovery",
       "scope": "实现附近地点查询、关键词搜索、地点去重入库和地点详情查询，合并高德基础数据与本地共建数据。",
       "dependencies": [
         "database-schema-design",
@@ -220,12 +220,14 @@
         "支持 GET /workspaces/search。",
         "支持 GET /places/{placeId}。",
         "高德 POI 按 amapPoiId 去重入库。",
-        "地点详情响应包含相关资源 links。"
+        "地点详情响应包含相关资源 links。",
+        "地点数据持久化到 MySQL schema 对应的 places 表，不使用仅内存 repository 作为最终实现。",
+        "本 feature 只交付后端接口和持久化能力，不包含前端页面。"
       ],
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "属于第一版 P0 能力。"
+      "notes": "已重新分配给 worker；此前 coordinator 越界实现的 place-discovery 分支已丢弃。要求交付完整后端实现，不包含 frontend-core-pages。"
     },
     {
       "id": "workspace-profile-contribution",
