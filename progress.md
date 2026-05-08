@@ -20,15 +20,17 @@ second feature batch in progress
 - 已补充本地高德配置相关文档，未提交真实密钥。
 - 已分配第二批 feature：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
 - 已创建第二批隔离 worktree，并完成 baseline 验证。
+- 已审查第二批 worker 输出，三个 feature 均进入 `ready-for-merge`。
 
 ## 进行中
 
-- 第二批 feature 开发中：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
+- 准备合并第二批 feature：`database-mysql-verification`、`auth-and-role`、`amap-service-integration`。
 - 继续保留第一批 worktree，等待后续清理或复用决策。
 
 ## 下一步
 
-- 分配或启动第二批 worker，在各自 worktree 内实现对应 feature。
+- 先合并 `database-mysql-verification`，再合并两个后端 feature。
+- 合并 `auth-and-role` 与 `amap-service-integration` 时，需要手动合并 `GlobalExceptionHandler`。
 - 决定是否清理已合并的第一批 worktree。
 - 将 main 推送到远端。
 

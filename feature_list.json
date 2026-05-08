@@ -141,7 +141,7 @@
     {
       "id": "auth-and-role",
       "title": "用户认证与角色识别",
-      "status": "in-progress",
+      "status": "ready-for-merge",
       "branch": "auth-and-role",
       "worktree": ".worktrees/auth-and-role",
       "scope": "实现用户注册、登录、退出、个人资料查询和 USER/ADMIN 角色识别，为写操作和管理员接口提供权限基础。",
@@ -158,12 +158,12 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "属于第二批 feature，独立 branch/worktree 已创建，baseline 后端测试通过。"
+      "notes": "worker 已完成并提交 1b68136、5625014；后端测试通过：Tests run: 9, Failures: 0, Errors: 0, Skipped: 0。公开注册已修正为只能创建 USER。"
     },
     {
       "id": "amap-service-integration",
       "title": "高德地图服务封装",
-      "status": "in-progress",
+      "status": "ready-for-merge",
       "branch": "amap-service-integration",
       "worktree": ".worktrees/amap-service-integration",
       "scope": "封装高德地图 Web 服务 API 的周边搜索、关键字搜索、地理编码和逆地理编码能力，并处理外部服务异常。",
@@ -179,12 +179,12 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "属于第二批 feature，独立 branch/worktree 已创建，baseline 后端测试通过；本地高德 Web服务 Key 已验证可用，真实密钥不进入仓库。"
+      "notes": "worker 已完成并提交 b5272ea；后端测试通过：Tests run: 10, Failures: 0, Errors: 0, Skipped: 0。与 auth-and-role 合并时 GlobalExceptionHandler 需要手动合并。"
     },
     {
       "id": "database-mysql-verification",
       "title": "MySQL schema 真实建表验证",
-      "status": "in-progress",
+      "status": "ready-for-merge",
       "branch": "database-mysql-verification",
       "worktree": ".worktrees/database-mysql-verification",
       "scope": "在本地 MySQL 环境验证 database/schema.sql 可执行，修复 schema 语法、索引、默认值或兼容性问题，并补充验证说明；不引入真实生产数据。",
@@ -202,7 +202,7 @@
         "mysql -u <user> -p < database/schema.sql",
         "git status --short"
       ],
-      "notes": "属于第二批 feature，独立 branch/worktree 已创建；本地 MySQL 8.0 客户端可用。"
+      "notes": "worker 已完成并提交 8a7e0d2；schema 无需修改，已用临时隔离 MySQL 8.0.43 实例真实执行建表验证。"
     },
     {
       "id": "place-discovery",
