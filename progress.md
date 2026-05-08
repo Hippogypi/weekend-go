@@ -17,14 +17,14 @@ parallel bootstrap ready
 ## 进行中
 
 - 准备为每个 worker 提供对应 feature 的任务说明。
-- 等待第一批 worker 启动并在各自 worktree 内实现。
+- `backend-bootstrap` worker 已启动，负责 Spring Boot 后端工程骨架。
+- `database-schema-design` worker 已启动，负责 MySQL schema 设计。
+- `frontend-bootstrap` worker 已启动，负责 Vue 前端工程骨架。
 
 ## 下一步
 
-- 启动 `backend-bootstrap` worker。
-- 启动 `database-schema-design` worker。
-- 启动 `frontend-bootstrap` worker。
 - 等第一批 worker 完成后，由 coordinator 审查并决定后续 feature 的启动顺序。
+- 根据 worker 回报更新 `feature_list.json` 和各 feature 小节。
 
 ## 阻塞与风险
 
