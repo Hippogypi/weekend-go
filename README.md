@@ -34,6 +34,19 @@ weekend-go/
 - `backend/`：Spring Boot 后端工程骨架，包含统一响应、异常处理和健康检查。
 - `frontend/`：Vue 前端工程骨架，包含基础布局、路由占位和 API client。
 
+## 本地高德地图配置
+
+项目本地开发需要区分两个高德 Key：
+
+- `Web端(JS API)` Key：供 Vue 前端加载高德地图 JS API 使用，应写入 `frontend/.env.local`。
+- `Web服务` Key：供 Spring Boot 后端调用高德 REST API 使用，应写入 `backend/src/main/resources/application-local.yml` 或本机环境变量。
+
+真实 Key、数据库密码和本地覆盖配置不得提交到 Git。当前本地验证结果：
+
+- 前端 JS API Key 已可从 `http://127.0.0.1:5173` 加载高德脚本。
+- 后端 Web服务 Key 已通过高德行政区查询接口验证。
+- 后端 Web服务 Key 的 IP 白名单绑定的是公网出口 IP；如果网络环境变化并出现 `INVALID_USER_IP`，需要在高德控制台更新白名单。
+
 ## 当前开发流程
 
 本项目采用 `feature_list.json + progress.md + git worktree` 机制管理开发。

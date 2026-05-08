@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "first bootstrap merged",
+  "currentPhase": "second feature batch allocated",
   "features": [
     {
       "id": "requirements-analysis",
@@ -141,9 +141,9 @@
     {
       "id": "auth-and-role",
       "title": "用户认证与角色识别",
-      "status": "planned",
-      "branch": null,
-      "worktree": null,
+      "status": "ready-for-work",
+      "branch": "auth-and-role",
+      "worktree": ".worktrees/auth-and-role",
       "scope": "实现用户注册、登录、退出、个人资料查询和 USER/ADMIN 角色识别，为写操作和管理员接口提供权限基础。",
       "dependencies": [
         "backend-bootstrap",
@@ -158,14 +158,14 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "属于第一版 P0 能力。"
+      "notes": "属于第二批 feature，已分配独立 branch/worktree。"
     },
     {
       "id": "amap-service-integration",
       "title": "高德地图服务封装",
-      "status": "planned",
-      "branch": null,
-      "worktree": null,
+      "status": "ready-for-work",
+      "branch": "amap-service-integration",
+      "worktree": ".worktrees/amap-service-integration",
       "scope": "封装高德地图 Web 服务 API 的周边搜索、关键字搜索、地理编码和逆地理编码能力，并处理外部服务异常。",
       "dependencies": [
         "backend-bootstrap"
@@ -179,7 +179,30 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "需要用户提供或本地配置高德地图 API Key。"
+      "notes": "属于第二批 feature，已分配独立 branch/worktree；本地高德 Web服务 Key 已验证可用，真实密钥不进入仓库。"
+    },
+    {
+      "id": "database-mysql-verification",
+      "title": "MySQL schema 真实建表验证",
+      "status": "ready-for-work",
+      "branch": "database-mysql-verification",
+      "worktree": ".worktrees/database-mysql-verification",
+      "scope": "在本地 MySQL 环境验证 database/schema.sql 可执行，修复 schema 语法、索引、默认值或兼容性问题，并补充验证说明；不引入真实生产数据。",
+      "dependencies": [
+        "database-schema-design"
+      ],
+      "acceptanceCriteria": [
+        "database/schema.sql 可在 MySQL 本地环境执行建表。",
+        "验证覆盖核心表、索引和初始化字典数据。",
+        "如需调整 schema，应说明原因并保持与需求文档一致。",
+        "验证过程不提交真实数据库密码或本地敏感配置。"
+      ],
+      "checkCommands": [
+        "mysql --version",
+        "mysql -u <user> -p < database/schema.sql",
+        "git status --short"
+      ],
+      "notes": "属于第二批 feature，已分配独立 branch/worktree；需要本地可用 MySQL 或说明无法执行真实验证的原因。"
     },
     {
       "id": "place-discovery",

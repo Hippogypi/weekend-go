@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-first bootstrap merged
+second feature batch allocated
 
 ## 已完成
 
@@ -16,21 +16,24 @@ first bootstrap merged
 - 已审查第一批 worker 输出，三个 feature 均进入 `ready-for-merge`。
 - 已合并第一批 feature：`database-schema-design`、`backend-bootstrap`、`frontend-bootstrap`。
 - 合并后验证通过：后端测试、前端测试、前端构建、schema 静态检查。
+- 已完成本地高德地图 Key 配置，并验证前端 JS API 与后端 Web服务 API 可用。
+- 已补充本地高德配置相关文档，未提交真实密钥。
+- 已分配第二批 feature：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
 
 ## 进行中
 
-- 准备启动下一批后端基础能力 feature。
+- 为第二批 feature 创建独立 worktree。
 - 继续保留第一批 worktree，等待后续清理或复用决策。
 
 ## 下一步
 
-- 根据依赖启动下一批：`auth-and-role`、`amap-service-integration`。
+- 启动第二批 worker：`auth-and-role`、`amap-service-integration`、`database-mysql-verification`。
 - 决定是否清理已合并的第一批 worktree。
 - 将 main 推送到远端。
 
 ## 阻塞与风险
 
-- 高德地图 API Key 尚未配置。
+- 高德地图本地 Key 已配置；后端 Web服务 Key 依赖公网出口 IP 白名单，网络变化时可能需要更新。
 - 数据库 schema 尚未执行真实 MySQL 建表验证。
 - 主仓库存在本地未跟踪 `.codex/` 配置目录，暂不纳入版本控制。
 - 后端和前端仍只有基础骨架，尚未实现业务能力。

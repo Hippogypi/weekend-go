@@ -19,6 +19,34 @@ Useful environment variables:
 - `DB_USERNAME`
 - `DB_PASSWORD`
 
+### Amap Web Service
+
+The backend uses the Amap `Web服务` key for server-side REST API calls, such as geocoding, reverse geocoding, POI search, and administrative district lookup.
+
+Local options:
+
+1. Put the key in `src/main/resources/application-local.yml`:
+
+```yml
+weekend-go:
+  amap:
+    api-key: your-amap-web-service-key
+```
+
+2. Or set the environment variable:
+
+```powershell
+$env:AMAP_API_KEY="your-amap-web-service-key"
+```
+
+When using `application-local.yml`, start the app with the `local` profile:
+
+```powershell
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+The Amap `Web服务` key checks the public outbound IP, not `127.0.0.1`. If Amap returns `INVALID_USER_IP`, update the IP whitelist in the Amap console to the current public outbound IP.
+
 ## Commands
 
 On Windows PowerShell:
