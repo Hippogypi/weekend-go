@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-feature planning
+worktree allocation
 
 ## 已完成
 
@@ -11,24 +11,25 @@ feature planning
 - 已确认当前仓库仍处于空壳结构，尚未初始化前后端工程。
 - 已确认后续采用 `feature_list.json + progress.md + git worktree` 协作机制。
 - 已完成 AI 协作规范、feature 清单、进度记录和 README 的初始化。
+- 已完成第一版 feature 队列拆分和依赖梳理。
 
 ## 进行中
 
-- 拆分第一版 feature 队列。
-- 明确 feature 之间的依赖关系、验收标准和检查命令。
-- 准备进入多 worktree 开发前的 coordinator 复核。
+- 为第一批 feature 分配 branch 和 worktree。
+- 创建第一批隔离工作目录。
+- 准备为每个 worker 提供对应 feature 的任务说明。
 
 ## 下一步
 
-- 复核 `feature_list.json` 中第一批 feature 的顺序和依赖。
-- 决定第一批可并行启动的 worktree。
-- 为即将启动的 feature 分配 branch、worktree 路径和 worker。
-- 优先启动基础类 feature：`backend-bootstrap`、`database-schema-design`、`frontend-bootstrap`。
+- 启动 `backend-bootstrap` worker。
+- 启动 `database-schema-design` worker。
+- 启动 `frontend-bootstrap` worker。
+- 等第一批 worker 完成后，由 coordinator 审查并决定后续 feature 的启动顺序。
 
 ## 阻塞与风险
 
 - 高德地图 API Key 尚未配置。
 - 数据库表结构和 REST 接口细节尚未设计。
 - Vue 前端和 Spring Boot 后端尚未初始化。
-- 多 worktree 并行开发尚未启动。
-- 当前 feature 的 branch 和 worktree 路径尚未分配。
+- 多 worktree 并行开发刚开始分配，尚未进入业务实现。
+- 第一批 worker 需要严格限制在各自 feature scope 内。
