@@ -24,11 +24,10 @@ public class AuthService {
         if (userAccountRepository.existsByUsername(request.username())) {
             throw new DuplicateUsernameException();
         }
-        UserRole role = request.role() == null ? UserRole.USER : request.role();
         UserAccount account = userAccountRepository.save(
                 request.username(),
                 passwordEncoder.encode(request.password()),
-                role,
+                UserRole.USER,
                 request.nickname()
         );
         return UserProfileResponse.from(account);

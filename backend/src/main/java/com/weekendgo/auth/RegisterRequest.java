@@ -15,8 +15,6 @@ public record RegisterRequest(
         String password,
 
         @Size(max = 64)
-        String nickname,
-
-        UserRole role
+        String nickname
 ) {
 }

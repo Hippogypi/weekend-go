@@ -2,6 +2,7 @@ package com.weekendgo.auth;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -50,8 +51,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data.passwordHash").doesNotExist());
 
         UserAccount storedUser = userAccountRepository.findByUsername("alice").orElseThrow();
-        org.assertj.core.api.Assertions.assertThat(storedUser.passwordHash()).isNotEqualTo("secret123");
-        org.assertj.core.api.Assertions.assertThat(passwordEncoder.matches("secret123", storedUser.passwordHash())).isTrue();
+        assertThat(storedUser.passwordHash()).isNotEqualTo("secret123");
+        assertThat(passwordEncoder.matches("secret123", storedUser.passwordHash())).isTrue();
 
         MvcResult login = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -115,8 +116,17 @@ class AuthControllerTest {
 
     @Test
     void userCannotAccessAdminEndpointButAdminCan() throws Exception {
-        String userToken = registerAndLogin("dave", "secret123", "Dave", null);
-        String adminToken = registerAndLogin("root", "secret123", "Root", "ADMIN");
+        String userToken = registerAndLogin("dave", "secret123", "Dave", "ADMIN");
+        UserAccount publicUser = userAccountRepository.findByUsername("dave").orElseThrow();
+        assertThat(publicUser.role()).isEqualTo(UserRole.USER);
+
+        userAccountRepository.save(
+                "root",
+                passwordEncoder.encode("secret123"),
+                UserRole.ADMIN,
+                "Root"
+        );
+        String adminToken = login("root", "secret123");
 
         mockMvc.perform(get("/api/admin/auth-check")
                         .header("Authorization", "Bearer " + userToken))
@@ -145,6 +155,20 @@ class AuthControllerTest {
 
     private String registerAndLogin(String username, String password, String nickname, String role) throws Exception {
         register(username, password, nickname, role);
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(username, password)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return JsonTestSupport.readString(result, "$.data.token");
+    }
+
+    private String login(String username, String password) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
