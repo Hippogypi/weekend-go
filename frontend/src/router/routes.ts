@@ -5,7 +5,7 @@ export const appRoutes = [
     path: '/',
     name: 'home',
     component: () => import('../views/HomeView.vue'),
-    meta: { title: '首页' }
+    meta: { title: '地点发现' }
   },
   {
     path: '/places/:placeId',
@@ -17,7 +17,7 @@ export const appRoutes = [
     path: '/profile',
     name: 'profile',
     component: () => import('../views/ProfileView.vue'),
-    meta: { title: '个人中心' }
+    meta: { title: '账号与收藏' }
   },
   {
     path: '/admin/reviews',
