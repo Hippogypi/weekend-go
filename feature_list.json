@@ -430,6 +430,32 @@
       "notes": "已建立本机 MySQL80 上的 weekend_go 开发库，字符集/排序规则为 utf8mb4/utf8mb4_0900_ai_ci；已导入 database/schema.sql，验证 12 张表、tags 10 条、search_keywords 9 条；后端完整测试 43 tests 通过。真实 MySQL smoke 需要当前 shell 或用户级环境变量提供 DB_USERNAME/DB_PASSWORD；worker 设置本地变量后复跑 AuthControllerTest local profile 通过，真实密码未写入可提交文件。"
     },
     {
+      "id": "local-dev-seed-data",
+      "title": "本地开发基础数据注入",
+      "status": "completed",
+      "completedAt": "2026-05-10",
+      "branch": null,
+      "worktree": null,
+      "scope": "向本机真实 MySQL weekend_go 开发库注入可用于前后端联调的非生产演示数据，并提交可重复执行的 seed 脚本和说明；不提交真实数据库密码、Amap Key 或生产数据。",
+      "dependencies": [
+        "local-database-setup",
+        "frontend-core-pages"
+      ],
+      "acceptanceCriteria": [
+        "database/dev_seed.sql 可重复执行并保持演示数据可用。",
+        "真实 weekend_go 数据库中存在演示用户、管理员、地点、公开属性、近期打卡、评价、图片和收藏数据。",
+        "演示数据不包含真实生产数据或真实密钥。",
+        "文档说明演示账号、导入方式和验证结果。"
+      ],
+      "checkCommands": [
+        "mysql --version",
+        "mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u <user> -p --default-character-set=utf8mb4 weekend_go -e \"source E:/App/service_development/weekend-go/database/dev_seed.sql\"",
+        "python -m json.tool feature_list.json",
+        "git diff --check"
+      ],
+      "notes": "已直接导入本机真实 weekend_go。验证结果：演示账号 2 个、演示地点 3 个、workspace_profiles 3 条、最近 2 小时打卡 3 条、审核通过评价 2 条、审核通过图片 2 条、演示收藏 2 条。演示账号为 api-user-demo / api-admin-demo，演示密码为 secret123；未提交真实数据库凭据。"
+    },
+    {
       "id": "postman-api-verification",
       "title": "Postman 接口验证集合",
       "status": "completed",

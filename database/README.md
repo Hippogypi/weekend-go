@@ -5,6 +5,7 @@
 ## 文件
 
 - `schema.sql`：MySQL 8.x 可执行建表脚本，包含核心表、枚举、外键、索引和初始化字典数据。
+- `dev_seed.sql`：本地开发演示数据脚本，包含演示账号、地点、公开属性、近期打卡、评价、图片、收藏和审核相关数据。
 
 ## 核心表关系
 
@@ -50,6 +51,33 @@ mysql -u <user> -p <database_name> < database/schema.sql
 
 脚本不会创建真实用户账号、地点或任何密钥配置；只初始化平台标签和候选搜索词字典。
 
+## 本地演示数据
+
+`dev_seed.sql` 用于给本机 `weekend_go` 注入可直接联调前端的基础数据。它只包含非生产演示数据，可重复执行。
+
+演示账号：
+
+| 用户名 | 角色 | 演示密码 |
+| --- | --- | --- |
+| `api-user-demo` | `USER` | `secret123` |
+| `api-admin-demo` | `ADMIN` | `secret123` |
+
+导入命令示例：
+
+```powershell
+mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u <user> -p --default-character-set=utf8mb4 weekend_go -e "source E:/App/service_development/weekend-go/database/dev_seed.sql"
+```
+
+当前本机真实 `weekend_go` 已完成导入，验证结果：
+
+- 演示账号：2 个。
+- 演示地点：3 个。
+- 公开 `workspace_profiles`：3 条。
+- 最近 2 小时打卡：3 条。
+- 审核通过评价：2 条。
+- 审核通过图片：2 条。
+- 演示收藏：2 条。
+
 ## 本地 weekend_go 开发库
 
 `local-database-setup` 已在本机 `MySQL80` 服务上建立可持续使用的 `weekend_go` 开发库。数据库字符集和排序规则为 `utf8mb4` / `utf8mb4_0900_ai_ci`，与 schema 中的表定义兼容。
@@ -69,7 +97,7 @@ mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p --default-character-s
 mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p weekend_go -e "SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema='weekend_go'; SELECT COUNT(*) AS tag_count FROM tags; SELECT COUNT(*) AS search_keyword_count FROM search_keywords;"
 ```
 
-当前验证结果：`table_count = 12`，`tag_count = 10`，`search_keyword_count = 9`。
+当前 schema 验证结果：`table_count = 12`，`tag_count = 10`，`search_keyword_count = 9`。
 
 ## MySQL 8.0.43 验证记录
 

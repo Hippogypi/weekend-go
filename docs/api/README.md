@@ -17,7 +17,7 @@ Postman collection 使用以下变量：
 | `userUsername` | `api-user-demo` | 普通用户用户名；重复运行前改名或先清理演示数据 |
 | `userPassword` | `secret123` | 普通用户演示密码，至少 8 位 |
 | `userNickname` | `API User` | 普通用户昵称 |
-| `adminUsername` | `api-admin` | 管理员用户名，需要预先准备 |
+| `adminUsername` | `api-admin-demo` | 管理员用户名，可由 `database/dev_seed.sql` 注入 |
 | `adminPassword` | `secret123` | 管理员演示密码，至少 8 位 |
 | `userToken` | 自动写入 | 普通用户登录后由 collection test script 写入 |
 | `adminToken` | 自动写入 | 管理员登录后由 collection test script 写入 |
@@ -50,6 +50,8 @@ $env:AMAP_API_KEY="<local-amap-web-service-key>"
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
+
+如果需要可直接演示的账号和地点数据，先在仓库根目录执行 `database/dev_seed.sql`。脚本会注入 `api-user-demo` 和 `api-admin-demo` 两个演示账号，密码均为 `secret123`。
 
 如果不准备调用 Amap，可不设置 `AMAP_API_KEY`，但 `/api/workspaces/search` 和 `/api/workspaces/nearby` 可能返回外部服务错误。此时可先在本地 MySQL 准备一个测试地点，然后在 Postman 环境中手动填写 `placeId`。
 

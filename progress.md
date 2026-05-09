@@ -14,6 +14,7 @@ frontend verification
 - 已合并 `place-discovery`，提供地点发现、搜索、详情和 places 表持久化能力；该 feature 不包含前端页面。
 - 已合并 `backend-data-access-standardization`，将 places 持久化迁移到 Spring 管理的 `JdbcTemplate + TransactionTemplate`，并保留无数据库配置时的默认可测试行为。
 - 已合并 `workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images`，后端 P0 业务闭环基本完成。
+- 已向本机真实 `weekend_go` 注入本地开发演示数据：演示账号、地点、公开属性、近期打卡、评价、图片和收藏。
 
 ## 进行中
 
@@ -21,7 +22,7 @@ frontend verification
 
 ## 下一步
 
-- 补充真实 MySQL + Amap + 浏览器端到端 smoke，覆盖注册、登录、搜索、详情、共建、打卡、评价、收藏、图片和审核。
+- 使用已注入的演示数据补充真实 MySQL + Amap + 浏览器端到端 smoke，覆盖登录、搜索、详情、共建、打卡、评价、收藏、图片和审核。
 
 ## 阻塞与风险
 
@@ -150,3 +151,11 @@ frontend verification
 - 功能覆盖：地点搜索/附近查询、详情、登录注册、属性共建、打卡、评价、图片、收藏、收藏列表和管理员按 id 审核入口。
 - 验证记录：`npm run test` 通过，4 test files / 12 tests；`npm run build` 通过；`git diff --check` 通过。
 - 剩余风险：尚未做真实 MySQL + Amap + 浏览器端到端 smoke；管理员待审核列表依赖后端后续补充 pending list API。
+
+## 2026-05-10 local-dev-seed-data
+
+- 已新增 `database/dev_seed.sql`，用于给本地真实 `weekend_go` 注入可重复执行的非生产演示数据。
+- 已直接导入本机真实 MySQL `weekend_go`，未把真实数据库凭据写入仓库。
+- 演示账号：`api-user-demo` / `api-admin-demo`，演示密码均为 `secret123`。
+- 验证结果：演示账号 2 个、演示地点 3 个、`workspace_profiles` 3 条、最近 2 小时打卡 3 条、审核通过评价 2 条、审核通过图片 2 条、演示收藏 2 条。
+- 已更新 `database/README.md` 和 `docs/api/README.md`，记录导入方式、演示账号和用途。
