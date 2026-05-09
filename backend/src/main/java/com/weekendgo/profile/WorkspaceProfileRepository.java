@@ -1,0 +1,14 @@
+package com.weekendgo.profile;
+
+import java.util.Optional;
+
+public interface WorkspaceProfileRepository {
+
+    ProfileSubmission createSubmission(long placeId, long userId, ProfileSubmissionRequest request);
+
+    ProfileSubmission audit(long submissionId, long adminId, AuditStatus status, String reason);
+
+    Optional<ProfileSubmission> findSubmissionById(long submissionId);
+
+    Optional<WorkspaceProfile> findProfileByPlaceId(long placeId);
+}
