@@ -8,6 +8,9 @@ import com.weekendgo.amap.exception.AmapServiceException;
 import com.weekendgo.interaction.InteractionStorageException;
 import com.weekendgo.place.PlaceNotFoundException;
 import com.weekendgo.place.PlaceStorageException;
+import com.weekendgo.profile.ProfileStorageException;
+import com.weekendgo.profile.ProfileSubmissionNotFoundException;
+import com.weekendgo.profile.WorkspaceProfileNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -117,6 +120,51 @@ public class GlobalExceptionHandler {
         ErrorResponse error = ErrorResponse.of(
                 "INTERACTION_STORAGE_ERROR",
                 "Interaction storage is unavailable",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(WorkspaceProfileNotFoundException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleWorkspaceProfileNotFound(
+            WorkspaceProfileNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "WORKSPACE_PROFILE_NOT_FOUND",
+                "Workspace profile not found",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(ProfileSubmissionNotFoundException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleProfileSubmissionNotFound(
+            ProfileSubmissionNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "PROFILE_SUBMISSION_NOT_FOUND",
+                "Profile submission not found",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(ProfileStorageException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleProfileStorageException(
+            ProfileStorageException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "PROFILE_STORAGE_ERROR",
+                "Workspace profile storage is unavailable",
                 request.getRequestURI()
         );
         return ResponseEntity

@@ -1,5 +1,6 @@
 package com.weekendgo.place;
 
+import com.weekendgo.profile.WorkspaceProfile;
 import java.math.BigDecimal;
 
 public record PlaceResponse(
@@ -16,10 +17,15 @@ public record PlaceResponse(
         String district,
         PlaceSource source,
         WorkspaceStatus workspaceStatus,
+        WorkspaceProfile workspaceProfile,
         PlaceLinksResponse links
 ) {
 
     public static PlaceResponse from(Place place) {
+        return from(place, null);
+    }
+
+    public static PlaceResponse from(Place place, WorkspaceProfile workspaceProfile) {
         return new PlaceResponse(
                 place.id(),
                 place.amapPoiId(),
@@ -34,6 +40,7 @@ public record PlaceResponse(
                 place.district(),
                 place.source(),
                 place.workspaceStatus(),
+                workspaceProfile,
                 PlaceLinksResponse.forPlace(place.id())
         );
     }
