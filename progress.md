@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-api verification planning
+frontend planning
 
 ## 已完成
 
@@ -17,12 +17,11 @@ api verification planning
 
 ## 进行中
 
-- 启动 `postman-api-verification`，基于真实 MySQL `weekend_go` 和已完成的后端 P0 API 整理接口验证闭环。
 - 规划前端核心页面联调：`frontend-core-pages`。
 
 ## 下一步
 
-- 审查 `postman-api-verification` 输出的接口验证资产，再决定是否启动 `frontend-core-pages`。
+- 启动 `frontend-core-pages`，基于已确认的 API 验证资产实现核心页面联调。
 - 后续联调阶段补充真实 MySQL 环境下的注册、登录、共建、打卡、评价、收藏、图片和审核端到端验证。
 
 ## 阻塞与风险
@@ -122,3 +121,10 @@ api verification planning
 - 验证记录：`python -m json.tool feature_list.json` 通过；`python -m json.tool docs/api/weekend-go.postman_collection.json` 通过；`git diff --check` 通过；`cd backend; .\mvnw.cmd test` 通过，43 tests, 0 failures。
 - 本地后端最小 HTTP smoke 已通过：`spring-boot:start` 启动后，`GET /api/health`、`POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me` 和无 token `GET /api/auth/me` 401 均符合预期；随后已执行 `spring-boot:stop`。
 - 真实 MySQL + Amap 全链路 smoke 未完成：当前 worker 进程和 Windows 用户级环境未读到 `DB_USERNAME`、`DB_PASSWORD`、`AMAP_API_KEY`，且当前 worktree 不存在未跟踪的 `application-local.yml`；已在 API 文档中记录人工环境前置和替代步骤。
+
+## 2026-05-09 postman-api-verification coordinator review
+
+- 已审查并合并 `postman-api-verification` 到 `main`。
+- 审查确认：接口验证资产未包含真实数据库密码、Amap Key 或登录 token；collection 覆盖第一版主要 API 和常见错误链路。
+- 验证记录：`feature_list.json` JSON 校验通过；Postman collection JSON 校验通过；diff 空白检查通过；后端完整测试通过，43 tests, 0 failures。
+- 剩余风险：真实 MySQL + Amap 全链路仍依赖本机 local profile、Amap Key 和公网 IP 白名单，后续前端联调时继续复核。
