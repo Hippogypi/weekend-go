@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-frontend implementation
+frontend verification
 
 ## 已完成
 
@@ -17,12 +17,11 @@ frontend implementation
 
 ## 进行中
 
-- 已启动前端核心页面联调：`frontend-core-pages`。
+- 准备真实后端、本地 MySQL、高德服务与前端浏览器端到端 smoke。
 
 ## 下一步
 
-- 派发 `frontend-core-pages` worker，基于已确认的 API 验证资产实现核心页面联调。
-- 后续联调阶段补充真实 MySQL 环境下的注册、登录、共建、打卡、评价、收藏、图片和审核端到端验证。
+- 补充真实 MySQL + Amap + 浏览器端到端 smoke，覆盖注册、登录、搜索、详情、共建、打卡、评价、收藏、图片和审核。
 
 ## 阻塞与风险
 
@@ -143,3 +142,11 @@ frontend implementation
 - 已补充前端测试覆盖 `ApiClient` 响应解包、PATCH/DELETE、业务 API URL/body、Bearer token 和 session 持久化/异常清理。
 - 验证通过：`cd frontend; npm run test`，4 test files / 12 tests passed；`cd frontend; npm run build` 通过。
 - 遗留风险：本次仅完成前端构建与单元测试，未在真实 MySQL + Amap + 后端运行环境下做浏览器端到端 smoke；管理员待审核列表后端当前没有 list pending 接口，因此页面提供按提交返回 id 审核的入口。
+
+## 2026-05-10 frontend-core-pages coordinator review
+
+- 已审查并合并 `frontend-core-pages` 到 `main`。
+- 审查确认：改动集中在 `frontend/` 与本 feature 进度记录；未修改后端业务功能，未提交真实密钥、数据库密码、Amap Key 或 token。
+- 功能覆盖：地点搜索/附近查询、详情、登录注册、属性共建、打卡、评价、图片、收藏、收藏列表和管理员按 id 审核入口。
+- 验证记录：`npm run test` 通过，4 test files / 12 tests；`npm run build` 通过；`git diff --check` 通过。
+- 剩余风险：尚未做真实 MySQL + Amap + 浏览器端到端 smoke；管理员待审核列表依赖后端后续补充 pending list API。

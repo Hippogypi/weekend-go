@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "frontend implementation",
+  "currentPhase": "frontend verification",
   "features": [
     {
       "id": "requirements-analysis",
@@ -368,8 +368,8 @@
     {
       "id": "frontend-core-pages",
       "title": "Vue 核心页面与接口联调",
-      "status": "in-progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-10",
       "branch": "frontend-core-pages",
       "worktree": ".worktrees/frontend-core-pages",
       "scope": "实现首页/地图列表、地点详情、属性共建、打卡反馈、评价图片、个人中心和管理员审核页面，并通过后端接口完成演示闭环。",
@@ -392,7 +392,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "已启动。worker 应只实现前端页面与接口联调，不修改后端业务功能，不提交真实密钥或本地敏感配置。"
+      "notes": "已合并到 main。coordinator 审查确认：前端已覆盖搜索/附近地点、详情、登录注册、共建、打卡、评价、图片、收藏和管理员按 id 审核入口；新增业务 API 封装与 session store；未修改后端业务功能，未提交真实密钥。验证通过：npm run test 4 files / 12 tests，npm run build 通过。剩余风险：尚未做真实 MySQL + Amap + 浏览器端到端 smoke；管理员待审核列表后端当前没有 pending list 接口。"
     },
     {
       "id": "local-database-setup",
