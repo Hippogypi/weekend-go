@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "frontend planning",
+  "currentPhase": "frontend implementation",
   "features": [
     {
       "id": "requirements-analysis",
@@ -368,28 +368,31 @@
     {
       "id": "frontend-core-pages",
       "title": "Vue 核心页面与接口联调",
-      "status": "planned",
+      "status": "in-progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "frontend-core-pages",
+      "worktree": ".worktrees/frontend-core-pages",
       "scope": "实现首页/地图列表、地点详情、属性共建、打卡反馈、评价图片、个人中心和管理员审核页面，并通过后端接口完成演示闭环。",
       "dependencies": [
         "frontend-bootstrap",
         "place-discovery",
         "workspace-profile-contribution",
         "checkin-current-status",
-        "reviews-favorites-images"
+        "reviews-favorites-images",
+        "postman-api-verification"
       ],
       "acceptanceCriteria": [
-        "Vue 客户端可完成搜索、详情查看、提交反馈和审核演示。",
-        "页面能处理主要接口错误提示。",
+        "Vue 客户端可完成搜索、附近地点、详情查看、登录注册、提交共建/打卡/评价/图片、收藏和管理员审核演示。",
+        "前端 API 调用与 docs/api 中的接口契约保持一致。",
+        "页面能处理主要接口错误、加载状态和空状态。",
         "前端构建通过。",
         "不在前端写死真实密钥。"
       ],
       "checkCommands": [
+        "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "建议在主要后端接口稳定后启动。"
+      "notes": "已启动。worker 应只实现前端页面与接口联调，不修改后端业务功能，不提交真实密钥或本地敏感配置。"
     },
     {
       "id": "local-database-setup",

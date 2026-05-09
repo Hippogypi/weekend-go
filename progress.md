@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-frontend planning
+frontend implementation
 
 ## 已完成
 
@@ -17,11 +17,11 @@ frontend planning
 
 ## 进行中
 
-- 规划前端核心页面联调：`frontend-core-pages`。
+- 已启动前端核心页面联调：`frontend-core-pages`。
 
 ## 下一步
 
-- 启动 `frontend-core-pages`，基于已确认的 API 验证资产实现核心页面联调。
+- 派发 `frontend-core-pages` worker，基于已确认的 API 验证资产实现核心页面联调。
 - 后续联调阶段补充真实 MySQL 环境下的注册、登录、共建、打卡、评价、收藏、图片和审核端到端验证。
 
 ## 阻塞与风险
@@ -30,6 +30,13 @@ frontend planning
 - `auth-persistence` 已保持当前注册、登录、退出、`/api/auth/me` 和鉴权过滤器契约不变；真实 MySQL 环境仍建议在后续联调中复验。
 - 真实 MySQL 运行验证仍需在后续接口联调阶段持续补充。
 - 主仓库存在本地未跟踪 `.codex/` 配置目录，暂不纳入版本控制。
+
+## 2026-05-09 frontend-core-pages allocation
+
+- 已启动 `frontend-core-pages`，分支为 `frontend-core-pages`，worktree 为 `.worktrees/frontend-core-pages`。
+- 范围限制：只实现 Vue 前端页面、状态处理和后端接口联调；不修改后端业务功能，不提交真实密钥或本地敏感配置。
+- 依赖基础：`frontend-bootstrap`、主要后端 P0 API、`postman-api-verification` 均已完成，可按 `docs/api` 的接口契约推进。
+- 验收重点：搜索/附近地点、详情、登录注册、共建、打卡、评价、图片、收藏、管理员审核页面形成可演示闭环，且 `npm run test` 与 `npm run build` 通过。
 
 ## 2026-05-09 backend-data-access-standardization coordinator review
 
