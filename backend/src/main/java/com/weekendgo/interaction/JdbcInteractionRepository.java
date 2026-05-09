@@ -1,0 +1,296 @@
+package com.weekendgo.interaction;
+
+import com.weekendgo.place.Place;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.support.TransactionTemplate;
+
+@Repository
+@ConditionalOnProperty(name = "spring.datasource.url")
+public class JdbcInteractionRepository implements InteractionRepository {
+
+    private static final String REVIEW_COLUMNS = """
+            SELECT id, place_id, user_id, quiet_score, wifi_score, socket_score,
+                   comfort_score, cost_score, content, audit_status, created_at
+            FROM reviews
+            """;
+
+    private static final String IMAGE_COLUMNS = """
+            SELECT id, place_id, user_id, image_url, description, audit_status, created_at
+            FROM place_images
+            """;
+
+    private final JdbcTemplate jdbcTemplate;
+    private final TransactionTemplate transactionTemplate;
+
+    public JdbcInteractionRepository(JdbcTemplate jdbcTemplate, TransactionTemplate transactionTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.transactionTemplate = transactionTemplate;
+    }
+
+    @Override
+    public ReviewResponse createReview(long placeId, long userId, ReviewRequest request) {
+        try {
+            ReviewResponse review = transactionTemplate.execute(status -> {
+                KeyHolder keyHolder = new GeneratedKeyHolder();
+                jdbcTemplate.update(connection -> {
+                    PreparedStatement statement = connection.prepareStatement("""
+                            INSERT INTO reviews (
+                              place_id, user_id, quiet_score, wifi_score, socket_score,
+                              comfort_score, cost_score, content, audit_status
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
+                            """, new String[]{"id"});
+                    statement.setLong(1, placeId);
+                    statement.setLong(2, userId);
+                    statement.setBigDecimal(3, request.quietScore());
+                    statement.setBigDecimal(4, request.wifiScore());
+                    statement.setBigDecimal(5, request.socketScore());
+                    statement.setBigDecimal(6, request.comfortScore());
+                    statement.setBigDecimal(7, request.costScore());
+                    statement.setString(8, request.content());
+                    return statement;
+                }, keyHolder);
+                return findReviewById(requiredKey(keyHolder));
+            });
+            return review == null ? findReviewByUserLatest(userId) : review;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to create review", exception);
+        }
+    }
+
+    @Override
+    public List<ReviewResponse> findApprovedReviews(long placeId) {
+        try {
+            return jdbcTemplate.query(
+                    REVIEW_COLUMNS + "WHERE place_id = ? AND audit_status = 'APPROVED' ORDER BY created_at DESC, id DESC",
+                    this::mapReview,
+                    placeId
+            );
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load reviews", exception);
+        }
+    }
+
+    @Override
+    public Optional<ReviewResponse> auditReview(long reviewId, long adminId, AuditStatus auditStatus, String reason) {
+        try {
+            return Optional.ofNullable(transactionTemplate.execute(status -> {
+                int updated = jdbcTemplate.update("""
+                        UPDATE reviews
+                        SET audit_status = ?, audited_by = ?, audited_at = CURRENT_TIMESTAMP, audit_reason = ?
+                        WHERE id = ?
+                        """, auditStatus.name(), adminId, reason, reviewId);
+                if (updated == 0) {
+                    return null;
+                }
+                insertAuditLog("REVIEW", reviewId, adminId, auditStatus, reason);
+                return findReviewById(reviewId);
+            }));
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to audit review", exception);
+        }
+    }
+
+    @Override
+    public ImageResponse createImage(long placeId, long userId, ImageRequest request) {
+        try {
+            ImageResponse image = transactionTemplate.execute(status -> {
+                KeyHolder keyHolder = new GeneratedKeyHolder();
+                jdbcTemplate.update(connection -> {
+                    PreparedStatement statement = connection.prepareStatement("""
+                            INSERT INTO place_images (place_id, user_id, image_url, description, audit_status)
+                            VALUES (?, ?, ?, ?, 'PENDING')
+                            """, new String[]{"id"});
+                    statement.setLong(1, placeId);
+                    statement.setLong(2, userId);
+                    statement.setString(3, request.imageUrl());
+                    statement.setString(4, request.description());
+                    return statement;
+                }, keyHolder);
+                return findImageById(requiredKey(keyHolder));
+            });
+            return image == null ? findImageByUserLatest(userId) : image;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to create image", exception);
+        }
+    }
+
+    @Override
+    public List<ImageResponse> findApprovedImages(long placeId) {
+        try {
+            return jdbcTemplate.query(
+                    IMAGE_COLUMNS + "WHERE place_id = ? AND audit_status = 'APPROVED' ORDER BY created_at DESC, id DESC",
+                    this::mapImage,
+                    placeId
+            );
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load images", exception);
+        }
+    }
+
+    @Override
+    public Optional<ImageResponse> auditImage(long imageId, long adminId, AuditStatus auditStatus, String reason) {
+        try {
+            return Optional.ofNullable(transactionTemplate.execute(status -> {
+                int updated = jdbcTemplate.update("""
+                        UPDATE place_images
+                        SET audit_status = ?, audited_by = ?, audited_at = CURRENT_TIMESTAMP, audit_reason = ?
+                        WHERE id = ?
+                        """, auditStatus.name(), adminId, reason, imageId);
+                if (updated == 0) {
+                    return null;
+                }
+                insertAuditLog("PLACE_IMAGE", imageId, adminId, auditStatus, reason);
+                return findImageById(imageId);
+            }));
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to audit image", exception);
+        }
+    }
+
+    @Override
+    public void favorite(long userId, Place place) {
+        try {
+            jdbcTemplate.update("""
+                    INSERT INTO favorites (user_id, place_id)
+                    VALUES (?, ?)
+                    ON DUPLICATE KEY UPDATE created_at = created_at
+                    """, userId, place.id());
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to favorite place", exception);
+        }
+    }
+
+    @Override
+    public void unfavorite(long userId, long placeId) {
+        try {
+            jdbcTemplate.update("DELETE FROM favorites WHERE user_id = ? AND place_id = ?", userId, placeId);
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to unfavorite place", exception);
+        }
+    }
+
+    @Override
+    public boolean isFavorited(long userId, long placeId) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM favorites WHERE user_id = ? AND place_id = ?",
+                    Integer.class,
+                    userId,
+                    placeId
+            );
+            return count != null && count > 0;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load favorite status", exception);
+        }
+    }
+
+    @Override
+    public List<FavoritePlaceResponse> findFavorites(long userId) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT f.place_id, p.name AS place_name, f.created_at
+                    FROM favorites f
+                    JOIN places p ON p.id = f.place_id
+                    WHERE f.user_id = ?
+                    ORDER BY f.created_at DESC, f.id DESC
+                    """, (resultSet, rowNum) -> new FavoritePlaceResponse(
+                    resultSet.getLong("place_id"),
+                    resultSet.getString("place_name"),
+                    toInstant(resultSet.getTimestamp("created_at"))
+            ), userId);
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load favorites", exception);
+        }
+    }
+
+    private ReviewResponse findReviewById(long id) {
+        return jdbcTemplate.query(REVIEW_COLUMNS + "WHERE id = ?", this::mapReview, id).stream()
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private ReviewResponse findReviewByUserLatest(long userId) {
+        return jdbcTemplate.query(
+                        REVIEW_COLUMNS + "WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+                        this::mapReview,
+                        userId
+                ).stream()
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private ImageResponse findImageById(long id) {
+        return jdbcTemplate.query(IMAGE_COLUMNS + "WHERE id = ?", this::mapImage, id).stream()
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private ImageResponse findImageByUserLatest(long userId) {
+        return jdbcTemplate.query(
+                        IMAGE_COLUMNS + "WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+                        this::mapImage,
+                        userId
+                ).stream()
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private void insertAuditLog(String targetType, long targetId, long adminId, AuditStatus auditStatus, String reason) {
+        jdbcTemplate.update("""
+                INSERT INTO audit_logs (target_type, target_id, admin_id, action, reason)
+                VALUES (?, ?, ?, ?, ?)
+                """, targetType, targetId, adminId, auditStatus.name(), reason);
+    }
+
+    private long requiredKey(KeyHolder keyHolder) {
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Failed to retrieve generated id");
+        }
+        return key.longValue();
+    }
+
+    private ReviewResponse mapReview(ResultSet resultSet, int rowNum) throws SQLException {
+        return new ReviewResponse(
+                resultSet.getLong("id"),
+                resultSet.getLong("place_id"),
+                resultSet.getLong("user_id"),
+                resultSet.getBigDecimal("quiet_score"),
+                resultSet.getBigDecimal("wifi_score"),
+                resultSet.getBigDecimal("socket_score"),
+                resultSet.getBigDecimal("comfort_score"),
+                resultSet.getBigDecimal("cost_score"),
+                resultSet.getString("content"),
+                AuditStatus.valueOf(resultSet.getString("audit_status")),
+                toInstant(resultSet.getTimestamp("created_at"))
+        );
+    }
+
+    private ImageResponse mapImage(ResultSet resultSet, int rowNum) throws SQLException {
+        return new ImageResponse(
+                resultSet.getLong("id"),
+                resultSet.getLong("place_id"),
+                resultSet.getLong("user_id"),
+                resultSet.getString("image_url"),
+                resultSet.getString("description"),
+                AuditStatus.valueOf(resultSet.getString("audit_status")),
+                toInstant(resultSet.getTimestamp("created_at"))
+        );
+    }
+
+    private Instant toInstant(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toInstant();
+    }
+}
