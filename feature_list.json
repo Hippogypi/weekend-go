@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "api verification planning",
+  "currentPhase": "api verification review",
   "features": [
     {
       "id": "requirements-analysis",
@@ -429,8 +429,8 @@
     {
       "id": "postman-api-verification",
       "title": "Postman 接口验证集合",
-      "status": "in-progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-09",
       "branch": "postman-api-verification",
       "worktree": ".worktrees/postman-api-verification",
       "scope": "整理第一版主要 REST 接口的 Postman 验证集合或等价接口测试说明，覆盖账号、地点、共建、打卡、评价、收藏、图片和审核。",
@@ -450,9 +450,16 @@
         "接口集合或说明不包含真实密钥。"
       ],
       "checkCommands": [
+        "python -m json.tool feature_list.json",
+        "python -m json.tool docs/api/weekend-go.postman_collection.json",
+        "git diff --check",
+        "cd backend; .\\mvnw.cmd test",
+        "cd backend; .\\mvnw.cmd -DskipTests spring-boot:start",
+        "PowerShell Invoke-RestMethod smoke for health/register/login/me/401",
+        "cd backend; .\\mvnw.cmd -DskipTests spring-boot:stop",
         "git status --short"
       ],
-      "notes": "由 coordinator 于 2026-05-09 启动。当前本地 MySQL weekend_go 已建立，DB_USERNAME/DB_PASSWORD 已配置为用户级环境变量；本 feature 负责整理并验证第一版主要 REST API 调用闭环，不新增业务功能，不提交真实凭据。"
+      "notes": "已新增 docs/api/weekend-go.postman_collection.json 和 docs/api/README.md，覆盖 health、auth、place discovery、workspace profile、checkin、reviews、favorites、images、admin audit 和 401/403/404 常见错误；collection 使用变量保存 token/id，不包含真实凭据。验证通过：feature_list.json JSON 校验、collection JSON 校验、git diff --check、后端完整测试 43 tests 0 failures、本地后端最小 HTTP smoke（health/register/login/me/401）通过。真实 MySQL + Amap 全链路 smoke 未完成：当前 worker 进程和 Windows 用户级环境未读到 DB_USERNAME/DB_PASSWORD/AMAP_API_KEY，且 worktree 无未跟踪 application-local.yml；已在 docs/api/README.md 记录管理员准备、手动 placeId 替代和清理步骤。"
     }
   ]
 }
