@@ -1,0 +1,947 @@
+{
+  "info": {
+    "_postman_id": "8f0c6f18-b00b-4fb0-8f12-0c1d812445f1",
+    "name": "weekend-go API verification",
+    "description": "First-version REST API verification for weekend-go. Uses variables only; no real credentials, Amap keys, or tokens are stored.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "userUsername", "value": "api-user-demo" },
+    { "key": "userPassword", "value": "secret123" },
+    { "key": "userNickname", "value": "API User" },
+    { "key": "adminUsername", "value": "api-admin" },
+    { "key": "adminPassword", "value": "secret123" },
+    { "key": "userToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "keyword", "value": "library" },
+    { "key": "city", "value": "Beijing" },
+    { "key": "longitude", "value": "116.481488" },
+    { "key": "latitude", "value": "39.990464" },
+    { "key": "placeId", "value": "" },
+    { "key": "profileSubmissionId", "value": "" },
+    { "key": "reviewId", "value": "" },
+    { "key": "imageId", "value": "" },
+    { "key": "missingPlaceId", "value": "999999999" },
+    { "key": "missingSubmissionId", "value": "999999999" },
+    { "key": "missingReviewId", "value": "999999999" },
+    { "key": "missingImageId", "value": "999999999" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health",
+            "description": "Public health check."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('health returns OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{userUsername}}\",\n  \"password\": \"{{userPassword}}\",\n  \"nickname\": \"{{userNickname}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Registers a normal USER account. Public registration ignores any attempted role field."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('register returns 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(pm.response.json().data.role).to.eql('USER');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{userUsername}}\",\n  \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Logs in the normal user and stores userToken."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login returns token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.token).to.match(/^wg_/);",
+                  "  pm.collectionVariables.set('userToken', data.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Returns the current authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('me returns USER profile', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.role).to.eql('USER');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Requires a pre-created ADMIN user. See docs/api/README.md for local promotion steps."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin login returns token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.token).to.match(/^wg_/);",
+                  "  pm.collectionVariables.set('adminToken', data.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Auth Check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/admin/auth-check",
+            "description": "Verifies that adminToken belongs to an ADMIN user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin check returns ADMIN profile', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.role).to.eql('ADMIN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "Invalidates userToken. Run this at the end of the walkthrough."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Place Discovery",
+      "item": [
+        {
+          "name": "Search Workspaces",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/search?keyword={{keyword}}&city={{city}}&page=1&offset=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workspaces", "search"],
+              "query": [
+                { "key": "keyword", "value": "{{keyword}}" },
+                { "key": "city", "value": "{{city}}" },
+                { "key": "page", "value": "1" },
+                { "key": "offset", "value": "10" }
+              ]
+            },
+            "description": "Public keyword search. Depends on Amap Web Service availability and key configuration."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('search request is accepted', function () {",
+                  "  pm.expect([200, 502, 503]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (Array.isArray(body.data) && body.data.length > 0) {",
+                  "    pm.collectionVariables.set('placeId', String(body.data[0].id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nearby Workspaces",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/nearby?longitude={{longitude}}&latitude={{latitude}}&keyword={{keyword}}&radius=1000&page=1&offset=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "workspaces", "nearby"],
+              "query": [
+                { "key": "longitude", "value": "{{longitude}}" },
+                { "key": "latitude", "value": "{{latitude}}" },
+                { "key": "keyword", "value": "{{keyword}}" },
+                { "key": "radius", "value": "1000" },
+                { "key": "page", "value": "1" },
+                { "key": "offset", "value": "10" }
+              ]
+            },
+            "description": "Public nearby search. Depends on Amap Web Service availability and key configuration."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('nearby request is accepted', function () {",
+                  "  pm.expect([200, 502, 503]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (Array.isArray(body.data) && body.data.length > 0 && !pm.collectionVariables.get('placeId')) {",
+                  "    pm.collectionVariables.set('placeId', String(body.data[0].id));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Place Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}",
+            "description": "Public place detail. Requires placeId from search or manual local setup."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('place detail returns links', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.links.detail).to.include('/api/places/');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Missing Place Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{missingPlaceId}}",
+            "description": "Common 404 verification for an unknown place."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing place returns 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().code).to.eql('PLACE_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Workspace Profile",
+      "item": [
+        {
+          "name": "Submit Profile Contribution",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quietScore\": 4.5,\n  \"wifiScore\": 4.0,\n  \"socketScore\": 3.5,\n  \"seatScore\": 4.0,\n  \"costScore\": 3.0,\n  \"minConsumption\": 20,\n  \"allowLongStay\": \"TRUE\",\n  \"suitableScenes\": [\"READING\", \"REMOTE_WORK\"],\n  \"remark\": \"stable wifi\"\n}"
+            },
+            "url": "{{baseUrl}}/api/places/{{placeId}}/profile-submissions",
+            "description": "Creates a PENDING workspace profile contribution."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('profile submission is pending', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.auditStatus).to.eql('PENDING');",
+                  "  pm.collectionVariables.set('profileSubmissionId', String(data.id));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve Profile Contribution",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"useful contribution\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/profile-submissions/{{profileSubmissionId}}/approve",
+            "description": "Admin approval updates the public workspace profile aggregation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('profile submission approved', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.auditStatus).to.eql('APPROVED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Public Workspace Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/workspace-profile",
+            "description": "Returns the aggregated public workspace profile after approval."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('public profile is available after approval', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.approvedSubmissionCount).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Missing Profile Contribution",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"not enough detail\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/profile-submissions/{{missingSubmissionId}}/reject",
+            "description": "Common 404 verification for an unknown profile submission."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing profile submission returns 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().code).to.eql('PROFILE_SUBMISSION_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Checkin",
+      "item": [
+        {
+          "name": "Submit Checkin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"crowdLevel\": \"NORMAL\",\n  \"noiseLevel\": \"RELATIVELY_QUIET\",\n  \"hasSeat\": true,\n  \"remark\": \"window seats available\"\n}"
+            },
+            "url": "{{baseUrl}}/api/places/{{placeId}}/checkins",
+            "description": "Creates recent checkin feedback for current status aggregation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('checkin created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(pm.response.json().data.placeId).to.eql(Number(pm.collectionVariables.get('placeId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/current-status",
+            "description": "Public current status aggregation using checkins from the last 2 hours."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('current status returns stable shape', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quietScore\": 4.5,\n  \"wifiScore\": 4.0,\n  \"socketScore\": 5.0,\n  \"comfortScore\": 4.0,\n  \"costScore\": 3.5,\n  \"content\": \"quiet before approval\"\n}"
+            },
+            "url": "{{baseUrl}}/api/places/{{placeId}}/reviews",
+            "description": "Creates a PENDING review."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('review created as pending', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.auditStatus).to.eql('PENDING');",
+                  "  pm.collectionVariables.set('reviewId', String(data.id));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Public Reviews Before Audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/reviews",
+            "description": "Public endpoint returns only APPROVED reviews, so a fresh pending review may be absent."
+          }
+        },
+        {
+          "name": "Admin Approve Review",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auditStatus\": \"APPROVED\",\n  \"reason\": \"ok\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reviews/{{reviewId}}/audit",
+            "description": "Admin approves a pending review."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('review approved', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.auditStatus).to.eql('APPROVED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Public Reviews After Audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/reviews",
+            "description": "Approved reviews are public and omit auditStatus."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('approved review is public', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Get Favorite Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/favorite",
+            "description": "Returns whether the current user has favorited the place."
+          }
+        },
+        {
+          "name": "Add Favorite",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/favorite",
+            "description": "Adds the place to the current user's favorites."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('favorite added', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.favorited).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Favorites",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/me/favorites",
+            "description": "Lists the current user's favorited places."
+          }
+        },
+        {
+          "name": "Delete Favorite",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/favorite",
+            "description": "Removes the place from the current user's favorites."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('favorite removed', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.favorited).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "item": [
+        {
+          "name": "Submit Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://example.com/weekend-go-demo.jpg\",\n  \"description\": \"reading area\"\n}"
+            },
+            "url": "{{baseUrl}}/api/places/{{placeId}}/images",
+            "description": "Creates a PENDING image record. This endpoint stores image metadata only."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('image created as pending', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data.auditStatus).to.eql('PENDING');",
+                  "  pm.collectionVariables.set('imageId', String(data.id));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Public Images Before Audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/images",
+            "description": "Public endpoint returns only APPROVED images, so a fresh pending image may be absent."
+          }
+        },
+        {
+          "name": "Admin Approve Image",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auditStatus\": \"APPROVED\",\n  \"reason\": \"ok\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/images/{{imageId}}/audit",
+            "description": "Admin approves a pending image."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('image approved', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.auditStatus).to.eql('APPROVED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Public Images After Audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/places/{{placeId}}/images",
+            "description": "Approved images are public and omit auditStatus."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('approved image is public', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "401 Get Me Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Unauthenticated protected endpoint should return 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing token returns 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "401 Submit Checkin Without Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"crowdLevel\": \"NORMAL\",\n  \"noiseLevel\": \"NORMAL\",\n  \"hasSeat\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/places/{{placeId}}/checkins",
+            "description": "Unauthenticated write operation should return 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('unauthenticated checkin returns 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 User Access Admin Check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
+            "url": "{{baseUrl}}/api/admin/auth-check",
+            "description": "Normal USER token should not access admin routes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('user token returns 403 on admin route', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  pm.expect(pm.response.json().code).to.eql('FORBIDDEN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "403 User Audit Image",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{userToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auditStatus\": \"APPROVED\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/images/{{imageId}}/audit",
+            "description": "Normal USER token should receive 403 on admin image audit."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('user image audit returns 403', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  pm.expect(pm.response.json().code).to.eql('FORBIDDEN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 Missing Review Audit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auditStatus\": \"APPROVED\",\n  \"reason\": \"missing review smoke\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/reviews/{{missingReviewId}}/audit",
+            "description": "Unknown review currently maps to Spring ResponseStatusException with code NOT_FOUND."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing review returns 404-equivalent', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().code).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "404 Missing Image Audit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auditStatus\": \"APPROVED\",\n  \"reason\": \"missing image smoke\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/images/{{missingImageId}}/audit",
+            "description": "Unknown image currently maps to Spring ResponseStatusException with code NOT_FOUND."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing image returns 404-equivalent', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json().code).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

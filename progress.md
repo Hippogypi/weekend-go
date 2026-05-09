@@ -113,3 +113,12 @@ api verification planning
 - 已启动 `postman-api-verification`，用于整理第一版主要 REST API 的验证集合或等价接口测试说明。
 - 范围限制：只做接口验证资产、调用顺序、环境变量说明和验证记录；不新增业务功能，不提交真实数据库密码、Amap Key 或登录 token。
 - 该 feature 应基于已完成的 `local-database-setup`，覆盖账号、地点、共建、打卡、评价、收藏、图片和审核链路。
+
+## 2026-05-09 postman-api-verification worker result
+
+- 已新增 `docs/api/weekend-go.postman_collection.json`，使用 Postman collection 变量串起普通用户 token、管理员 token、`placeId`、共建提交 id、评价 id 和图片 id，不包含真实密码、Amap Key 或登录 token。
+- 已新增 `docs/api/README.md`，记录环境变量、后端启动、管理员账号准备、Amap 不稳定时手动准备 `placeId`、调用顺序、清理 SQL、PowerShell smoke 示例和覆盖范围。
+- Collection 覆盖 health、register/login/logout/me、place search/nearby/detail、workspace profile submit/public/approve/reject、checkin submit/current-status、review submit/list/audit、favorite get/add/delete/list、image submit/list/audit，以及未登录 401、普通用户访问 admin 403、不存在资源 404 或当前实现等价响应。
+- 验证记录：`python -m json.tool feature_list.json` 通过；`python -m json.tool docs/api/weekend-go.postman_collection.json` 通过；`git diff --check` 通过；`cd backend; .\mvnw.cmd test` 通过，43 tests, 0 failures。
+- 本地后端最小 HTTP smoke 已通过：`spring-boot:start` 启动后，`GET /api/health`、`POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me` 和无 token `GET /api/auth/me` 401 均符合预期；随后已执行 `spring-boot:stop`。
+- 真实 MySQL + Amap 全链路 smoke 未完成：当前 worker 进程和 Windows 用户级环境未读到 `DB_USERNAME`、`DB_PASSWORD`、`AMAP_API_KEY`，且当前 worktree 不存在未跟踪的 `application-local.yml`；已在 API 文档中记录人工环境前置和替代步骤。
