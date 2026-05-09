@@ -90,3 +90,21 @@ local database setup and api verification planning
 - 已启动 `local-database-setup`，用于建立可持续使用的本地 MySQL `weekend_go` 开发库。
 - 范围限制：只处理本地数据库创建、`database/schema.sql` 导入、本地未提交配置和真实 MySQL 连接验证；不新增业务功能，不提交真实密码或本地敏感配置。
 - 该 feature 是后续 `postman-api-verification` 和前端联调的前置基础。
+
+## 2026-05-09 local-database-setup worker result
+
+- 已确认本机 `mysql` client 为 MySQL 8.0.43，`MySQL80` 服务运行中。
+- 已在本机真实 MySQL 建立 `weekend_go` 数据库，字符集/排序规则为 `utf8mb4` / `utf8mb4_0900_ai_ci`。
+- 已创建本地应用账号 `weekend_go` 并授予 `weekend_go.*` 权限；真实密码只通过本机环境变量使用，未写入可提交文件。
+- 已导入 `database/schema.sql`；验证得到 12 张表，`tags` 10 条，`search_keywords` 9 条。
+- 已复制被 Git 忽略的 `backend/src/main/resources/application-local.yml`，内容保留 `${DB_USERNAME}` / `${DB_PASSWORD}` 占位。
+- 真实 MySQL smoke：`AuthControllerTest` 在 `local` profile 下通过，Hikari 已建立 MySQL Connector/J 连接，5 tests、0 failures。
+- smoke 验证写入的假用户已从本地 `users` 表清理，保留空的可持续开发库。
+- 后端普通测试：`cd backend; .\mvnw.cmd test` 通过，43 tests、0 failures。
+- 注意：沙箱内运行 Maven 时当前 JDK `java.security` 文件访问被拒绝，测试使用审批后的沙箱外命令执行；这不是项目代码问题。
+
+## 2026-05-09 local-database-setup review fix
+
+- coordinator 复跑 smoke 时未设置 `DB_USERNAME` / `DB_PASSWORD`，因此 `application-local.example.yml` 的 `change-me` fallback 导致真实 MySQL 认证失败；已将后端 README 和 feature notes 改为明确要求当前 shell 或用户级环境变量提供本地凭据。
+- 已把 `database/README.md` 中新增的 schema 导入命令改为仓库根目录可执行的通用写法：`mysql ... weekend_go < database/schema.sql`。
+- 修复后已在当前命令中显式设置 `DB_USERNAME=weekend_go` 和本地 `DB_PASSWORD` 复跑 `AuthControllerTest` local profile smoke，5 tests、0 failures；Hikari 建立 MySQL Connector/J 连接；测试用户已再次清理为 0。

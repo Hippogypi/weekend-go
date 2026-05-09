@@ -50,6 +50,27 @@ mysql -u <user> -p <database_name> < database/schema.sql
 
 脚本不会创建真实用户账号、地点或任何密钥配置；只初始化平台标签和候选搜索词字典。
 
+## 本地 weekend_go 开发库
+
+`local-database-setup` 已在本机 `MySQL80` 服务上建立可持续使用的 `weekend_go` 开发库。数据库字符集和排序规则为 `utf8mb4` / `utf8mb4_0900_ai_ci`，与 schema 中的表定义兼容。
+
+推荐本地初始化步骤：
+
+```powershell
+mysql --version
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS weekend_go CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+mysql -u root -p -e "CREATE USER IF NOT EXISTS 'weekend_go'@'localhost' IDENTIFIED BY '<local-password>'; CREATE USER IF NOT EXISTS 'weekend_go'@'127.0.0.1' IDENTIFIED BY '<local-password>'; GRANT ALL PRIVILEGES ON weekend_go.* TO 'weekend_go'@'localhost'; GRANT ALL PRIVILEGES ON weekend_go.* TO 'weekend_go'@'127.0.0.1'; FLUSH PRIVILEGES;"
+mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p --default-character-set=utf8mb4 weekend_go < database/schema.sql
+```
+
+导入后可用以下查询确认表和初始化字典数据：
+
+```powershell
+mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p weekend_go -e "SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema='weekend_go'; SELECT COUNT(*) AS tag_count FROM tags; SELECT COUNT(*) AS search_keyword_count FROM search_keywords;"
+```
+
+当前验证结果：`table_count = 12`，`tag_count = 10`，`search_keyword_count = 9`。
+
 ## MySQL 8.0.43 验证记录
 
 本地默认 `MySQL80` server 正在运行，但未提供可提交的非敏感账号密码；无密码访问 `root@localhost` 被拒绝。因此本 feature 使用同机 `mysqld 8.0.43` 在 worktree 下创建临时 `--initialize-insecure` 数据目录，并在 `127.0.0.1:33307` 短暂启动隔离实例完成真实建表验证。临时实例只用于执行 schema，不包含生产数据、真实账号密码或本地敏感配置。

@@ -19,6 +19,30 @@ Useful environment variables:
 - `DB_USERNAME`
 - `DB_PASSWORD`
 
+### Local MySQL
+
+For a real local MySQL connection, create `src/main/resources/application-local.yml` from the example file. This file is ignored by Git and must not contain committed credentials.
+
+```powershell
+Copy-Item src/main/resources/application-local.example.yml src/main/resources/application-local.yml
+$env:DB_USERNAME="weekend_go"
+$env:DB_PASSWORD="<local-password>"
+```
+
+Set `DB_USERNAME` and `DB_PASSWORD` in every shell that starts the backend or runs local-profile tests. If `DB_PASSWORD` is not set, the example fallback is `change-me`, so MySQL authentication is expected to fail unless that is the real local password.
+
+With the local profile enabled, the backend connects to `jdbc:mysql://localhost:3306/weekend_go` and uses the JDBC repositories instead of the in-memory fallback.
+
+Smoke verification used for `local-database-setup`:
+
+```powershell
+$env:DB_USERNAME="weekend_go"
+$env:DB_PASSWORD="<local-password>"
+.\mvnw.cmd "-Dtest=AuthControllerTest" "-Dspring.profiles.active=local" test
+```
+
+Expected result: `AuthControllerTest` starts with profile `local`, Hikari opens a MySQL Connector/J connection, and the register/login/auth tests pass.
+
 ### Amap Web Service
 
 The backend uses the Amap `Web服务` key for server-side REST API calls, such as geocoding, reverse geocoding, POI search, and administrative district lookup.
