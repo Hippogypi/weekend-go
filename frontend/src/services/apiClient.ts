@@ -26,7 +26,7 @@ export class ApiClient {
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, '');
     this.accessTokenProvider = options.accessTokenProvider;
-    this.fetcher = options.fetcher ?? fetch;
+    this.fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
   }
 
   get<TResponse>(path: string, init?: RequestInit): Promise<TResponse> {

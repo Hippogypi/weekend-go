@@ -29,7 +29,14 @@ frontend verification
 - 高德 Web 服务 Key 依赖公网出口 IP 白名单，网络变化时可能需要更新。
 - `auth-persistence` 已保持当前注册、登录、退出、`/api/auth/me` 和鉴权过滤器契约不变；真实 MySQL 环境仍建议在后续联调中复验。
 - 真实 MySQL 运行验证仍需在后续接口联调阶段持续补充。
-- 主仓库存在本地未跟踪 `.codex/` 配置目录，暂不纳入版本控制。
+
+## 2026-05-10 frontend-backend smoke fix
+
+- 修复 `apiClient.ts` 中 `fetch` 绑定丢失导致的 `Illegal invocation` 错误。
+- 后端 `SecurityConfig` 补充 CORS 配置，允许本地 dev server 跨域访问。
+- 本地配置文件修正：`frontend/.env.local` 补 `/api` 后缀；`backend/application-local.yml` 补 `spring.datasource.url` 及凭据。
+- 根目录 `.gitignore` 补充 `.codex/`。
+- 验证结果：前端 `npm run test` 12 passed；后端 `mvnw test` 43 passed；浏览器端到端 `地点发现 -> 查询地点` 请求链路打通，前后端与本地 MySQL 联调成功。
 
 ## 2026-05-09 frontend-core-pages allocation
 
