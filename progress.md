@@ -135,3 +135,11 @@ frontend implementation
 - 审查确认：接口验证资产未包含真实数据库密码、Amap Key 或登录 token；collection 覆盖第一版主要 API 和常见错误链路。
 - 验证记录：`feature_list.json` JSON 校验通过；Postman collection JSON 校验通过；diff 空白检查通过；后端完整测试通过，43 tests, 0 failures。
 - 剩余风险：真实 MySQL + Amap 全链路仍依赖本机 local profile、Amap Key 和公网 IP 白名单，后续前端联调时继续复核。
+## 2026-05-10 frontend-core-pages worker result
+
+- 已实现 Vue 核心页面联调闭环：地点搜索/附近查询、地点详情、登录注册、属性共建、打卡反馈、评价提交与公开展示、图片提交与公开展示、收藏/取消收藏/收藏列表、管理员审核入口。
+- 已新增前端业务 API 封装与 session store；API base URL 继续使用 `VITE_API_BASE_URL` fallback 到 `http://localhost:8080/api`，未写入真实密钥、token、DB 密码或 Amap Key。
+- 已补充 loading、empty、error、未登录和权限不足提示；管理员页支持按返回 id 审核 profile submission、review 和 image。
+- 已补充前端测试覆盖 `ApiClient` 响应解包、PATCH/DELETE、业务 API URL/body、Bearer token 和 session 持久化/异常清理。
+- 验证通过：`cd frontend; npm run test`，4 test files / 12 tests passed；`cd frontend; npm run build` 通过。
+- 遗留风险：本次仅完成前端构建与单元测试，未在真实 MySQL + Amap + 后端运行环境下做浏览器端到端 smoke；管理员待审核列表后端当前没有 list pending 接口，因此页面提供按提交返回 id 审核的入口。

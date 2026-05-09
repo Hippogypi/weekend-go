@@ -94,4 +94,51 @@ describe('ApiClient', () => {
       'Content-Type': 'application/vnd.weekend-go.import+json'
     });
   });
+
+  it('unwraps standard weekend-go API responses', async () => {
+    const fetcher: typeof fetch = async () =>
+      new Response(JSON.stringify({
+        success: true,
+        code: 'OK',
+        message: 'success',
+        data: { id: 12, name: 'Library desk' }
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+    const client = new ApiClient({
+      baseUrl: 'https://api.example.test',
+      fetcher
+    });
+
+    await expect(client.get('/places/12')).resolves.toEqual({
+      id: 12,
+      name: 'Library desk'
+    });
+  });
+
+  it('supports patch and delete requests with JSON bodies', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      calls.push({ input, init });
+      return new Response(JSON.stringify({ success: true, code: 'OK', message: 'success', data: null }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    };
+
+    const client = new ApiClient({
+      baseUrl: 'https://api.example.test',
+      fetcher
+    });
+
+    await client.patch('/admin/images/8/audit', { auditStatus: 'APPROVED' });
+    await client.delete('/places/5/favorite');
+
+    expect(calls[0].init?.method).toBe('PATCH');
+    expect(calls[0].init?.headers).toMatchObject({ 'Content-Type': 'application/json' });
+    expect(calls[0].init?.body).toBe(JSON.stringify({ auditStatus: 'APPROVED' }));
+    expect(calls[1].init?.method).toBe('DELETE');
+  });
 });

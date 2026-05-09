@@ -2,9 +2,9 @@
 import { RouterLink, RouterView } from 'vue-router';
 
 const navItems = [
-  { to: '/', label: '首页' },
-  { to: '/places/demo-place', label: '详情' },
-  { to: '/profile', label: '个人中心' },
+  { to: '/', label: '地点' },
+  { to: '/places/1', label: '详情' },
+  { to: '/profile', label: '账号' },
   { to: '/admin/reviews', label: '审核' }
 ];
 </script>

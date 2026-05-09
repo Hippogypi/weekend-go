@@ -50,6 +50,27 @@ export class ApiClient {
     });
   }
 
+  patch<TResponse, TBody = unknown>(
+    path: string,
+    body: TBody,
+    init?: RequestInit
+  ): Promise<TResponse> {
+    const defaultHeaders: HeadersInit = {
+      'Content-Type': 'application/json'
+    };
+
+    return this.request<TResponse>(path, {
+      ...init,
+      method: 'PATCH',
+      headers: this.mergeHeaders(defaultHeaders, init?.headers),
+      body: JSON.stringify(body)
+    });
+  }
+
+  delete<TResponse>(path: string, init?: RequestInit): Promise<TResponse> {
+    return this.request<TResponse>(path, { ...init, method: 'DELETE' });
+  }
+
   async request<TResponse>(path: string, init: RequestInit = {}): Promise<TResponse> {
     const response = await this.fetcher(this.buildUrl(path), {
       ...init,
@@ -62,7 +83,7 @@ export class ApiClient {
       throw new ApiError(response.statusText || 'Request failed', response.status, payload);
     }
 
-    return payload as TResponse;
+    return this.unwrapPayload(payload) as TResponse;
   }
 
   private buildUrl(path: string): string {
@@ -120,5 +141,13 @@ export class ApiClient {
     }
 
     return response.text();
+  }
+
+  private unwrapPayload(payload: unknown): unknown {
+    if (!payload || typeof payload !== 'object' || !('success' in payload) || !('data' in payload)) {
+      return payload;
+    }
+
+    return (payload as { data: unknown }).data;
   }
 }
