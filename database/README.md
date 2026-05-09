@@ -60,7 +60,7 @@ mysql -u <user> -p <database_name> < database/schema.sql
 mysql --version
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS weekend_go CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
 mysql -u root -p -e "CREATE USER IF NOT EXISTS 'weekend_go'@'localhost' IDENTIFIED BY '<local-password>'; CREATE USER IF NOT EXISTS 'weekend_go'@'127.0.0.1' IDENTIFIED BY '<local-password>'; GRANT ALL PRIVILEGES ON weekend_go.* TO 'weekend_go'@'localhost'; GRANT ALL PRIVILEGES ON weekend_go.* TO 'weekend_go'@'127.0.0.1'; FLUSH PRIVILEGES;"
-mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p --default-character-set=utf8mb4 weekend_go -e "source E:/App/service_development/weekend-go/.worktrees/local-database-setup/database/schema.sql"
+mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p --default-character-set=utf8mb4 weekend_go < database/schema.sql
 ```
 
 导入后可用以下查询确认表和初始化字典数据：

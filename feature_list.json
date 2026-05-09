@@ -424,7 +424,7 @@
         "cd backend; .\\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local",
         "git status --short"
       ],
-      "notes": "已建立本机 MySQL80 上的 weekend_go 开发库，字符集/排序规则为 utf8mb4/utf8mb4_0900_ai_ci；已导入 database/schema.sql，验证 12 张表、tags 10 条、search_keywords 9 条；已用未提交的 application-local.yml 和环境变量连接真实 MySQL 运行 AuthControllerTest smoke，5 tests 通过；后端完整测试 43 tests 通过；真实密码未写入可提交文件。"
+      "notes": "已建立本机 MySQL80 上的 weekend_go 开发库，字符集/排序规则为 utf8mb4/utf8mb4_0900_ai_ci；已导入 database/schema.sql，验证 12 张表、tags 10 条、search_keywords 9 条；后端完整测试 43 tests 通过。真实 MySQL smoke 需要当前 shell 或用户级环境变量提供 DB_USERNAME/DB_PASSWORD；worker 设置本地变量后复跑 AuthControllerTest local profile 通过，真实密码未写入可提交文件。"
     },
     {
       "id": "postman-api-verification",

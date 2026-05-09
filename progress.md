@@ -102,3 +102,9 @@ local database setup and api verification planning
 - smoke 验证写入的假用户已从本地 `users` 表清理，保留空的可持续开发库。
 - 后端普通测试：`cd backend; .\mvnw.cmd test` 通过，43 tests、0 failures。
 - 注意：沙箱内运行 Maven 时当前 JDK `java.security` 文件访问被拒绝，测试使用审批后的沙箱外命令执行；这不是项目代码问题。
+
+## 2026-05-09 local-database-setup review fix
+
+- coordinator 复跑 smoke 时未设置 `DB_USERNAME` / `DB_PASSWORD`，因此 `application-local.example.yml` 的 `change-me` fallback 导致真实 MySQL 认证失败；已将后端 README 和 feature notes 改为明确要求当前 shell 或用户级环境变量提供本地凭据。
+- 已把 `database/README.md` 中新增的 schema 导入命令改为仓库根目录可执行的通用写法：`mysql ... weekend_go < database/schema.sql`。
+- 修复后已在当前命令中显式设置 `DB_USERNAME=weekend_go` 和本地 `DB_PASSWORD` 复跑 `AuthControllerTest` local profile smoke，5 tests、0 failures；Hikari 建立 MySQL Connector/J 连接；测试用户已再次清理为 0。
