@@ -456,6 +456,34 @@
       "notes": "已直接导入本机真实 weekend_go。验证结果：演示账号 2 个、演示地点 3 个、workspace_profiles 3 条、最近 2 小时打卡 3 条、审核通过评价 2 条、审核通过图片 2 条、演示收藏 2 条。演示账号为 api-user-demo / api-admin-demo，演示密码为 secret123；未提交真实数据库凭据。"
     },
     {
+      "id": "map-marker-display",
+      "title": "地点发现页面地图与 Marker 展示",
+      "status": "completed",
+      "completedAt": "2026-05-10",
+      "branch": "map-marker-display",
+      "worktree": ".worktrees/map-marker-display",
+      "scope": "在地点发现页面集成高德地图 JS API，将搜索/附近查询结果以地图 marker 形式展示；marker 可交互查看地点名称；仅涉及前端 Vue 组件改动，不修改后端接口契约。",
+      "dependencies": [
+        "frontend-core-pages",
+        "place-discovery"
+      ],
+      "acceptanceCriteria": [
+        "地点发现页面加载后展示高德地图容器。",
+        "搜索/附近查询结果在地图上以 marker 标记对应经纬度位置。",
+        "点击 marker 可查看地点名称浮层或提示。",
+        "地图与现有列表布局共存，不破坏现有页面结构。",
+        "npm run test 与 npm run build 通过。",
+        "不提交真实高德 JS API Key 或本地敏感配置。"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build",
+        "python -m json.tool feature_list.json",
+        "git diff --check"
+      ],
+      "notes": "Worker 在 .worktrees/map-marker-display 中实现；高德 JS API Key 从前端 .env.local 读取，不提交到 Git。"
+    },
+    {
       "id": "postman-api-verification",
       "title": "Postman 接口验证集合",
       "status": "completed",

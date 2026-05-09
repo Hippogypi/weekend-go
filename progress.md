@@ -151,6 +151,21 @@ frontend verification
 - 验证通过：`cd frontend; npm run test`，4 test files / 12 tests passed；`cd frontend; npm run build` 通过。
 - 遗留风险：本次仅完成前端构建与单元测试，未在真实 MySQL + Amap + 后端运行环境下做浏览器端到端 smoke；管理员待审核列表后端当前没有 list pending 接口，因此页面提供按提交返回 id 审核的入口。
 
+## 2026-05-10 map-marker-display allocation
+
+- 已启动 `map-marker-display`，分支为 `map-marker-display`，worktree 为 `.worktrees/map-marker-display`。
+- 范围限制：只在前端地点发现页面集成高德地图 JS API，以 marker 展示搜索/附近结果；不修改后端接口契约，不提交真实密钥或本地敏感配置。
+- 依赖基础：`frontend-core-pages`（地点发现页面已完成）、`place-discovery`（后端已返回 longitude/latitude）。
+- 验收重点：地图容器正确加载、marker 按经纬度定位、点击可查看地点名称、`npm run test` 与 `npm run build` 通过。
+
+## 2026-05-10 map-marker-display coordinator review
+
+- 已审查并合并 `map-marker-display` 到 `main`。
+- 审查确认：新增 `MapView.vue` 组件动态加载高德 JS API，搜索/附近结果以 marker 形式展示在地图上；marker 可点击显示地点名称；地图在无数据时也展示默认中心视野。
+- 修复内容：补充 `watch immediate: true` 确保首次挂载即加载地图；调整 `v-if` 条件确保搜索后始终显示地图；dev server 绑定 `127.0.0.1` 以兼容高德白名单。
+- 验证记录：`npm run test` 12 passed；`npm run build` 通过；浏览器端到端地图与 marker 渲染正常。
+- 剩余事项：高德 Web 端 Key 白名单需包含 `127.0.0.1` 或留空，以消除 `INVALID_USER_DOMAIN` 控制台提示。
+
 ## 2026-05-10 frontend-core-pages coordinator review
 
 - 已审查并合并 `frontend-core-pages` 到 `main`。
