@@ -1,3 +1,5 @@
 .worktrees/
 .local/
 .codex/
+.playwright-mcp/
+map-full.png
