@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-frontend and api verification planning
+local database setup and api verification planning
 
 ## 已完成
 
@@ -16,6 +16,8 @@ frontend and api verification planning
 - 已合并 `workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images`，后端 P0 业务闭环基本完成。
 
 ## 进行中
+
+- 启动 `local-database-setup`，建立可持续使用的本地 MySQL `weekend_go` 开发库，为真实 API 联调补齐数据库基础。
 
 - 规划前端核心页面联调和接口验证：`frontend-core-pages`、`postman-api-verification`。
 
@@ -82,3 +84,9 @@ frontend and api verification planning
 - `workspace-profile-contribution` 新增属性共建、审核和 workspace profile 聚合；地点详情和搜索结果兼容新增 nullable `workspaceProfile`。
 - 合并冲突：仅 `GlobalExceptionHandler` 发生冲突，已手工保留 interaction、profile 和 `ResponseStatusException` 的异常映射。
 - 验证记录：合并后三分支后端完整测试通过，43 tests, 0 failures；`feature_list.json` JSON 校验通过；diff 空白检查通过。
+
+## 2026-05-09 local-database-setup allocation
+
+- 已启动 `local-database-setup`，用于建立可持续使用的本地 MySQL `weekend_go` 开发库。
+- 范围限制：只处理本地数据库创建、`database/schema.sql` 导入、本地未提交配置和真实 MySQL 连接验证；不新增业务功能，不提交真实密码或本地敏感配置。
+- 该 feature 是后续 `postman-api-verification` 和前端联调的前置基础。
