@@ -2,7 +2,7 @@
 
 ## 当前阶段
 
-local database setup and api verification planning
+api verification planning
 
 ## 已完成
 
@@ -17,13 +17,12 @@ local database setup and api verification planning
 
 ## 进行中
 
-- 启动 `local-database-setup`，建立可持续使用的本地 MySQL `weekend_go` 开发库，为真实 API 联调补齐数据库基础。
-
-- 规划前端核心页面联调和接口验证：`frontend-core-pages`、`postman-api-verification`。
+- 启动 `postman-api-verification`，基于真实 MySQL `weekend_go` 和已完成的后端 P0 API 整理接口验证闭环。
+- 规划前端核心页面联调：`frontend-core-pages`。
 
 ## 下一步
 
-- 评估是否先启动 `frontend-core-pages`，再补 `postman-api-verification`，或两者并行推进。
+- 审查 `postman-api-verification` 输出的接口验证资产，再决定是否启动 `frontend-core-pages`。
 - 后续联调阶段补充真实 MySQL 环境下的注册、登录、共建、打卡、评价、收藏、图片和审核端到端验证。
 
 ## 阻塞与风险
@@ -108,3 +107,9 @@ local database setup and api verification planning
 - coordinator 复跑 smoke 时未设置 `DB_USERNAME` / `DB_PASSWORD`，因此 `application-local.example.yml` 的 `change-me` fallback 导致真实 MySQL 认证失败；已将后端 README 和 feature notes 改为明确要求当前 shell 或用户级环境变量提供本地凭据。
 - 已把 `database/README.md` 中新增的 schema 导入命令改为仓库根目录可执行的通用写法：`mysql ... weekend_go < database/schema.sql`。
 - 修复后已在当前命令中显式设置 `DB_USERNAME=weekend_go` 和本地 `DB_PASSWORD` 复跑 `AuthControllerTest` local profile smoke，5 tests、0 failures；Hikari 建立 MySQL Connector/J 连接；测试用户已再次清理为 0。
+
+## 2026-05-09 postman-api-verification allocation
+
+- 已启动 `postman-api-verification`，用于整理第一版主要 REST API 的验证集合或等价接口测试说明。
+- 范围限制：只做接口验证资产、调用顺序、环境变量说明和验证记录；不新增业务功能，不提交真实数据库密码、Amap Key 或登录 token。
+- 该 feature 应基于已完成的 `local-database-setup`，覆盖账号、地点、共建、打卡、评价、收藏、图片和审核链路。

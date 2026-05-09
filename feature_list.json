@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "local database setup and api verification planning",
+  "currentPhase": "api verification planning",
   "features": [
     {
       "id": "requirements-analysis",
@@ -429,10 +429,10 @@
     {
       "id": "postman-api-verification",
       "title": "Postman 接口验证集合",
-      "status": "planned",
+      "status": "in-progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "postman-api-verification",
+      "worktree": ".worktrees/postman-api-verification",
       "scope": "整理第一版主要 REST 接口的 Postman 验证集合或等价接口测试说明，覆盖账号、地点、共建、打卡、评价、收藏、图片和审核。",
       "dependencies": [
         "auth-and-role",
@@ -440,7 +440,8 @@
         "place-discovery",
         "workspace-profile-contribution",
         "checkin-current-status",
-        "reviews-favorites-images"
+        "reviews-favorites-images",
+        "local-database-setup"
       ],
       "acceptanceCriteria": [
         "主要接口可按顺序完成演示验证。",
@@ -451,7 +452,7 @@
       "checkCommands": [
         "git status --short"
       ],
-      "notes": "可与前端联调后期并行完善。"
+      "notes": "由 coordinator 于 2026-05-09 启动。当前本地 MySQL weekend_go 已建立，DB_USERNAME/DB_PASSWORD 已配置为用户级环境变量；本 feature 负责整理并验证第一版主要 REST API 调用闭环，不新增业务功能，不提交真实凭据。"
     }
   ]
 }
