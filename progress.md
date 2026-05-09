@@ -16,12 +16,12 @@ backend p0 feature planning
 
 ## 进行中
 
-- 规划下一批 P0 后端业务 feature：`workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images`。
+- 并行开发下一批 P0 后端业务 feature：`workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images`。
 
 ## 下一步
 
-- 评估 `workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images` 的依赖和并行边界。
-- 决定是否启动下一批 worker。
+- 为 `workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images` 分别派发 worker。
+- worker 完成后由 coordinator 审查、验证并合并到 `main`。
 
 ## 阻塞与风险
 
@@ -65,3 +65,10 @@ backend p0 feature planning
 - `feature_list.json` 已新增 `completedAt` 字段，用于机器可读地记录 feature 完成日期。
 - 已完成 feature 回填完成日期；未完成 feature 暂记为 `null`。
 - `AGENTS.md` 已补充 `completedAt` 字段约定。
+
+## 2026-05-09 P0 backend feature allocation
+
+- 已决定并行启动 `workspace-profile-contribution`、`checkin-current-status`、`reviews-favorites-images`。
+- 三个 feature 均依赖已完成的 `auth-and-role`、`auth-persistence` 和 `place-discovery`，当前依赖已满足。
+- 分配边界：三项均只做后端能力，不实现前端页面；继续沿用 Spring 管理的 `JdbcTemplate + TransactionTemplate` 数据访问模式。
+- 合并风险：三项可能都需要扩展地点详情或管理审核视图，worker 应尽量控制对共享 place/auth/common 代码的改动范围。

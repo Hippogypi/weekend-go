@@ -296,10 +296,10 @@
     {
       "id": "workspace-profile-contribution",
       "title": "学习办公属性共建与审核",
-      "status": "planned",
+      "status": "in-progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "workspace-profile-contribution",
+      "worktree": ".worktrees/workspace-profile-contribution",
       "scope": "实现用户提交学习办公属性、管理员审核、审核通过后聚合 workspace_profile 并公开展示。",
       "dependencies": [
         "auth-and-role",
@@ -315,15 +315,15 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "属于第一版 P0 能力。"
+      "notes": "2026-05-09 已分配独立 worktree 并行开发。范围限制：只实现后端学习办公属性共建、审核和聚合，不实现打卡、评价、收藏、图片或前端页面。"
     },
     {
       "id": "checkin-current-status",
       "title": "打卡反馈与近期状态聚合",
-      "status": "planned",
+      "status": "in-progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "checkin-current-status",
+      "worktree": ".worktrees/checkin-current-status",
       "scope": "实现地点打卡反馈、最近 2 小时拥挤度/噪音/空座统计和当前状态查询。",
       "dependencies": [
         "auth-and-role",
@@ -339,15 +339,15 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "属于第一版 P0 能力。"
+      "notes": "2026-05-09 已分配独立 worktree 并行开发。范围限制：只实现后端打卡反馈、最近 2 小时状态聚合和状态查询，不实现共建属性、评价、收藏、图片或前端页面。"
     },
     {
       "id": "reviews-favorites-images",
       "title": "评价、收藏与图片能力",
-      "status": "planned",
+      "status": "in-progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "reviews-favorites-images",
+      "worktree": ".worktrees/reviews-favorites-images",
       "scope": "实现地点评价、收藏、取消收藏、图片上传记录和图片审核展示，覆盖第一版 P0/P1 互动能力。",
       "dependencies": [
         "auth-and-role",
@@ -363,7 +363,7 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "可在核心地点与认证能力稳定后启动。"
+      "notes": "2026-05-09 已分配独立 worktree 并行开发。范围限制：只实现后端评价、收藏、取消收藏、图片上传记录和审核展示，不实现共建属性、打卡或前端页面。"
     },
     {
       "id": "frontend-core-pages",
