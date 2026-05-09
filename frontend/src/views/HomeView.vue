@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router';
 
 import { ApiError, weekendGoApi } from '../services';
 import type { Place } from '../services';
+import MapView from '../components/MapView.vue';
 
 const keyword = ref('library');
 const city = ref('');
@@ -91,6 +92,8 @@ loadPlaces();
         {{ loading ? '查询中' : '查询地点' }}
       </button>
     </form>
+
+    <MapView v-if="hasSearched && !loading" :places="places" />
 
     <p v-if="error" class="notice error">{{ error }}</p>
     <p v-else-if="loading" class="notice">正在加载地点...</p>
