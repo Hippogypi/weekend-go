@@ -5,6 +5,7 @@ import com.weekendgo.common.api.ErrorResponse;
 import com.weekendgo.auth.DuplicateUsernameException;
 import com.weekendgo.auth.InvalidCredentialsException;
 import com.weekendgo.amap.exception.AmapServiceException;
+import com.weekendgo.interaction.InteractionStorageException;
 import com.weekendgo.place.PlaceNotFoundException;
 import com.weekendgo.place.PlaceStorageException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -104,6 +106,37 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(InteractionStorageException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleInteractionStorageException(
+            InteractionStorageException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "INTERACTION_STORAGE_ERROR",
+                "Interaction storage is unavailable",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleResponseStatusException(
+            ResponseStatusException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        ErrorResponse error = ErrorResponse.of(
+                status.name(),
+                exception.getReason() == null ? status.getReasonPhrase() : exception.getReason(),
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(status)
                 .body(ApiResponse.fail(error.code(), error.message(), error));
     }
 
