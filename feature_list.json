@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "backend p0 feature planning",
+  "currentPhase": "frontend and api verification planning",
   "features": [
     {
       "id": "requirements-analysis",
@@ -296,8 +296,8 @@
     {
       "id": "workspace-profile-contribution",
       "title": "学习办公属性共建与审核",
-      "status": "in-progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-09",
       "branch": "workspace-profile-contribution",
       "worktree": ".worktrees/workspace-profile-contribution",
       "scope": "实现用户提交学习办公属性、管理员审核、审核通过后聚合 workspace_profile 并公开展示。",
@@ -315,13 +315,13 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "2026-05-09 已分配独立 worktree 并行开发。范围限制：只实现后端学习办公属性共建、审核和聚合，不实现打卡、评价、收藏、图片或前端页面。"
+      "notes": "已合并到 main。coordinator 审查确认：登录用户可提交 PENDING 属性共建；ADMIN 可审核通过或驳回；审核通过后重建 workspace_profiles 聚合；公开接口可查询 workspace profile；地点详情和搜索结果兼容新增 nullable workspaceProfile 字段；后端完整测试通过。"
     },
     {
       "id": "checkin-current-status",
       "title": "打卡反馈与近期状态聚合",
-      "status": "in-progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-09",
       "branch": "checkin-current-status",
       "worktree": ".worktrees/checkin-current-status",
       "scope": "实现地点打卡反馈、最近 2 小时拥挤度/噪音/空座统计和当前状态查询。",
@@ -339,13 +339,13 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "2026-05-09 已分配独立 worktree 并行开发。范围限制：只实现后端打卡反馈、最近 2 小时状态聚合和状态查询，不实现共建属性、评价、收藏、图片或前端页面。"
+      "notes": "已合并到 main。coordinator 审查确认：登录用户可提交打卡反馈；未登录写操作返回 401；当前状态聚合只统计最近 2 小时内数据；无近期数据返回 NO_RECENT_FEEDBACK/暂无近期反馈；后端完整测试通过。"
     },
     {
       "id": "reviews-favorites-images",
       "title": "评价、收藏与图片能力",
-      "status": "in-progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-09",
       "branch": "reviews-favorites-images",
       "worktree": ".worktrees/reviews-favorites-images",
       "scope": "实现地点评价、收藏、取消收藏、图片上传记录和图片审核展示，覆盖第一版 P0/P1 互动能力。",
@@ -363,7 +363,7 @@
       "checkCommands": [
         "cd backend; ./mvnw test"
       ],
-      "notes": "2026-05-09 已分配独立 worktree 并行开发。范围限制：只实现后端评价、收藏、取消收藏、图片上传记录和审核展示，不实现共建属性、打卡或前端页面。"
+      "notes": "已合并到 main。coordinator 审查确认：登录用户可提交评价和图片记录且默认 PENDING；公开查询只返回 APPROVED 评价/图片；登录用户可收藏、取消收藏和查询收藏；ADMIN 可审核评价和图片；后端完整测试通过。"
     },
     {
       "id": "frontend-core-pages",
