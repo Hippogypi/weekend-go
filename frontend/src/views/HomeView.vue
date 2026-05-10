@@ -14,13 +14,12 @@ const city = ref('');
 const longitude = ref('');
 const latitude = ref('');
 const radius = ref(1000);
-const searchMode = ref<'keyword' | 'nearby'>('keyword');
+const searchMode = ref<'keyword' | 'nearby'>('nearby');
 const hasSearched = ref(false);
 
 const currentPage = ref(1);
 const pageSize = ref(10);
 const allPlaces = ref<Place[]>([]);
-const defaultMarkers = ref<Place[]>([]);
 const markerMeta = ref<Record<number, { marked: boolean; favorited: boolean }>>({});
 const hasMore = ref(false);
 
@@ -51,7 +50,7 @@ function requestLocation(): void {
       longitude.value = String(position.coords.longitude);
       locationStatus.value = 'success';
       nextTick(() => {
-        loadDefaultMarkers();
+        loadNearbyMarkers();
       });
     },
     (err) => {
@@ -79,8 +78,9 @@ async function doSearch(reset = true): Promise<void> {
     setError(new Error('请输入搜索关键词'));
     return;
   }
-  if (searchMode.value === 'nearby' && (!longitude.value.trim() || !latitude.value.trim())) {
-    setError(new Error('请允许浏览器定位或手动输入经纬度'));
+
+  if (searchMode.value === 'nearby') {
+    await loadNearbyMarkers();
     return;
   }
 
@@ -90,21 +90,12 @@ async function doSearch(reset = true): Promise<void> {
   }
 
   await loadPlaces(() =>
-    searchMode.value === 'keyword'
-      ? weekendGoApi.searchPlaces({
-          keyword: keyword.value.trim(),
-          city: city.value.trim() || undefined,
-          page: currentPage.value,
-          offset: pageSize.value
-        })
-      : weekendGoApi.nearbyPlaces({
-          longitude: longitude.value.trim(),
-          latitude: latitude.value.trim(),
-          keyword: keyword.value.trim() || undefined,
-          radius: radius.value,
-          page: currentPage.value,
-          offset: pageSize.value
-        })
+    weekendGoApi.searchPlaces({
+      keyword: keyword.value.trim(),
+      city: city.value.trim() || undefined,
+      page: currentPage.value,
+      offset: pageSize.value
+    })
   );
 
   if (places.value) {
@@ -117,13 +108,19 @@ async function doSearch(reset = true): Promise<void> {
   }
 }
 
-async function loadDefaultMarkers(): Promise<void> {
-  if (!longitude.value || !latitude.value) return;
+async function loadNearbyMarkers(): Promise<void> {
+  if (!longitude.value || !latitude.value) {
+    setError(new Error('请允许浏览器定位或手动输入经纬度'));
+    return;
+  }
+  clearError();
+  hasSearched.value = true;
+  loading.value = true;
   try {
     const markers = await weekendGoApi.mapMarkers({
       longitude: longitude.value,
       latitude: latitude.value,
-      radius: 5000
+      radius: radius.value || 5000
     });
     const meta: Record<number, { marked: boolean; favorited: boolean }> = {};
     const places: Place[] = markers.map(m => {
@@ -145,19 +142,17 @@ async function loadDefaultMarkers(): Promise<void> {
         workspaceProfile: null
       };
     });
-    defaultMarkers.value = places;
+    allPlaces.value = places;
     markerMeta.value = meta;
-    if (allPlaces.value.length === 0) {
-      allPlaces.value = places;
-      hasSearched.value = true;
-    }
-  } catch (e) {
-    console.error('Failed to load default markers:', e);
+  } catch (e: any) {
+    setError(new Error(e.message || '加载附近地点失败'));
+  } finally {
+    loading.value = false;
   }
 }
 
 async function loadMore(): Promise<void> {
-  if (loading.value || !hasMore.value) return;
+  if (loading.value || !hasMore.value || searchMode.value !== 'keyword') return;
   currentPage.value += 1;
   await doSearch(false);
 }
@@ -193,12 +188,8 @@ async function loadMore(): Promise<void> {
       </label>
       <template v-else>
         <label class="field">
-          <span>经度</span>
-          <input v-model="longitude" />
-        </label>
-        <label class="field">
-          <span>纬度</span>
-          <input v-model="latitude" />
+          <span>半径(米)</span>
+          <input v-model.number="radius" type="number" min="100" max="50000" step="100" />
         </label>
       </template>
 
@@ -219,8 +210,8 @@ async function loadMore(): Promise<void> {
     </div>
 
     <MapView
-      v-if="(hasSearched && !loading && allPlaces.length > 0) || defaultMarkers.length > 0"
-      :places="allPlaces.length > 0 ? allPlaces : defaultMarkers"
+      v-if="hasSearched && !loading && allPlaces.length > 0"
+      :places="allPlaces"
       :marker-meta="markerMeta"
       @open-detail="id => router.push(`/places/${id}`)"
     />
