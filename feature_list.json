@@ -587,8 +587,8 @@
     {
       "id": "review-image-binding-backend",
       "title": "后端评价绑定图片+属性改造",
-      "status": "pending",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-10",
       "branch": null,
       "worktree": null,
       "scope": "改造后端使评价成为图片和属性的载体：place_images表新增review_id字段，ReviewRequest支持profileAttributes和images，ReviewResponse内嵌images，提交评价时同时写入reviews+profile_submissions+place_images三张表。",

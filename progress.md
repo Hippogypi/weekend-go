@@ -16,6 +16,15 @@ frontend verification
 - 拆分为 6 个 feature：frontend-navigation-restructure（P0）、review-image-binding-backend（P0）、review-image-binding-frontend（P1）、user-profile-expansion（P1）、admin-workbench（P1）、home-page-enhancement（P2）。
 - 已创建 worktree `.worktrees/frontend-navigation-restructure`，启动 Feature 1 实施。
 
+## 2026-05-10 review-image-binding-backend 合并
+
+- 已合并 `review-image-binding-backend` 到 `main`。
+- 审查确认：`place_images` 表新增 `review_id` 字段及外键约束；`ReviewRequest` 新增 `profileAttributes` 和 `images` 字段；`ReviewResponse` 内嵌 `images` 列表。
+- `POST /places/{placeId}/reviews` 同时写入 `reviews` + `profile_submissions`（如有属性）+ `place_images`（如有图片）。
+- `GET /places/{placeId}/reviews` 返回评价及附带图片（LEFT JOIN 聚合）。
+- 现有独立图片上传接口保留兼容。
+- 验证记录：后端测试 45 passed / 0 failures；JSON 校验通过；diff 空白检查通过。
+
 ## 2026-05-10 frontend-navigation-restructure 合并
 
 - 已合并 `frontend-navigation-restructure` 到 `main`。
