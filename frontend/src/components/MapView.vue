@@ -6,6 +6,10 @@ const props = defineProps<{
   places: Place[];
 }>();
 
+const emit = defineEmits<{
+  (e: 'open-detail', placeId: number | string): void;
+}>();
+
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: AMap.Map | null = null;
 let markers: AMap.Marker[] = [];
@@ -106,7 +110,21 @@ function addMarkers(places: Place[]): void {
 
     marker.on('click', () => {
       if (infoWindow) {
-        infoWindow.setContent(`<div style="padding:4px 8px;font-weight:600;color:#101828;">${place.name}</div>`);
+        const content = document.createElement('div');
+        content.style.padding = '4px 8px';
+        content.innerHTML = `<strong style="display:block;margin-bottom:4px;color:#101828;">${place.name}</strong>`;
+        const link = document.createElement('a');
+        link.href = 'javascript:void(0)';
+        link.textContent = '查看详情';
+        link.style.color = '#0f766e';
+        link.style.fontSize = '13px';
+        link.style.textDecoration = 'underline';
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          emit('open-detail', place.id);
+        });
+        content.appendChild(link);
+        (infoWindow as any).setContent(content);
         infoWindow.open(map!, marker.getPosition()!);
       }
     });
