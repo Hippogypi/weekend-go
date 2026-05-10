@@ -16,6 +16,15 @@ frontend verification
 - 拆分为 6 个 feature：frontend-navigation-restructure（P0）、review-image-binding-backend（P0）、review-image-binding-frontend（P1）、user-profile-expansion（P1）、admin-workbench（P1）、home-page-enhancement（P2）。
 - 已创建 worktree `.worktrees/frontend-navigation-restructure`，启动 Feature 1 实施。
 
+## 2026-05-10 frontend-navigation-restructure 合并
+
+- 已合并 `frontend-navigation-restructure` 到 `main`。
+- 审查确认：全局导航精简为发现/我的/审核（条件渲染），移除硬编码详情导航。
+- 地点详情页改为标签页布局：概况（基础信息+属性+状态+图片）/ 评价（公开评价列表）/ 去贡献（两个入口按钮）。
+- 新增 `ContributeView.vue` 贡献选择页、`ContributeCheckinView.vue` 独立打卡页、`ContributeReviewView.vue` 独立写评价页。
+- 打卡页使用正确的中文枚举值（空闲/适中/较拥挤/爆满，安静/较安静/一般/较吵/很吵）。
+- 验证记录：`npm run test` 45 passed / 8 test files；`npm run build` 通过；`git diff --check` 通过。
+
 ## 2026-05-10 auth-frontend-enhancement 合并
 
 - 已合并 `auth-frontend-enhancement` 到 `main`。

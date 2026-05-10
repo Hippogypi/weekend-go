@@ -555,8 +555,8 @@
     {
       "id": "frontend-navigation-restructure",
       "title": "前端导航与页面结构重组",
-      "status": "in_progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-10",
       "branch": "frontend-navigation-restructure",
       "worktree": ".worktrees/frontend-navigation-restructure",
       "scope": "重构前端导航和页面结构：移除硬编码详情导航、审核条件渲染、地点详情页改为概况/评价/去贡献标签页、提取打卡和写评价为独立页面、新增贡献选择入口。不修改后端接口契约。",
