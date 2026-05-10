@@ -616,8 +616,8 @@
     {
       "id": "review-image-binding-frontend",
       "title": "前端图文评价与图片展示",
-      "status": "pending",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-10",
       "branch": null,
       "worktree": null,
       "scope": "前端实现图文评价：写评价页支持图片上传，详情页评价标签展示评价附带图片，个人中心我的评价展示图片。依赖后端review-image-binding-backend完成后启动。",

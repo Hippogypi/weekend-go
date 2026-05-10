@@ -25,6 +25,14 @@ frontend verification
 - 现有独立图片上传接口保留兼容。
 - 验证记录：后端测试 45 passed / 0 failures；JSON 校验通过；diff 空白检查通过。
 
+## 2026-05-10 review-image-binding-frontend 合并
+
+- 已合并 `review-image-binding-frontend` 到 `main`。
+- 审查确认：`weekendGoApi.ts` 新增 `ProfileAttributeRequest`、`ReviewImageAttachment` 接口；`ReviewRequest`/`Review` 支持 `profileAttributes` 和 `images` 字段。
+- `ContributeReviewView.vue` 新增客观属性折叠区域（最低消费/适合久坐/适合场景多选）和图片添加区域（URL+描述，可添加多张）。
+- `PlaceDetailView.vue` 评价标签展示每条评价的附带图片缩略图。
+- 验证记录：前端测试 45 passed / 8 test files；构建通过；diff 空白检查通过。
+
 ## 2026-05-10 frontend-navigation-restructure 合并
 
 - 已合并 `frontend-navigation-restructure` 到 `main`。
