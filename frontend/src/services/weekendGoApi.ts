@@ -117,6 +117,17 @@ export interface CurrentStatus {
   seatAvailabilityRatio?: number | null;
 }
 
+export interface ProfileAttributeRequest {
+  minConsumption?: number | null;
+  allowLongStay?: string | null;
+  suitableScenes?: string[];
+}
+
+export interface ReviewImageAttachment {
+  imageUrl: string;
+  description?: string;
+}
+
 export interface ReviewRequest {
   quietScore: number;
   wifiScore: number;
@@ -124,6 +135,8 @@ export interface ReviewRequest {
   comfortScore: number;
   costScore: number;
   content: string;
+  profileAttributes?: ProfileAttributeRequest | null;
+  images?: ReviewImageAttachment[];
 }
 
 export interface Review extends ReviewRequest {
@@ -132,6 +145,7 @@ export interface Review extends ReviewRequest {
   userId: number;
   auditStatus?: string | null;
   createdAt?: string;
+  images?: PlaceImage[];
 }
 
 export interface ImageRequest {

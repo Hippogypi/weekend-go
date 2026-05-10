@@ -18,12 +18,51 @@ const reviewForm = reactive({
   content: ''
 });
 
+const showAttributes = ref(false);
+const attrForm = reactive({
+  minConsumption: undefined as number | undefined,
+  allowLongStay: null as string | null,
+  suitableScenes: [] as string[]
+});
+
+const sceneOptions = ['自习', '阅读', '远程办公', '临时办公', '小组讨论', '视频会议'];
+
+const imageList = ref<Array<{ imageUrl: string; description: string }>>([]);
+const showAddImage = ref(false);
+const newImageUrl = ref('');
+const newImageDesc = ref('');
+
 const loading = ref(false);
 const message = ref('');
 const { errorMessage, setError, clearError } = useApiError();
 
 function goBack(): void {
   router.push(`/places/${placeId.value}`);
+}
+
+function toggleScene(scene: string): void {
+  const idx = attrForm.suitableScenes.indexOf(scene);
+  if (idx >= 0) {
+    attrForm.suitableScenes.splice(idx, 1);
+  } else {
+    attrForm.suitableScenes.push(scene);
+  }
+}
+
+function addImage(): void {
+  const url = newImageUrl.value.trim();
+  if (!url) return;
+  imageList.value.push({
+    imageUrl: url,
+    description: newImageDesc.value.trim()
+  });
+  newImageUrl.value = '';
+  newImageDesc.value = '';
+  showAddImage.value = false;
+}
+
+function removeImage(index: number): void {
+  imageList.value.splice(index, 1);
 }
 
 async function submitReview(): Promise<void> {
@@ -37,16 +76,33 @@ async function submitReview(): Promise<void> {
   message.value = '';
 
   try {
+    const hasAttributes = showAttributes.value && (
+      attrForm.minConsumption !== undefined ||
+      attrForm.allowLongStay !== null ||
+      attrForm.suitableScenes.length > 0
+    );
+
     const review = await weekendGoApi.submitReview(placeId.value, {
       quietScore: Number(reviewForm.quietScore),
       wifiScore: Number(reviewForm.wifiScore),
       socketScore: Number(reviewForm.socketScore),
       comfortScore: Number(reviewForm.comfortScore),
       costScore: Number(reviewForm.costScore),
-      content: reviewForm.content
+      content: reviewForm.content,
+      profileAttributes: hasAttributes ? {
+        minConsumption: attrForm.minConsumption ?? null,
+        allowLongStay: attrForm.allowLongStay,
+        suitableScenes: attrForm.suitableScenes.length > 0 ? attrForm.suitableScenes : undefined
+      } : null,
+      images: imageList.value.length > 0 ? imageList.value : undefined
     });
     message.value = `评价已提交，审核状态：${review.auditStatus}`;
     reviewForm.content = '';
+    attrForm.minConsumption = undefined;
+    attrForm.allowLongStay = null;
+    attrForm.suitableScenes = [];
+    showAttributes.value = false;
+    imageList.value = [];
   } catch (err) {
     setError(err);
   } finally {
@@ -95,9 +151,200 @@ async function submitReview(): Promise<void> {
         <span>评价内容</span>
         <textarea v-model="reviewForm.content" required rows="4" placeholder="例如：周末下午人很多，但插座充足，Wi-Fi稳定，适合带电脑工作..."></textarea>
       </label>
+
+      <div class="attributes-section">
+        <button
+          type="button"
+          class="text-button toggle-button"
+          @click="showAttributes = !showAttributes"
+        >
+          {{ showAttributes ? '折叠' : '展开' }} 补充客观属性
+        </button>
+        <div v-if="showAttributes" class="panel attributes-panel">
+          <label class="field stacked">
+            <span>最低消费（元）</span>
+            <input v-model.number="attrForm.minConsumption" type="number" min="0" placeholder="例如 30" />
+          </label>
+          <div class="field">
+            <span>适合久坐</span>
+            <div class="radio-group">
+              <label class="check-field">
+                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="'true'" />
+                是
+              </label>
+              <label class="check-field">
+                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="'false'" />
+                否
+              </label>
+              <label class="check-field">
+                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="null" />
+                不确定
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <span>适合场景</span>
+            <div class="scene-tags">
+              <button
+                v-for="scene in sceneOptions"
+                :key="scene"
+                type="button"
+                class="tag-button"
+                :class="{ active: attrForm.suitableScenes.includes(scene) }"
+                @click="toggleScene(scene)"
+              >
+                {{ scene }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="images-section">
+        <div class="section-heading">
+          <h3>已添加图片</h3>
+          <span v-if="imageList.length === 0" class="muted">暂无</span>
+        </div>
+        <div v-if="imageList.length > 0" class="image-list">
+          <div v-for="(img, idx) in imageList" :key="idx" class="image-item">
+            <img :src="img.imageUrl" :alt="img.description || '评价图片'" />
+            <input
+              v-model="img.description"
+              type="text"
+              placeholder="图片描述"
+            />
+            <button type="button" class="ghost-button remove-button" @click="removeImage(idx)">删除</button>
+          </div>
+        </div>
+        <button
+          v-if="!showAddImage"
+          type="button"
+          class="text-button add-image-button"
+          @click="showAddImage = true"
+        >
+          + 添加图片
+        </button>
+        <div v-else class="panel add-image-panel">
+          <label class="field stacked">
+            <span>图片 URL</span>
+            <input v-model="newImageUrl" type="url" placeholder="https://example.com/image.jpg" />
+          </label>
+          <label class="field stacked">
+            <span>描述</span>
+            <input v-model="newImageDesc" type="text" placeholder="例如：座位区" />
+          </label>
+          <div class="add-image-actions">
+            <button type="button" class="ghost-button" @click="showAddImage = false">取消</button>
+            <button type="button" class="primary-button" :disabled="!newImageUrl.trim()" @click="addImage">确认添加</button>
+          </div>
+        </div>
+      </div>
+
       <button class="primary-button" type="submit" :disabled="loading">
         {{ loading ? '提交中...' : '提交评价' }}
       </button>
     </form>
   </section>
 </template>
+
+<style scoped>
+.toggle-button {
+  justify-self: start;
+}
+
+.attributes-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.scene-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag-button {
+  border: 1px solid #cfd6e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475467;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.tag-button.active {
+  border-color: #0f766e;
+  background: #e8f3f1;
+  color: #0f5f59;
+}
+
+.images-section .section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.images-section .section-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #101828;
+}
+
+.image-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.image-item {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.image-item img {
+  width: 80px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #eef2f6;
+}
+
+.image-item input {
+  min-width: 0;
+}
+
+.remove-button {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.add-image-button {
+  justify-self: start;
+}
+
+.add-image-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.add-image-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+</style>

@@ -174,6 +174,14 @@ doLoadDetail();
             <li v-for="review in reviews" :key="review.id">
               <strong>{{ review.content }}</strong>
               <span>综合 {{ review.comfortScore }} / 安静 {{ review.quietScore }}</span>
+              <div v-if="review.images && review.images.length > 0" class="review-images">
+                <img
+                  v-for="img in review.images"
+                  :key="img.id"
+                  :src="img.imageUrl"
+                  :alt="img.description || ''"
+                />
+              </div>
             </li>
           </ul>
         </section>
@@ -199,3 +207,20 @@ doLoadDetail();
     </template>
   </section>
 </template>
+
+<style scoped>
+.review-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.review-images img {
+  width: 96px;
+  height: 72px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #eef2f6;
+}
+</style>
