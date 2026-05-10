@@ -4,6 +4,18 @@
 
 frontend verification
 
+## 2026-05-10 auth-frontend-enhancement 合并
+
+- 已合并 `auth-frontend-enhancement` 到 `main`。
+- 审查确认：新增独立 `/login` 路由和 `LoginView.vue`，支持注册后自动登录；应用启动时自动验证 token（`restoreSession`）；全局 `beforeEach` 路由守卫处理未登录拦截、管理员拦截、已登录防回退；登录成功后按 `redirect` 参数回到原页面。
+- 新增 `composables/` 目录：`useAsyncAction`、`useApiError`、`useAuthRedirect`、`useToast` 及对应的 `.test.ts`。
+- 新增 `ToastContainer.vue` 全局通知组件。
+- `ProfileView.vue` 移除内嵌登录表单，改为纯个人信息 + 收藏列表。
+- `HomeView.vue`、`PlaceDetailView.vue`、`AdminReviewView.vue` 使用 composables 重构重复错误处理逻辑。
+- 新增前端开发规则文档 `docs/frontend-rules.md`，覆盖路由、认证、组件架构、API 错误处理、状态管理、UI/UX、地图、安全、测试 9 大规则章节。
+- 验证记录：`npm run test` 45 passed / 8 test files；`npm run build` 通过；`git diff --check` 通过；未提交真实密钥或敏感配置。
+- 新增依赖 `jsdom`（用于路由守卫测试的 DOM 环境）。
+
 ## 已完成
 
 - 已建立 `feature_list.json + progress.md + git worktree` 协作机制。
@@ -177,6 +189,8 @@ frontend verification
 ## 2026-05-10 local-dev-seed-data
 
 - 已新增 `database/dev_seed.sql`，用于给本地真实 `weekend_go` 注入可重复执行的非生产演示数据。
+- 已建立 `docs/frontend-rules.md` 前端开发规则体系，覆盖 9 大规则章节。
+- 已完成前端认证体验增强：独立登录页、自动登录、路由守卫、共享 composables。
 - 已直接导入本机真实 MySQL `weekend_go`，未把真实数据库凭据写入仓库。
 - 演示账号：`api-user-demo` / `api-admin-demo`，演示密码均为 `secret123`。
 - 验证结果：演示账号 2 个、演示地点 3 个、`workspace_profiles` 3 条、最近 2 小时打卡 3 条、审核通过评价 2 条、审核通过图片 2 条、演示收藏 2 条。
