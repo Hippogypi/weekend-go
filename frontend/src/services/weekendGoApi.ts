@@ -177,6 +177,32 @@ export interface AuditRequest {
   reason?: string;
 }
 
+export interface PendingAuditItem {
+  id: number;
+  placeId: number;
+  placeName: string;
+  userId: number;
+  username: string;
+  content: string;
+  createdAt: string;
+  type: string;
+}
+
+export interface PageResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface AuditStats {
+  pendingProfiles: number;
+  pendingReviews: number;
+  pendingImages: number;
+  todayApproved: number;
+  todayRejected: number;
+}
+
 export class WeekendGoApi {
   private readonly client: ApiClient;
 
@@ -292,6 +318,18 @@ export class WeekendGoApi {
 
   auditImage(imageId: number | string, body: AuditRequest): Promise<PlaceImage> {
     return this.client.patch(`/admin/images/${imageId}/audit`, body);
+  }
+
+  pendingList(type: string, page?: number, size?: number): Promise<PageResult<PendingAuditItem>> {
+    const query = new URLSearchParams();
+    query.set('type', type);
+    query.set('page', String(page ?? 1));
+    query.set('size', String(size ?? 20));
+    return this.client.get(`/admin/audits/pending-list?${query.toString()}`);
+  }
+
+  auditStats(): Promise<AuditStats> {
+    return this.client.get('/admin/audits/stats');
   }
 }
 

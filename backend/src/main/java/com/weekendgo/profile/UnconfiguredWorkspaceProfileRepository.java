@@ -1,5 +1,7 @@
 package com.weekendgo.profile;
 
+import com.weekendgo.interaction.PendingAuditItem;
+import java.util.List;
 import java.util.Optional;
 
 public class UnconfiguredWorkspaceProfileRepository implements WorkspaceProfileRepository {
@@ -22,5 +24,15 @@ public class UnconfiguredWorkspaceProfileRepository implements WorkspaceProfileR
     @Override
     public Optional<WorkspaceProfile> findProfileByPlaceId(long placeId) {
         return Optional.empty();
+    }
+
+    @Override
+    public List<PendingAuditItem> findPendingProfileSubmissions(int page, int size) {
+        throw new ProfileStorageException("spring.datasource.url is required for workspace profile persistence");
+    }
+
+    @Override
+    public long countPendingProfileSubmissions() {
+        throw new ProfileStorageException("spring.datasource.url is required for workspace profile persistence");
     }
 }

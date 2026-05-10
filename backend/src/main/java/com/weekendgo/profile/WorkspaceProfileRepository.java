@@ -1,5 +1,7 @@
 package com.weekendgo.profile;
 
+import com.weekendgo.interaction.PendingAuditItem;
+import java.util.List;
 import java.util.Optional;
 
 public interface WorkspaceProfileRepository {
@@ -11,4 +13,8 @@ public interface WorkspaceProfileRepository {
     Optional<ProfileSubmission> findSubmissionById(long submissionId);
 
     Optional<WorkspaceProfile> findProfileByPlaceId(long placeId);
+
+    List<PendingAuditItem> findPendingProfileSubmissions(int page, int size);
+
+    long countPendingProfileSubmissions();
 }

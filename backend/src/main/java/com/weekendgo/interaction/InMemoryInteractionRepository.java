@@ -164,6 +164,36 @@ public class InMemoryInteractionRepository implements InteractionRepository {
     }
 
     @Override
+    public List<PendingAuditItem> findPendingReviews(int page, int size) {
+        return List.of();
+    }
+
+    @Override
+    public List<PendingAuditItem> findPendingImages(int page, int size) {
+        return List.of();
+    }
+
+    @Override
+    public long countPendingReviews() {
+        return 0;
+    }
+
+    @Override
+    public long countPendingImages() {
+        return 0;
+    }
+
+    @Override
+    public long countTodayApproved() {
+        return 0;
+    }
+
+    @Override
+    public long countTodayRejected() {
+        return 0;
+    }
+
+    @Override
     public List<FavoritePlaceResponse> findFavorites(long userId) {
         return favorites.entrySet().stream()
                 .filter(entry -> entry.getKey().userId() == userId)

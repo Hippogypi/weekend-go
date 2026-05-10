@@ -38,10 +38,10 @@ export const appRoutes = [
     meta: { title: '账号与收藏', requiresAuth: true }
   },
   {
-    path: '/admin/reviews',
-    name: 'admin-reviews',
-    component: () => import('../views/AdminReviewView.vue'),
-    meta: { title: '管理员审核', requiresAuth: true, requiresAdmin: true }
+    path: '/admin',
+    name: 'admin',
+    component: () => import('../views/AdminDashboardView.vue'),
+    meta: { title: '审核工作台', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/login',
