@@ -14,6 +14,10 @@ public interface InteractionRepository {
 
     ImageResponse createImage(long placeId, long userId, ImageRequest request);
 
+    ImageResponse saveImageWithReviewId(long placeId, long userId, long reviewId, String imageUrl, String description);
+
+    List<ImageResponse> findImagesByReviewId(long reviewId);
+
     List<ImageResponse> findApprovedImages(long placeId);
 
     Optional<ImageResponse> auditImage(long imageId, long adminId, AuditStatus auditStatus, String reason);

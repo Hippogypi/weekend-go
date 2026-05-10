@@ -3,6 +3,7 @@ package com.weekendgo.interaction;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ReviewResponse(
@@ -16,12 +17,16 @@ public record ReviewResponse(
         BigDecimal costScore,
         String content,
         AuditStatus auditStatus,
-        Instant createdAt
+        Instant createdAt,
+        List<ImageResponse> images
 ) {
     public ReviewResponse publicView() {
+        List<ImageResponse> publicImages = images == null ? null : images.stream()
+                .map(ImageResponse::publicView)
+                .toList();
         return new ReviewResponse(
                 id, placeId, userId, quietScore, wifiScore, socketScore,
-                comfortScore, costScore, content, null, createdAt
+                comfortScore, costScore, content, null, createdAt, publicImages
         );
     }
 }

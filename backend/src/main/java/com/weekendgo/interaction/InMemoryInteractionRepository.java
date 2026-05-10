@@ -2,9 +2,12 @@ package com.weekendgo.interaction;
 
 import com.weekendgo.place.Place;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,6 +18,7 @@ public class InMemoryInteractionRepository implements InteractionRepository {
     private final AtomicLong imageIds = new AtomicLong(1);
     private final Map<Long, ReviewResponse> reviews = new ConcurrentHashMap<>();
     private final Map<Long, ImageResponse> images = new ConcurrentHashMap<>();
+    private final Map<Long, Long> imageReviewIds = new ConcurrentHashMap<>();
     private final Map<FavoriteKey, FavoritePlaceResponse> favorites = new ConcurrentHashMap<>();
 
     @Override
@@ -30,7 +34,8 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 request.costScore(),
                 request.content(),
                 AuditStatus.PENDING,
-                Instant.now()
+                Instant.now(),
+                null
         );
         reviews.put(review.id(), review);
         return review;
@@ -42,6 +47,20 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 .filter(review -> review.placeId() == placeId)
                 .filter(review -> review.auditStatus() == AuditStatus.APPROVED)
                 .sorted(Comparator.comparing(ReviewResponse::createdAt).reversed())
+                .map(review -> {
+                    List<ImageResponse> reviewImages = imageReviewIds.entrySet().stream()
+                            .filter(entry -> entry.getValue() == review.id())
+                            .map(entry -> images.get(entry.getKey()))
+                            .filter(image -> image != null && image.auditStatus() == AuditStatus.APPROVED)
+                            .sorted(Comparator.comparing(ImageResponse::createdAt).reversed())
+                            .toList();
+                    return new ReviewResponse(
+                            review.id(), review.placeId(), review.userId(),
+                            review.quietScore(), review.wifiScore(), review.socketScore(),
+                            review.comfortScore(), review.costScore(), review.content(),
+                            review.auditStatus(), review.createdAt(), reviewImages
+                    );
+                })
                 .toList();
     }
 
@@ -58,7 +77,8 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 review.costScore(),
                 review.content(),
                 auditStatus,
-                review.createdAt()
+                review.createdAt(),
+                review.images()
         )));
     }
 
@@ -75,6 +95,32 @@ public class InMemoryInteractionRepository implements InteractionRepository {
         );
         images.put(image.id(), image);
         return image;
+    }
+
+    @Override
+    public ImageResponse saveImageWithReviewId(long placeId, long userId, long reviewId, String imageUrl, String description) {
+        ImageResponse image = new ImageResponse(
+                imageIds.getAndIncrement(),
+                placeId,
+                userId,
+                imageUrl,
+                description,
+                AuditStatus.PENDING,
+                Instant.now()
+        );
+        images.put(image.id(), image);
+        imageReviewIds.put(image.id(), reviewId);
+        return image;
+    }
+
+    @Override
+    public List<ImageResponse> findImagesByReviewId(long reviewId) {
+        return imageReviewIds.entrySet().stream()
+                .filter(entry -> entry.getValue() == reviewId)
+                .map(entry -> images.get(entry.getKey()))
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(ImageResponse::createdAt).reversed())
+                .toList();
     }
 
     @Override

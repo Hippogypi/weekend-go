@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS place_images (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   place_id BIGINT UNSIGNED NOT NULL,
   user_id BIGINT UNSIGNED NOT NULL,
+  review_id BIGINT UNSIGNED NULL,
   image_url VARCHAR(512) NOT NULL,
   description VARCHAR(500) NULL,
   audit_status ENUM('PENDING', 'APPROVED', 'REJECTED', 'DELETED') NOT NULL DEFAULT 'PENDING',
@@ -192,6 +193,7 @@ CREATE TABLE IF NOT EXISTS place_images (
   KEY idx_place_images_place_status_created (place_id, audit_status, created_at),
   KEY idx_place_images_user_created (user_id, created_at),
   KEY idx_place_images_audit_status (audit_status),
+  KEY idx_place_images_review_id (review_id),
   CONSTRAINT fk_place_images_place
     FOREIGN KEY (place_id) REFERENCES places (id)
     ON DELETE CASCADE ON UPDATE CASCADE,
@@ -200,7 +202,10 @@ CREATE TABLE IF NOT EXISTS place_images (
     ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT fk_place_images_auditor
     FOREIGN KEY (audited_by) REFERENCES users (id)
-    ON DELETE SET NULL ON UPDATE CASCADE
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_place_images_review
+    FOREIGN KEY (review_id) REFERENCES reviews (id)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户上传的地点图片记录';
 
 CREATE TABLE IF NOT EXISTS tags (
@@ -323,5 +328,11 @@ ON DUPLICATE KEY UPDATE
   remark = VALUES(remark),
   sort_order = VALUES(sort_order),
   updated_at = CURRENT_TIMESTAMP;
+
+ALTER TABLE place_images
+  ADD COLUMN IF NOT EXISTS review_id BIGINT UNSIGNED NULL AFTER user_id,
+  ADD CONSTRAINT IF NOT EXISTS fk_place_images_review
+    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    ON DELETE CASCADE ON UPDATE CASCADE;
 
 SET FOREIGN_KEY_CHECKS = 1;

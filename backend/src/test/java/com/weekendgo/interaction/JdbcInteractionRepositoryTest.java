@@ -6,6 +6,7 @@ import com.weekendgo.place.Place;
 import com.weekendgo.place.PlaceSource;
 import com.weekendgo.place.WorkspaceStatus;
 import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -74,7 +75,9 @@ class JdbcInteractionRepositoryTest {
                 new BigDecimal("5.0"),
                 new BigDecimal("4.0"),
                 new BigDecimal("3.5"),
-                "quiet tables"
+                "quiet tables",
+                null,
+                null
         ));
         ImageResponse image = repository.createImage(42, 1, new ImageRequest(
                 "https://example.com/library.jpg",
@@ -107,6 +110,58 @@ class JdbcInteractionRepositoryTest {
                 .containsExactly("City Library");
         repository.unfavorite(1, 42);
         assertThat(repository.isFavorited(1, 42)).isFalse();
+    }
+
+    @Test
+    void saveImageWithReviewIdAndFindImagesByReviewId() {
+        ReviewResponse review = repository.createReview(42, 1, new ReviewRequest(
+                new BigDecimal("4.5"),
+                new BigDecimal("4.0"),
+                new BigDecimal("5.0"),
+                new BigDecimal("4.0"),
+                new BigDecimal("3.5"),
+                "quiet tables",
+                null,
+                null
+        ));
+
+        ImageResponse image = repository.saveImageWithReviewId(
+                42, 1, review.id(),
+                "https://example.com/review.jpg", "review photo"
+        );
+
+        assertThat(image.placeId()).isEqualTo(42);
+        assertThat(image.auditStatus()).isEqualTo(AuditStatus.PENDING);
+
+        List<ImageResponse> found = repository.findImagesByReviewId(review.id());
+        assertThat(found).hasSize(1);
+        assertThat(found.get(0).imageUrl()).isEqualTo("https://example.com/review.jpg");
+
+        repository.auditImage(image.id(), 2, AuditStatus.APPROVED, "ok");
+        assertThat(repository.findImagesByReviewId(review.id())).hasSize(1);
+    }
+
+    @Test
+    void findApprovedReviewsIncludesImages() {
+        ReviewResponse review = repository.createReview(42, 1, new ReviewRequest(
+                new BigDecimal("4.5"),
+                new BigDecimal("4.0"),
+                new BigDecimal("5.0"),
+                new BigDecimal("4.0"),
+                new BigDecimal("3.5"),
+                "quiet tables",
+                null,
+                null
+        ));
+        ImageResponse imageA = repository.saveImageWithReviewId(42, 1, review.id(), "https://example.com/a.jpg", "a");
+        ImageResponse imageB = repository.saveImageWithReviewId(42, 1, review.id(), "https://example.com/b.jpg", "b");
+
+        repository.auditReview(review.id(), 2, AuditStatus.APPROVED, "ok");
+        repository.auditImage(imageA.id(), 2, AuditStatus.APPROVED, "ok");
+        repository.auditImage(imageB.id(), 2, AuditStatus.APPROVED, "ok");
+        List<ReviewResponse> approved = repository.findApprovedReviews(42);
+        assertThat(approved).hasSize(1);
+        assertThat(approved.get(0).images()).hasSize(2);
     }
 
     private Integer auditLogCount() {
@@ -160,6 +215,7 @@ class JdbcInteractionRepositoryTest {
                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
                   place_id BIGINT NOT NULL,
                   user_id BIGINT NOT NULL,
+                  review_id BIGINT,
                   image_url VARCHAR(512) NOT NULL,
                   description VARCHAR(500),
                   audit_status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
