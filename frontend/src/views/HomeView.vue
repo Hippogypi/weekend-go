@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 
 import { weekendGoApi } from '../services';
@@ -20,6 +20,8 @@ const hasSearched = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const allPlaces = ref<Place[]>([]);
+const defaultMarkers = ref<Place[]>([]);
+const markerMeta = ref<Record<number, { marked: boolean; favorited: boolean }>>({});
 const hasMore = ref(false);
 
 const locationStatus = ref<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -48,6 +50,9 @@ function requestLocation(): void {
       latitude.value = String(position.coords.latitude);
       longitude.value = String(position.coords.longitude);
       locationStatus.value = 'success';
+      nextTick(() => {
+        loadDefaultMarkers();
+      });
     },
     (err) => {
       locationStatus.value = 'error';
@@ -60,6 +65,10 @@ watch(searchMode, (mode) => {
   if (mode === 'nearby') {
     requestLocation();
   }
+});
+
+onMounted(() => {
+  requestLocation();
 });
 
 async function doSearch(reset = true): Promise<void> {
@@ -105,6 +114,45 @@ async function doSearch(reset = true): Promise<void> {
       allPlaces.value = [...allPlaces.value, ...places.value];
     }
     hasMore.value = places.value.length === pageSize.value;
+  }
+}
+
+async function loadDefaultMarkers(): Promise<void> {
+  if (!longitude.value || !latitude.value) return;
+  try {
+    const markers = await weekendGoApi.mapMarkers({
+      longitude: longitude.value,
+      latitude: latitude.value,
+      radius: 5000
+    });
+    const meta: Record<number, { marked: boolean; favorited: boolean }> = {};
+    const places: Place[] = markers.map(m => {
+      meta[m.id] = { marked: m.marked, favorited: m.favorited };
+      return {
+        id: m.id,
+        name: m.name,
+        address: m.address ?? null,
+        longitude: m.longitude,
+        latitude: m.latitude,
+        amapPoiId: null,
+        amapType: null,
+        amapTypeCode: null,
+        province: null,
+        city: null,
+        district: null,
+        source: null,
+        workspaceStatus: null,
+        workspaceProfile: null
+      };
+    });
+    defaultMarkers.value = places;
+    markerMeta.value = meta;
+    if (allPlaces.value.length === 0) {
+      allPlaces.value = places;
+      hasSearched.value = true;
+    }
+  } catch (e) {
+    console.error('Failed to load default markers:', e);
   }
 }
 
@@ -171,8 +219,9 @@ async function loadMore(): Promise<void> {
     </div>
 
     <MapView
-      v-if="hasSearched && !loading && allPlaces.length > 0"
-      :places="allPlaces"
+      v-if="(hasSearched && !loading && allPlaces.length > 0) || defaultMarkers.length > 0"
+      :places="allPlaces.length > 0 ? allPlaces : defaultMarkers"
+      :marker-meta="markerMeta"
       @open-detail="id => router.push(`/places/${id}`)"
     />
 

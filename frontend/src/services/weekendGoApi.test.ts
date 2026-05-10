@@ -23,6 +23,24 @@ describe('WeekendGoApi', () => {
     expect(calls[1].input).toBe('https://api.example.test/api/workspaces/nearby?longitude=121.4737&latitude=31.2304&keyword=library&radius=1000&page=1&offset=10');
   });
 
+  it('builds map markers URL with default radius', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const api = createWeekendGoApi({
+      baseUrl: 'https://api.example.test/api',
+      fetcher: async (input, init) => {
+        calls.push({ input, init });
+        return new Response(JSON.stringify({ success: true, code: 'OK', message: 'success', data: [{ id: 1, name: 'A', longitude: 116.4, latitude: 39.9, marked: true, favorited: false }] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    });
+
+    const result = await api.mapMarkers({ longitude: '116.4', latitude: '39.9' });
+    expect(calls[0].input).toBe('https://api.example.test/api/map/markers?longitude=116.4&latitude=39.9&radius=5000');
+    expect(result).toEqual([{ id: 1, name: 'A', longitude: 116.4, latitude: 39.9, marked: true, favorited: false }]);
+  });
+
   it('sends auth, contribution, checkin, review, image, favorite and audit requests to documented endpoints', async () => {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
     const api = createWeekendGoApi({

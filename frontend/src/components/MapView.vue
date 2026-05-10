@@ -4,7 +4,8 @@ import type { Place } from '../services';
 
 const props = defineProps<{
   places: Place[];
-}>();
+  markerMeta?: Record<number, { marked: boolean; favorited: boolean }>;
+}>()
 
 const emit = defineEmits<{
   (e: 'open-detail', placeId: number | string): void;
@@ -103,9 +104,13 @@ function addMarkers(places: Place[]): void {
     const lng = typeof place.longitude === 'string' ? parseFloat(place.longitude) : place.longitude!;
     const lat = typeof place.latitude === 'string' ? parseFloat(place.latitude) : place.latitude!;
 
+    const meta = props.markerMeta?.[place.id];
+    const color = meta?.favorited ? '#ef4444' : (meta?.marked ? '#0f766e' : '#6b7280');
     const marker = new window.AMap.Marker({
       position: new window.AMap.LngLat(lng, lat),
-      title: place.name
+      title: place.name,
+      content: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
+      offset: new window.AMap.Pixel(-7, -7)
     });
 
     marker.on('click', () => {

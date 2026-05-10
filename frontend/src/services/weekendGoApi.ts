@@ -192,6 +192,16 @@ export interface FavoritePlace {
   createdAt: string;
 }
 
+export interface MapMarker {
+  id: number;
+  name: string;
+  longitude: number;
+  latitude: number;
+  address?: string | null;
+  marked: boolean;
+  favorited: boolean;
+}
+
 export interface AuditRequest {
   auditStatus: 'APPROVED' | 'REJECTED';
   reason?: string;
@@ -366,6 +376,14 @@ export class WeekendGoApi {
 
   auditStats(): Promise<AuditStats> {
     return this.client.get('/admin/audits/stats');
+  }
+
+  mapMarkers(params: { longitude: string; latitude: string; radius?: number }): Promise<MapMarker[]> {
+    const query = new URLSearchParams();
+    query.set('longitude', params.longitude);
+    query.set('latitude', params.latitude);
+    query.set('radius', String(params.radius ?? 5000));
+    return this.client.get(`/map/markers?${query.toString()}`);
   }
 }
 

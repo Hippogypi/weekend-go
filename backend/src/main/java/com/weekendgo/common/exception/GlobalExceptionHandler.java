@@ -12,6 +12,7 @@ import com.weekendgo.profile.ProfileStorageException;
 import com.weekendgo.profile.ProfileSubmissionNotFoundException;
 import com.weekendgo.profile.WorkspaceProfileNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,6 +26,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<ErrorResponse>> handleValidationException(
             MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "VALIDATION_ERROR",
+                "Request validation failed",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleConstraintViolationException(
+            ConstraintViolationException exception,
             HttpServletRequest request
     ) {
         ErrorResponse error = ErrorResponse.of(

@@ -53,7 +53,8 @@ public class SecurityConfig {
                                 HttpMethod.GET,
                                 "/api/workspaces/nearby",
                                 "/api/workspaces/search",
-                                "/api/places/**"
+                                "/api/places/**",
+                                "/api/map/markers"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
