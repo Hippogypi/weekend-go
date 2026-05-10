@@ -642,7 +642,7 @@
     {
       "id": "user-profile-expansion",
       "title": "个人中心扩展",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
       "branch": null,
       "worktree": null,
@@ -666,7 +666,7 @@
     {
       "id": "admin-workbench",
       "title": "管理员工作台",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
       "branch": null,
       "worktree": null,
@@ -693,7 +693,7 @@
     {
       "id": "home-page-enhancement",
       "title": "首页搜索增强",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
       "branch": null,
       "worktree": null,
