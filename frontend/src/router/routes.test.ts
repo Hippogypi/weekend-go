@@ -13,7 +13,7 @@ describe('appRoutes', () => {
       '/places/:placeId/contribute/checkin',
       '/places/:placeId/contribute/review',
       '/profile',
-      '/admin/reviews',
+      '/admin',
       '/login'
     ]);
   });
@@ -26,7 +26,7 @@ describe('appRoutes', () => {
       'contribute-checkin',
       'contribute-review',
       'profile',
-      'admin-reviews',
+      'admin',
       'login'
     ]);
   });
@@ -38,13 +38,13 @@ describe('appRoutes', () => {
       '/places/:placeId/contribute/checkin',
       '/places/:placeId/contribute/review',
       '/profile',
-      '/admin/reviews'
+      '/admin'
     ]);
   });
 
   it('marks admin routes with requiresAdmin', () => {
     const adminRoutes = appRoutes.filter((r) => r.meta?.requiresAdmin);
-    expect(adminRoutes.map((r) => r.path)).toEqual(['/admin/reviews']);
+    expect(adminRoutes.map((r) => r.path)).toEqual(['/admin']);
   });
 });
 

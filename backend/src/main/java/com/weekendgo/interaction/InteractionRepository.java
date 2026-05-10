@@ -22,6 +22,18 @@ public interface InteractionRepository {
 
     Optional<ImageResponse> auditImage(long imageId, long adminId, AuditStatus auditStatus, String reason);
 
+    List<PendingAuditItem> findPendingReviews(int page, int size);
+
+    List<PendingAuditItem> findPendingImages(int page, int size);
+
+    long countPendingReviews();
+
+    long countPendingImages();
+
+    long countTodayApproved();
+
+    long countTodayRejected();
+
     void favorite(long userId, Place place);
 
     void unfavorite(long userId, long placeId);

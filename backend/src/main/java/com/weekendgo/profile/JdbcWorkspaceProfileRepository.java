@@ -3,6 +3,7 @@ package com.weekendgo.profile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.weekendgo.interaction.PendingAuditItem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.ResultSet;
@@ -129,6 +130,43 @@ public class JdbcWorkspaceProfileRepository implements WorkspaceProfileRepositor
                     """, this::mapSubmission, submissionId).stream().findFirst();
         } catch (DataAccessException exception) {
             throw new ProfileStorageException("Failed to load profile submission", exception);
+        }
+    }
+
+    @Override
+    public List<PendingAuditItem> findPendingProfileSubmissions(int page, int size) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT ps.id, ps.place_id, p.name AS place_name, ps.user_id, u.username, ps.remark AS content, ps.created_at
+                    FROM profile_submissions ps
+                    JOIN places p ON p.id = ps.place_id
+                    JOIN users u ON u.id = ps.user_id
+                    WHERE ps.audit_status = 'PENDING'
+                    ORDER BY ps.created_at DESC, ps.id DESC
+                    LIMIT ? OFFSET ?
+                    """, (resultSet, rowNum) -> new PendingAuditItem(
+                    resultSet.getLong("id"),
+                    resultSet.getLong("place_id"),
+                    resultSet.getString("place_name"),
+                    resultSet.getLong("user_id"),
+                    resultSet.getString("username"),
+                    resultSet.getString("content"),
+                    nullableInstant(resultSet, "created_at"),
+                    "profile"
+            ), size, (page - 1) * size);
+        } catch (DataAccessException exception) {
+            throw new ProfileStorageException("Failed to load pending profile submissions", exception);
+        }
+    }
+
+    @Override
+    public long countPendingProfileSubmissions() {
+        try {
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM profile_submissions WHERE audit_status = 'PENDING'", Long.class);
+            return count == null ? 0 : count;
+        } catch (DataAccessException exception) {
+            throw new ProfileStorageException("Failed to count pending profile submissions", exception);
         }
     }
 

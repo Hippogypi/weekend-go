@@ -334,6 +334,87 @@ public class JdbcInteractionRepository implements InteractionRepository {
     }
 
     @Override
+    public List<PendingAuditItem> findPendingReviews(int page, int size) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT r.id, r.place_id, p.name AS place_name, r.user_id, u.username, r.content, r.created_at
+                    FROM reviews r
+                    JOIN places p ON p.id = r.place_id
+                    JOIN users u ON u.id = r.user_id
+                    WHERE r.audit_status = 'PENDING'
+                    ORDER BY r.created_at DESC, r.id DESC
+                    LIMIT ? OFFSET ?
+                    """, pendingAuditItemMapper("review"), size, (page - 1) * size);
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load pending reviews", exception);
+        }
+    }
+
+    @Override
+    public List<PendingAuditItem> findPendingImages(int page, int size) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT i.id, i.place_id, p.name AS place_name, i.user_id, u.username,
+                           COALESCE(NULLIF(i.description, ''), i.image_url) AS content, i.created_at
+                    FROM place_images i
+                    JOIN places p ON p.id = i.place_id
+                    JOIN users u ON u.id = i.user_id
+                    WHERE i.audit_status = 'PENDING'
+                    ORDER BY i.created_at DESC, i.id DESC
+                    LIMIT ? OFFSET ?
+                    """, pendingAuditItemMapper("image"), size, (page - 1) * size);
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load pending images", exception);
+        }
+    }
+
+    @Override
+    public long countPendingReviews() {
+        try {
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM reviews WHERE audit_status = 'PENDING'", Long.class);
+            return count == null ? 0 : count;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to count pending reviews", exception);
+        }
+    }
+
+    @Override
+    public long countPendingImages() {
+        try {
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM place_images WHERE audit_status = 'PENDING'", Long.class);
+            return count == null ? 0 : count;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to count pending images", exception);
+        }
+    }
+
+    @Override
+    public long countTodayApproved() {
+        try {
+            Long count = jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*) FROM audit_logs WHERE action = 'APPROVED' AND created_at >= CURRENT_DATE
+                    """, Long.class);
+            return count == null ? 0 : count;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to count today approved", exception);
+        }
+    }
+
+    @Override
+    public long countTodayRejected() {
+        try {
+            Long count = jdbcTemplate.queryForObject("""
+                    SELECT COUNT(*) FROM audit_logs WHERE action = 'REJECTED' AND created_at >= CURRENT_DATE
+                    """, Long.class);
+            return count == null ? 0 : count;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to count today rejected", exception);
+        }
+    }
+
+    @Override
     public List<FavoritePlaceResponse> findFavorites(long userId) {
         try {
             return jdbcTemplate.query("""
@@ -425,6 +506,19 @@ public class JdbcInteractionRepository implements InteractionRepository {
                 resultSet.getString("description"),
                 AuditStatus.valueOf(resultSet.getString("audit_status")),
                 toInstant(resultSet.getTimestamp("created_at"))
+        );
+    }
+
+    private org.springframework.jdbc.core.RowMapper<PendingAuditItem> pendingAuditItemMapper(String type) {
+        return (resultSet, rowNum) -> new PendingAuditItem(
+                resultSet.getLong("id"),
+                resultSet.getLong("place_id"),
+                resultSet.getString("place_name"),
+                resultSet.getLong("user_id"),
+                resultSet.getString("username"),
+                resultSet.getString("content"),
+                toInstant(resultSet.getTimestamp("created_at")),
+                type
         );
     }
 

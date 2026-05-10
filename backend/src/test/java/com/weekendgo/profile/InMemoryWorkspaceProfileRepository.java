@@ -1,5 +1,6 @@
 package com.weekendgo.profile;
 
+import com.weekendgo.interaction.PendingAuditItem;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-class InMemoryWorkspaceProfileRepository implements WorkspaceProfileRepository {
+public class InMemoryWorkspaceProfileRepository implements WorkspaceProfileRepository {
 
     private final AtomicLong sequence = new AtomicLong(1);
     private final Map<Long, ProfileSubmission> submissions = new LinkedHashMap<>();
@@ -85,6 +86,32 @@ class InMemoryWorkspaceProfileRepository implements WorkspaceProfileRepository {
                 .filter(submission -> submission.userId() == userId)
                 .sorted(java.util.Comparator.comparing(ProfileSubmission::createdAt).reversed())
                 .toList();
+    }
+
+    @Override
+    public List<PendingAuditItem> findPendingProfileSubmissions(int page, int size) {
+        return submissions.values().stream()
+                .filter(submission -> submission.auditStatus() == AuditStatus.PENDING)
+                .skip((long) (page - 1) * size)
+                .limit(size)
+                .map(submission -> new PendingAuditItem(
+                        submission.id(),
+                        submission.placeId(),
+                        "Unknown",
+                        submission.userId(),
+                        "Unknown",
+                        submission.remark(),
+                        submission.createdAt(),
+                        "profile"
+                ))
+                .toList();
+    }
+
+    @Override
+    public long countPendingProfileSubmissions() {
+        return submissions.values().stream()
+                .filter(submission -> submission.auditStatus() == AuditStatus.PENDING)
+                .count();
     }
 
     private void rebuildProfile(long placeId) {

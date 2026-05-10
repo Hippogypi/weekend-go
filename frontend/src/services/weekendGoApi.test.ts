@@ -50,6 +50,8 @@ describe('WeekendGoApi', () => {
     await api.myProfileSubmissions();
     await api.myCheckins();
     await api.myReviews();
+    await api.pendingList('review', 1, 20);
+    await api.auditStats();
 
     expect(calls.map((call) => `${call.init?.method} ${call.input}`)).toEqual([
       'POST https://api.example.test/api/auth/login',
@@ -64,7 +66,9 @@ describe('WeekendGoApi', () => {
       'PATCH https://api.example.test/api/auth/me',
       'GET https://api.example.test/api/me/profile-submissions',
       'GET https://api.example.test/api/me/checkins',
-      'GET https://api.example.test/api/me/reviews'
+      'GET https://api.example.test/api/me/reviews',
+      'GET https://api.example.test/api/admin/audits/pending-list?type=review&page=1&size=20',
+      'GET https://api.example.test/api/admin/audits/stats'
     ]);
     expect(calls[1].init?.headers).toMatchObject({ Authorization: 'Bearer token-1' });
   });
