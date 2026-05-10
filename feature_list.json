@@ -551,6 +551,168 @@
         "git status --short"
       ],
       "notes": "已合并到 main。新增 11 个文件，修改 13 个文件；测试 45 passed / 8 test files；构建通过。前端规则文档 docs/frontend-rules.md 已同步建立。"
+    },
+    {
+      "id": "frontend-navigation-restructure",
+      "title": "前端导航与页面结构重组",
+      "status": "in_progress",
+      "completedAt": null,
+      "branch": "frontend-navigation-restructure",
+      "worktree": ".worktrees/frontend-navigation-restructure",
+      "scope": "重构前端导航和页面结构：移除硬编码详情导航、审核条件渲染、地点详情页改为概况/评价/去贡献标签页、提取打卡和写评价为独立页面、新增贡献选择入口。不修改后端接口契约。",
+      "dependencies": [
+        "auth-frontend-enhancement"
+      ],
+      "acceptanceCriteria": [
+        "侧边栏导航移除硬编码详情项，审核仅对ADMIN可见",
+        "地点详情页改为标签页布局：概况/评价/去贡献",
+        "概况标签展示基础信息+学习办公属性+实时状态",
+        "评价标签展示公开评价列表",
+        "去贡献标签跳转到贡献选择页",
+        "新增贡献选择页：打卡反馈/写评价两个入口",
+        "打卡页为独立页面，从详情页提取",
+        "写评价页为独立页面（先只迁移现有表单，图文增强等Feature 3）",
+        "npm run test和npm run build通过",
+        "不提交真实密钥或敏感配置"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build",
+        "python -m json.tool feature_list.json",
+        "git diff --check",
+        "git status --short"
+      ],
+      "notes": "Worker在.worktrees/frontend-navigation-restructure中实现。"
+    },
+    {
+      "id": "review-image-binding-backend",
+      "title": "后端评价绑定图片+属性改造",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "改造后端使评价成为图片和属性的载体：place_images表新增review_id字段，ReviewRequest支持profileAttributes和images，ReviewResponse内嵌images，提交评价时同时写入reviews+profile_submissions+place_images三张表。",
+      "dependencies": [
+        "reviews-favorites-images",
+        "workspace-profile-contribution"
+      ],
+      "acceptanceCriteria": [
+        "place_images表新增review_id字段及外键",
+        "ReviewRequest支持profileAttributes和images字段",
+        "ReviewResponse内嵌images列表",
+        "POST /places/{placeId}/reviews同时写入reviews+profile_submissions+place_images",
+        "GET /places/{placeId}/reviews返回评价及附带图片",
+        "现有无图片评价不受影响",
+        "后端测试全部通过"
+      ],
+      "checkCommands": [
+        "cd backend; ./mvnw.cmd test",
+        "python -m json.tool feature_list.json",
+        "git diff --check",
+        "git status --short"
+      ],
+      "notes": "待定。"
+    },
+    {
+      "id": "review-image-binding-frontend",
+      "title": "前端图文评价与图片展示",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "前端实现图文评价：写评价页支持图片上传，详情页评价标签展示评价附带图片，个人中心我的评价展示图片。依赖后端review-image-binding-backend完成后启动。",
+      "dependencies": [
+        "review-image-binding-backend",
+        "frontend-navigation-restructure"
+      ],
+      "acceptanceCriteria": [
+        "写评价页支持添加多张图片",
+        "详情页评价列表展示每条评价的附带图片",
+        "个人中心我的评价展示图片",
+        "npm run test和npm run build通过"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build",
+        "python -m json.tool feature_list.json",
+        "git diff --check"
+      ],
+      "notes": "待定，依赖Feature 2完成后启动。"
+    },
+    {
+      "id": "user-profile-expansion",
+      "title": "个人中心扩展",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "扩展个人中心：增加我的共建/打卡/评价标签页，支持编辑昵称。依赖frontend-navigation-restructure完成后启动。",
+      "dependencies": [
+        "frontend-navigation-restructure",
+        "auth-persistence"
+      ],
+      "acceptanceCriteria": [
+        "ProfileView增加标签页导航",
+        "我的收藏/共建/打卡/评价四个标签页",
+        "支持编辑昵称",
+        "npm run test和npm run build通过"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "待定。"
+    },
+    {
+      "id": "admin-workbench",
+      "title": "管理员工作台",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "替换现有的ID输入审核方式为工作台：后端新增待审核列表API，前端实现统计卡片+列表+批量操作的管理员工作台。",
+      "dependencies": [
+        "auth-and-role",
+        "workspace-profile-contribution",
+        "reviews-favorites-images"
+      ],
+      "acceptanceCriteria": [
+        "后端提供待审核列表API（分页）",
+        "前端工作台展示统计卡片",
+        "属性共建/评价/图片三个待审核标签页",
+        "支持通过/驳回操作",
+        "前后端测试通过"
+      ],
+      "checkCommands": [
+        "cd backend; .\\mvnw.cmd test",
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "待定。"
+    },
+    {
+      "id": "home-page-enhancement",
+      "title": "首页搜索增强",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "增强首页搜索体验：浏览器Geolocation API自动定位、搜索结果分页控件、地图marker点击进入详情。",
+      "dependencies": [
+        "frontend-bootstrap",
+        "place-discovery"
+      ],
+      "acceptanceCriteria": [
+        "附近搜索自动获取当前位置",
+        "搜索结果分页可用",
+        "地图marker点击进入详情",
+        "npm run test和npm run build通过"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "待定。"
     }
   ]
 }

@@ -4,6 +4,18 @@
 
 frontend verification
 
+## 2026-05-10 前端业务组织逻辑重构方案确认
+
+- 用户确认前端业务逻辑不符合直觉，要求从使用者视角重构。
+- 经多轮讨论，确定核心业务逻辑：
+  - 打卡与评价分离：打卡是实时状态（可多次），评价是体验反馈（一般一次）。
+  - 评价是共建和图片的载体：写评价时同时提交客观属性（进入共建审核）和图片（绑定到评价）。
+  - 全局导航精简为三层：发现/我的/审核（条件渲染）。
+  - 地点详情页改为标签页：概况/评价/去贡献。
+  - 贡献流程只有两个入口：打卡反馈 + 写评价。
+- 拆分为 6 个 feature：frontend-navigation-restructure（P0）、review-image-binding-backend（P0）、review-image-binding-frontend（P1）、user-profile-expansion（P1）、admin-workbench（P1）、home-page-enhancement（P2）。
+- 已创建 worktree `.worktrees/frontend-navigation-restructure`，启动 Feature 1 实施。
+
 ## 2026-05-10 auth-frontend-enhancement 合并
 
 - 已合并 `auth-frontend-enhancement` 到 `main`。
