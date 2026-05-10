@@ -5,13 +5,13 @@ export const appRoutes = [
     path: '/',
     name: 'home',
     component: () => import('../views/HomeView.vue'),
-    meta: { title: '地点发现' }
+    meta: { title: '地点发现', requiresAuth: true }
   },
   {
     path: '/places/:placeId',
     name: 'place-detail',
     component: () => import('../views/PlaceDetailView.vue'),
-    meta: { title: '地点详情' }
+    meta: { title: '地点详情', requiresAuth: true }
   },
   {
     path: '/places/:placeId/contribute',

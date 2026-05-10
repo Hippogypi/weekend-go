@@ -34,6 +34,8 @@ describe('appRoutes', () => {
   it('marks protected routes with requiresAuth', () => {
     const protectedRoutes = appRoutes.filter((r) => r.meta?.requiresAuth);
     expect(protectedRoutes.map((r) => r.path)).toEqual([
+      '/',
+      '/places/:placeId',
       '/places/:placeId/contribute',
       '/places/:placeId/contribute/checkin',
       '/places/:placeId/contribute/review',
@@ -62,6 +64,48 @@ describe('router beforeEach guard', () => {
     await router.push('/profile');
     expect(router.currentRoute.value.path).toBe('/login');
     expect(router.currentRoute.value.query.redirect).toBe('/profile');
+  });
+
+  it('redirects unauthenticated users from / to login with redirect', async () => {
+    const { router } = await import('./index');
+    const { sessionStore } = await import('../services');
+
+    vi.spyOn(sessionStore, 'isLoggedIn', 'get').mockReturnValue({ value: false } as never);
+
+    await router.push('/');
+    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.query.redirect).toBe('/');
+  });
+
+  it('redirects unauthenticated users from /places/:placeId to login with redirect', async () => {
+    const { router } = await import('./index');
+    const { sessionStore } = await import('../services');
+
+    vi.spyOn(sessionStore, 'isLoggedIn', 'get').mockReturnValue({ value: false } as never);
+
+    await router.push('/places/123');
+    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.query.redirect).toBe('/places/123');
+  });
+
+  it('allows logged-in users to access /', async () => {
+    const { router } = await import('./index');
+    const { sessionStore } = await import('../services');
+
+    vi.spyOn(sessionStore, 'isLoggedIn', 'get').mockReturnValue({ value: true } as never);
+
+    await router.push('/');
+    expect(router.currentRoute.value.path).toBe('/');
+  });
+
+  it('allows logged-in users to access /places/:placeId', async () => {
+    const { router } = await import('./index');
+    const { sessionStore } = await import('../services');
+
+    vi.spyOn(sessionStore, 'isLoggedIn', 'get').mockReturnValue({ value: true } as never);
+
+    await router.push('/places/123');
+    expect(router.currentRoute.value.path).toBe('/places/123');
   });
 
   it('redirects logged-in users away from /login to home', async () => {
