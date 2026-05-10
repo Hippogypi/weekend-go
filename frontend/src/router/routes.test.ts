@@ -9,6 +9,9 @@ describe('appRoutes', () => {
     expect(appRoutes.map((route) => route.path)).toEqual([
       '/',
       '/places/:placeId',
+      '/places/:placeId/contribute',
+      '/places/:placeId/contribute/checkin',
+      '/places/:placeId/contribute/review',
       '/profile',
       '/admin/reviews',
       '/login'
@@ -19,6 +22,9 @@ describe('appRoutes', () => {
     expect(appRoutes.map((route) => route.name)).toEqual([
       'home',
       'place-detail',
+      'contribute',
+      'contribute-checkin',
+      'contribute-review',
       'profile',
       'admin-reviews',
       'login'
@@ -27,7 +33,13 @@ describe('appRoutes', () => {
 
   it('marks protected routes with requiresAuth', () => {
     const protectedRoutes = appRoutes.filter((r) => r.meta?.requiresAuth);
-    expect(protectedRoutes.map((r) => r.path)).toEqual(['/profile', '/admin/reviews']);
+    expect(protectedRoutes.map((r) => r.path)).toEqual([
+      '/places/:placeId/contribute',
+      '/places/:placeId/contribute/checkin',
+      '/places/:placeId/contribute/review',
+      '/profile',
+      '/admin/reviews'
+    ]);
   });
 
   it('marks admin routes with requiresAdmin', () => {
