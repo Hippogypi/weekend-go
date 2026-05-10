@@ -172,6 +172,30 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 .toList();
     }
 
+    @Override
+    public List<ReviewResponse> findReviewsByUserId(long userId) {
+        Map<Long, ReviewResponse> result = new LinkedHashMap<>();
+        for (ReviewResponse review : reviews.values()) {
+            if (review.userId() == userId) {
+                List<ImageResponse> reviewImages = imageReviewIds.entrySet().stream()
+                        .filter(entry -> entry.getValue() == review.id())
+                        .map(entry -> images.get(entry.getKey()))
+                        .filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(ImageResponse::createdAt).reversed())
+                        .toList();
+                result.put(review.id(), new ReviewResponse(
+                        review.id(), review.placeId(), review.userId(),
+                        review.quietScore(), review.wifiScore(), review.socketScore(),
+                        review.comfortScore(), review.costScore(), review.content(),
+                        review.auditStatus(), review.createdAt(), reviewImages
+                ));
+            }
+        }
+        return result.values().stream()
+                .sorted(Comparator.comparing(ReviewResponse::createdAt).reversed())
+                .toList();
+    }
+
     private record FavoriteKey(long userId, long placeId) {
     }
 }

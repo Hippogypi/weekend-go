@@ -8,4 +8,6 @@ public interface CheckinRepository {
     SavedCheckin save(NewCheckin checkin);
 
     List<SavedCheckin> findRecentByPlaceId(long placeId, Instant cutoff);
+
+    List<SavedCheckin> findByUserId(long userId);
 }

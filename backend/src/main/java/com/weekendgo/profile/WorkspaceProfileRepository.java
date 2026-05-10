@@ -1,5 +1,6 @@
 package com.weekendgo.profile;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface WorkspaceProfileRepository {
@@ -11,4 +12,6 @@ public interface WorkspaceProfileRepository {
     Optional<ProfileSubmission> findSubmissionById(long submissionId);
 
     Optional<WorkspaceProfile> findProfileByPlaceId(long placeId);
+
+    List<ProfileSubmission> findSubmissionsByUserId(long userId);
 }

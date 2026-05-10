@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -92,6 +93,15 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
                 username
         );
         return count != null && count > 0;
+    }
+
+    @Override
+    public void updateNickname(long userId, String nickname) {
+        try {
+            jdbcTemplate.update("UPDATE users SET nickname = ? WHERE id = ?", nickname, userId);
+        } catch (DataAccessException exception) {
+            throw new IllegalStateException("Failed to update nickname", exception);
+        }
     }
 
     private UserAccount mapUserAccount(ResultSet resultSet, int rowNum) throws SQLException {

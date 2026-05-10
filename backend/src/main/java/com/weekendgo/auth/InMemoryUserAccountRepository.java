@@ -51,6 +51,23 @@ public class InMemoryUserAccountRepository implements UserAccountRepository {
         return idsByUsername.containsKey(normalize(username));
     }
 
+    @Override
+    public void updateNickname(long userId, String nickname) {
+        UserAccount current = usersById.get(userId);
+        if (current == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        usersById.put(userId, new UserAccount(
+                current.id(),
+                current.username(),
+                current.passwordHash(),
+                current.role(),
+                nickname,
+                current.enabled(),
+                current.createdAt()
+        ));
+    }
+
     private String normalize(String username) {
         return username.toLowerCase(Locale.ROOT);
     }

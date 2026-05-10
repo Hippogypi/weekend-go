@@ -184,6 +184,25 @@ class InteractionControllerTest {
                 .andExpect(jsonPath("$.data[0].auditStatus").doesNotExist());
     }
 
+    @Test
+    void authenticatedUserCanListOwnReviews() throws Exception {
+        String userToken = registerAndLogin("review-lister", UserRole.USER);
+
+        mockMvc.perform(post("/api/places/42/reviews")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewJson("my own review")))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/me/reviews")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].content").value("my own review"))
+                .andExpect(jsonPath("$.data[0].auditStatus").value("PENDING"))
+                .andExpect(jsonPath("$.data[0].placeName").value("City Library"));
+    }
+
     private String registerAndLogin(String username, UserRole role) throws Exception {
         userAccountRepository.save(username, passwordEncoder.encode("secret123"), role, username);
         MvcResult result = mockMvc.perform(post("/api/auth/login")

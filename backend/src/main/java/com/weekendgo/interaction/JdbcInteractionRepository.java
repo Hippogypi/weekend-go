@@ -85,6 +85,24 @@ public class JdbcInteractionRepository implements InteractionRepository {
                     LEFT JOIN place_images i ON i.review_id = r.id AND i.audit_status = 'APPROVED'
                     WHERE r.place_id = ? AND r.audit_status = 'APPROVED'
                     ORDER BY r.created_at DESC, r.id DESC, i.created_at DESC
+                    """, this::extractReviews, placeId);
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load reviews", exception);
+        }
+    }
+
+    @Override
+    public List<ReviewResponse> findReviewsByUserId(long userId) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT r.id, r.place_id, r.user_id, r.quiet_score, r.wifi_score, r.socket_score,
+                           r.comfort_score, r.cost_score, r.content, r.audit_status, r.created_at,
+                           i.id as image_id, i.user_id as image_user_id,
+                           i.image_url, i.description, i.audit_status as image_audit_status, i.created_at as image_created_at
+                    FROM reviews r
+                    LEFT JOIN place_images i ON i.review_id = r.id
+                    WHERE r.user_id = ?
+                    ORDER BY r.created_at DESC, r.id DESC, i.created_at DESC
                     """, (ResultSet rs) -> {
                 Map<Long, ReviewAccumulator> map = new LinkedHashMap<>();
                 while (rs.next()) {
@@ -114,16 +132,53 @@ public class JdbcInteractionRepository implements InteractionRepository {
                                 rs.getLong("image_user_id"),
                                 rs.getString("image_url"),
                                 rs.getString("description"),
-                                AuditStatus.APPROVED,
+                                AuditStatus.valueOf(rs.getString("image_audit_status")),
                                 toInstant(rs.getTimestamp("image_created_at"))
                         ));
                     }
                 }
                 return map.values().stream().map(ReviewAccumulator::toResponse).toList();
-            }, placeId);
+            }, userId);
         } catch (DataAccessException exception) {
             throw new InteractionStorageException("Failed to load reviews", exception);
         }
+    }
+
+    private List<ReviewResponse> extractReviews(ResultSet rs) throws SQLException {
+        Map<Long, ReviewAccumulator> map = new LinkedHashMap<>();
+        while (rs.next()) {
+            long reviewId = rs.getLong("id");
+            ReviewAccumulator acc = map.get(reviewId);
+            if (acc == null) {
+                acc = new ReviewAccumulator(
+                        reviewId,
+                        rs.getLong("place_id"),
+                        rs.getLong("user_id"),
+                        rs.getBigDecimal("quiet_score"),
+                        rs.getBigDecimal("wifi_score"),
+                        rs.getBigDecimal("socket_score"),
+                        rs.getBigDecimal("comfort_score"),
+                        rs.getBigDecimal("cost_score"),
+                        rs.getString("content"),
+                        AuditStatus.valueOf(rs.getString("audit_status")),
+                        toInstant(rs.getTimestamp("created_at"))
+                );
+                map.put(reviewId, acc);
+            }
+            long imageId = rs.getLong("image_id");
+            if (!rs.wasNull()) {
+                acc.addImage(new ImageResponse(
+                        imageId,
+                        rs.getLong("place_id"),
+                        rs.getLong("image_user_id"),
+                        rs.getString("image_url"),
+                        rs.getString("description"),
+                        AuditStatus.APPROVED,
+                        toInstant(rs.getTimestamp("image_created_at"))
+                ));
+            }
+        }
+        return map.values().stream().map(ReviewAccumulator::toResponse).toList();
     }
 
     @Override

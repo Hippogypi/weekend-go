@@ -47,6 +47,17 @@ export function createSessionStore() {
     localStorage.setItem('weekend-go.access-token', session.token);
   }
 
+  function updateUser(updated: UserProfile): void {
+    if (user.value) {
+      user.value = updated;
+      const stored = loadStoredSession();
+      if (stored) {
+        stored.user = updated;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      }
+    }
+  }
+
   function clearSession(): void {
     token.value = null;
     user.value = null;
@@ -75,6 +86,7 @@ export function createSessionStore() {
     isLoggedIn: computed(() => Boolean(token.value && user.value)),
     isAdmin: computed(() => user.value?.role === 'ADMIN'),
     setSession,
+    updateUser,
     clearSession,
     restoreSession
   };
