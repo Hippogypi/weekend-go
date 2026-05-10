@@ -6,6 +6,7 @@ import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -44,5 +45,13 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<UserProfileResponse> me(@AuthenticationPrincipal AuthenticatedUser principal) {
         return ApiResponse.ok(UserProfileResponse.from(principal.account()));
+    }
+
+    @PatchMapping("/me")
+    public ApiResponse<UserProfileResponse> updateNickname(
+            @AuthenticationPrincipal AuthenticatedUser principal,
+            @Valid @RequestBody NicknameUpdateRequest request
+    ) {
+        return ApiResponse.ok(authService.updateNickname(principal.account().id(), request.nickname()));
     }
 }

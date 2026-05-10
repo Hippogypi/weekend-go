@@ -46,6 +46,10 @@ describe('WeekendGoApi', () => {
     await api.removeFavorite(7);
     await api.auditReview(9, { auditStatus: 'APPROVED', reason: 'ok' });
     await api.approveProfileSubmission(11, 'ok');
+    await api.updateNickname('new-nick');
+    await api.myProfileSubmissions();
+    await api.myCheckins();
+    await api.myReviews();
 
     expect(calls.map((call) => `${call.init?.method} ${call.input}`)).toEqual([
       'POST https://api.example.test/api/auth/login',
@@ -56,7 +60,11 @@ describe('WeekendGoApi', () => {
       'POST https://api.example.test/api/places/7/favorite',
       'DELETE https://api.example.test/api/places/7/favorite',
       'PATCH https://api.example.test/api/admin/reviews/9/audit',
-      'POST https://api.example.test/api/admin/profile-submissions/11/approve'
+      'POST https://api.example.test/api/admin/profile-submissions/11/approve',
+      'PATCH https://api.example.test/api/auth/me',
+      'GET https://api.example.test/api/me/profile-submissions',
+      'GET https://api.example.test/api/me/checkins',
+      'GET https://api.example.test/api/me/reviews'
     ]);
     expect(calls[1].init?.headers).toMatchObject({ Authorization: 'Bearer token-1' });
   });

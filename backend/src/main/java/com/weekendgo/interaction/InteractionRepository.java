@@ -29,4 +29,6 @@ public interface InteractionRepository {
     boolean isFavorited(long userId, long placeId);
 
     List<FavoritePlaceResponse> findFavorites(long userId);
+
+    List<ReviewResponse> findReviewsByUserId(long userId);
 }

@@ -98,6 +98,26 @@ export interface ProfileSubmission extends ProfileSubmissionRequest {
   createdAt?: string;
 }
 
+export interface MyProfileSubmission extends ProfileSubmission {
+  placeName: string;
+}
+
+export interface MyCheckin {
+  id: number;
+  placeId: number;
+  placeName: string;
+  userId: number;
+  crowdLevel: string;
+  noiseLevel: string;
+  hasSeat: boolean;
+  remark?: string;
+  createdAt: string;
+}
+
+export interface MyReview extends Review {
+  placeName: string;
+}
+
 export interface CheckinRequest {
   crowdLevel: 'QUIET' | 'NORMAL' | 'CROWDED' | string;
   noiseLevel: 'QUIET' | 'RELATIVELY_QUIET' | 'NORMAL' | 'NOISY' | string;
@@ -284,6 +304,22 @@ export class WeekendGoApi {
 
   favorites(): Promise<FavoritePlace[]> {
     return this.client.get('/me/favorites');
+  }
+
+  updateNickname(nickname: string): Promise<UserProfile> {
+    return this.client.patch('/auth/me', { nickname });
+  }
+
+  myProfileSubmissions(): Promise<MyProfileSubmission[]> {
+    return this.client.get('/me/profile-submissions');
+  }
+
+  myCheckins(): Promise<MyCheckin[]> {
+    return this.client.get('/me/checkins');
+  }
+
+  myReviews(): Promise<MyReview[]> {
+    return this.client.get('/me/reviews');
   }
 
   auditReview(reviewId: number | string, body: AuditRequest): Promise<Review> {

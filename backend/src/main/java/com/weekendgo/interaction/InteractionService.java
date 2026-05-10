@@ -132,6 +132,32 @@ public class InteractionService {
         return interactionRepository.findFavorites(user.account().id());
     }
 
+    public List<MyReviewResponse> myReviews(long userId) {
+        List<ReviewResponse> reviews = interactionRepository.findReviewsByUserId(userId);
+        return reviews.stream()
+                .map(review -> {
+                    String placeName = placeRepository.findById(review.placeId())
+                            .map(com.weekendgo.place.Place::name)
+                            .orElse("未知地点");
+                    return new MyReviewResponse(
+                            review.id(),
+                            review.placeId(),
+                            placeName,
+                            review.userId(),
+                            review.quietScore(),
+                            review.wifiScore(),
+                            review.socketScore(),
+                            review.comfortScore(),
+                            review.costScore(),
+                            review.content(),
+                            review.auditStatus(),
+                            review.createdAt(),
+                            review.images()
+                    );
+                })
+                .toList();
+    }
+
     private Place requirePlace(long placeId) {
         return placeRepository.findById(placeId).orElseThrow(PlaceNotFoundException::new);
     }

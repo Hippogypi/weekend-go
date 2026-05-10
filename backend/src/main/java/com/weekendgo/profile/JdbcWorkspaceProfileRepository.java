@@ -147,6 +147,22 @@ public class JdbcWorkspaceProfileRepository implements WorkspaceProfileRepositor
         }
     }
 
+    @Override
+    public List<ProfileSubmission> findSubmissionsByUserId(long userId) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT id, place_id, user_id, quiet_score, wifi_score, socket_score, seat_score,
+                           cost_score, min_consumption, allow_long_stay, suitable_scenes, remark,
+                           audit_status, audited_by, audited_at, audit_reason, created_at
+                    FROM profile_submissions
+                    WHERE user_id = ?
+                    ORDER BY created_at DESC, id DESC
+                    """, this::mapSubmission, userId);
+        } catch (DataAccessException exception) {
+            throw new ProfileStorageException("Failed to load profile submissions", exception);
+        }
+    }
+
     private void rebuildProfile(long placeId) {
         Aggregation aggregation = aggregate(placeId);
         int updated = jdbcTemplate.update("""

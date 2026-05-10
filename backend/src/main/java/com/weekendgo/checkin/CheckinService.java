@@ -66,6 +66,27 @@ public class CheckinService {
         );
     }
 
+    public List<MyCheckinResponse> myCheckins(long userId) {
+        return checkinRepository.findByUserId(userId).stream()
+                .map(checkin -> {
+                    String placeName = placeRepository.findById(checkin.placeId())
+                            .map(com.weekendgo.place.Place::name)
+                            .orElse("未知地点");
+                    return new MyCheckinResponse(
+                            checkin.id(),
+                            checkin.placeId(),
+                            placeName,
+                            checkin.userId(),
+                            checkin.crowdLevel(),
+                            checkin.noiseLevel(),
+                            checkin.hasSeat(),
+                            checkin.remark(),
+                            checkin.createdAt()
+                    );
+                })
+                .toList();
+    }
+
     private void ensurePlaceExists(long placeId) {
         if (placeRepository.findById(placeId).isEmpty()) {
             throw new PlaceNotFoundException();

@@ -79,6 +79,14 @@ class InMemoryWorkspaceProfileRepository implements WorkspaceProfileRepository {
         return Optional.ofNullable(profiles.get(placeId));
     }
 
+    @Override
+    public List<ProfileSubmission> findSubmissionsByUserId(long userId) {
+        return submissions.values().stream()
+                .filter(submission -> submission.userId() == userId)
+                .sorted(java.util.Comparator.comparing(ProfileSubmission::createdAt).reversed())
+                .toList();
+    }
+
     private void rebuildProfile(long placeId) {
         List<ProfileSubmission> approved = submissions.values().stream()
                 .filter(submission -> submission.placeId() == placeId)

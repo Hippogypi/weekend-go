@@ -3,7 +3,9 @@ package com.weekendgo.profile;
 import com.weekendgo.auth.AuthenticatedUser;
 import com.weekendgo.common.api.ApiResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,5 +57,13 @@ public class WorkspaceProfileController {
     @GetMapping("/api/places/{placeId}/workspace-profile")
     public ApiResponse<WorkspaceProfile> publicProfile(@PathVariable long placeId) {
         return ApiResponse.ok(workspaceProfileService.getPublicProfile(placeId));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/me/profile-submissions")
+    public ApiResponse<List<MyProfileSubmissionResponse>> myProfileSubmissions(
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return ApiResponse.ok(workspaceProfileService.mySubmissions(user.account().id()));
     }
 }

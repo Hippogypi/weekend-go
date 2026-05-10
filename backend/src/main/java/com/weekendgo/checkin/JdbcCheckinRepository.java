@@ -85,6 +85,22 @@ public class JdbcCheckinRepository implements CheckinRepository {
         }
     }
 
+    @Override
+    public List<SavedCheckin> findByUserId(long userId) {
+        try {
+            return jdbcTemplate.query(
+                    SELECT_COLUMNS + """
+                            WHERE user_id = ?
+                            ORDER BY created_at DESC, id DESC
+                            """,
+                    this::mapCheckin,
+                    userId
+            );
+        } catch (DataAccessException exception) {
+            throw new CheckinStorageException("Failed to load checkins", exception);
+        }
+    }
+
     private SavedCheckin findById(long id) {
         return jdbcTemplate.query(
                         SELECT_COLUMNS + "WHERE id = ?",

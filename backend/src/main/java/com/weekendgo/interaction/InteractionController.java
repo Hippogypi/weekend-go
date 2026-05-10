@@ -86,6 +86,12 @@ public class InteractionController {
         return ApiResponse.ok(interactionService.favorites(user));
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/me/reviews")
+    public ApiResponse<List<MyReviewResponse>> myReviews(@AuthenticationPrincipal AuthenticatedUser user) {
+        return ApiResponse.ok(interactionService.myReviews(user.account().id()));
+    }
+
     @PatchMapping("/api/admin/reviews/{reviewId}/audit")
     public ApiResponse<ReviewResponse> auditReview(
             @PathVariable long reviewId,

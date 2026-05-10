@@ -14,4 +14,9 @@ public class UnconfiguredCheckinRepository implements CheckinRepository {
     public List<SavedCheckin> findRecentByPlaceId(long placeId, Instant cutoff) {
         return List.of();
     }
+
+    @Override
+    public List<SavedCheckin> findByUserId(long userId) {
+        return List.of();
+    }
 }

@@ -11,4 +11,6 @@ public interface UserAccountRepository {
     Optional<UserAccount> findById(long id);
 
     boolean existsByUsername(String username);
+
+    void updateNickname(long userId, String nickname);
 }

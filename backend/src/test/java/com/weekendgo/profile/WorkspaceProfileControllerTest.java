@@ -1,5 +1,6 @@
 package com.weekendgo.profile;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -130,6 +131,35 @@ class WorkspaceProfileControllerTest {
         mockMvc.perform(get("/api/places/42/workspace-profile"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("WORKSPACE_PROFILE_NOT_FOUND"));
+    }
+
+    @Test
+    void authenticatedUserCanListOwnProfileSubmissions() throws Exception {
+        String userToken = createUserAndLogin("sub-lister", UserRole.USER);
+
+        mockMvc.perform(post("/api/places/42/profile-submissions")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "quietScore": 4.0,
+                                  "wifiScore": 4.0,
+                                  "socketScore": 5.0,
+                                  "seatScore": 3.0,
+                                  "costScore": 4.0,
+                                  "allowLongStay": "TRUE",
+                                  "remark": "works well"
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/me/profile-submissions")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].auditStatus").value("PENDING"))
+                .andExpect(jsonPath("$.data[0].placeName").value("City Library"))
+                .andExpect(jsonPath("$.data[0].remark").value("works well"));
     }
 
     private long submitProfile(String token) throws Exception {

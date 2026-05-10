@@ -136,6 +136,32 @@ class CheckinControllerTest {
                 .andExpect(jsonPath("$.data.seatAvailabilityRatio").doesNotExist());
     }
 
+    @Test
+    void authenticatedUserCanListOwnCheckins() throws Exception {
+        String token = registerAndLogin("checkin-list");
+
+        mockMvc.perform(post("/api/places/42/checkins")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "crowdLevel": "NORMAL",
+                                  "noiseLevel": "QUIET",
+                                  "hasSeat": true,
+                                  "remark": "nice spot"
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/me/checkins")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].placeId").value(42))
+                .andExpect(jsonPath("$.data[0].crowdLevel").value("NORMAL"))
+                .andExpect(jsonPath("$.data[0].remark").value("nice spot"));
+    }
+
     private String registerAndLogin(String username) throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -212,6 +238,14 @@ class CheckinControllerTest {
             return saved.stream()
                     .filter(checkin -> checkin.placeId() == placeId)
                     .filter(checkin -> !checkin.createdAt().isBefore(cutoff))
+                    .toList();
+        }
+
+        @Override
+        public List<SavedCheckin> findByUserId(long userId) {
+            return saved.stream()
+                    .filter(checkin -> checkin.userId() == userId)
+                    .sorted(java.util.Comparator.comparing(SavedCheckin::createdAt).reversed())
                     .toList();
         }
 

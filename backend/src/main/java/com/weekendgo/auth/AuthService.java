@@ -45,4 +45,11 @@ public class AuthService {
     public void logout(String token) {
         authTokenStore.revoke(token);
     }
+
+    public UserProfileResponse updateNickname(long userId, String nickname) {
+        userAccountRepository.updateNickname(userId, nickname);
+        return UserProfileResponse.from(
+                userAccountRepository.findById(userId).orElseThrow()
+        );
+    }
 }
