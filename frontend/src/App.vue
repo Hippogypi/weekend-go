@@ -1,17 +1,23 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { RouterLink, RouterView } from 'vue-router';
 
 import ToastContainer from './components/ToastContainer.vue';
 import { provideToast } from './composables';
+import { sessionStore } from './services';
 
 provideToast();
 
-const navItems = [
-  { to: '/', label: '地点' },
-  { to: '/places/1', label: '详情' },
-  { to: '/profile', label: '账号' },
-  { to: '/admin/reviews', label: '审核' }
-];
+const navItems = computed(() => {
+  const items = [
+    { to: '/', label: '发现' },
+    { to: '/profile', label: '我的' }
+  ];
+  if (sessionStore.isAdmin.value) {
+    items.push({ to: '/admin/reviews', label: '审核' });
+  }
+  return items;
+});
 </script>
 
 <template>

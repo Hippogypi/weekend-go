@@ -14,6 +14,24 @@ export const appRoutes = [
     meta: { title: '地点详情' }
   },
   {
+    path: '/places/:placeId/contribute',
+    name: 'contribute',
+    component: () => import('../views/ContributeView.vue'),
+    meta: { title: '贡献信息', requiresAuth: true }
+  },
+  {
+    path: '/places/:placeId/contribute/checkin',
+    name: 'contribute-checkin',
+    component: () => import('../views/ContributeCheckinView.vue'),
+    meta: { title: '打卡反馈', requiresAuth: true }
+  },
+  {
+    path: '/places/:placeId/contribute/review',
+    name: 'contribute-review',
+    component: () => import('../views/ContributeReviewView.vue'),
+    meta: { title: '写评价', requiresAuth: true }
+  },
+  {
     path: '/profile',
     name: 'profile',
     component: () => import('../views/ProfileView.vue'),
