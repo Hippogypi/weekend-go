@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 
-import { ApiError, sessionStore, weekendGoApi } from '../services';
+import { weekendGoApi } from '../services';
+import { useAsyncAction, useApiError } from '../composables';
 
-const loading = ref('');
+const { errorMessage, setError, clearError } = useApiError();
+
 const message = ref('');
-const error = ref('');
 const form = reactive({
   targetType: 'review',
   targetId: '',
@@ -13,31 +14,18 @@ const form = reactive({
   reason: 'ok'
 });
 
-function describeError(value: unknown): string {
-  if (value instanceof ApiError) {
-    const payload = value.payload as { message?: string; code?: string } | undefined;
-    if (value.status === 401) {
-      return '需要先登录管理员账号。';
-    }
-    if (value.status === 403) {
-      return '当前账号不是管理员，无法审核。';
-    }
-    return payload?.message ?? payload?.code ?? `${value.status} ${value.message}`;
-  }
+const {
+  loading,
+  execute: submitAudit
+} = useAsyncAction<void>({
+  onError: (msg) => setError(new Error(msg))
+});
 
-  return value instanceof Error ? value.message : '请求失败，请稍后重试。';
-}
-
-async function submitAudit(): Promise<void> {
-  if (!sessionStore.isAdmin.value) {
-    error.value = '请先在账号页登录 ADMIN 账号。';
-    return;
-  }
-
-  error.value = '';
+async function doSubmitAudit(): Promise<void> {
+  clearError();
   message.value = '';
-  loading.value = 'audit';
-  try {
+
+  await submitAudit(async () => {
     if (form.targetType === 'review') {
       const result = await weekendGoApi.auditReview(form.targetId, {
         auditStatus: form.auditStatus as 'APPROVED' | 'REJECTED',
@@ -57,11 +45,7 @@ async function submitAudit(): Promise<void> {
       const result = await weekendGoApi.rejectProfileSubmission(form.targetId, form.reason);
       message.value = `属性共建 ${result.id} 已驳回`;
     }
-  } catch (err) {
-    error.value = describeError(err);
-  } finally {
-    loading.value = '';
-  }
+  });
 }
 </script>
 
@@ -72,14 +56,13 @@ async function submitAudit(): Promise<void> {
         <h1 class="page-title">管理员审核</h1>
         <p class="page-subtitle">根据提交后返回的 id 审核属性共建、评价和图片。</p>
       </div>
-      <span class="status-pill">{{ sessionStore.isAdmin.value ? 'ADMIN' : 'No permission' }}</span>
+      <span class="status-pill">ADMIN</span>
     </header>
 
     <p v-if="message" class="notice success">{{ message }}</p>
-    <p v-if="error" class="notice error">{{ error }}</p>
-    <p v-if="!sessionStore.isAdmin.value" class="notice">当前未以管理员身份登录，审核提交会返回权限提示。</p>
+    <p v-if="errorMessage" class="notice error">{{ errorMessage }}</p>
 
-    <form class="panel form-panel narrow" @submit.prevent="submitAudit">
+    <form class="panel form-panel narrow" @submit.prevent="doSubmitAudit">
       <h2>审核操作</h2>
       <label class="field stacked">
         <span>类型</span>
@@ -104,8 +87,8 @@ async function submitAudit(): Promise<void> {
         <span>原因</span>
         <textarea v-model="form.reason" rows="3" />
       </label>
-      <button class="primary-button" :disabled="loading === 'audit'">
-        {{ loading === 'audit' ? '提交中' : '提交审核' }}
+      <button class="primary-button" :disabled="loading">
+        {{ loading ? '提交中...' : '提交审核' }}
       </button>
     </form>
 

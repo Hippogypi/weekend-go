@@ -17,12 +17,18 @@ export const appRoutes = [
     path: '/profile',
     name: 'profile',
     component: () => import('../views/ProfileView.vue'),
-    meta: { title: '账号与收藏' }
+    meta: { title: '账号与收藏', requiresAuth: true }
   },
   {
     path: '/admin/reviews',
     name: 'admin-reviews',
     component: () => import('../views/AdminReviewView.vue'),
-    meta: { title: '管理员审核' }
+    meta: { title: '管理员审核', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('../views/LoginView.vue'),
+    meta: { title: '登录' }
   }
 ] satisfies RouteRecordRaw[];

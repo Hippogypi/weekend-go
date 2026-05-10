@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
-import { ApiError, sessionStore, weekendGoApi } from '../services';
+import { sessionStore, weekendGoApi } from '../services';
 import type { CurrentStatus, Place, PlaceImage, Review } from '../services';
+import { useAsyncAction, useApiError } from '../composables';
 
 const route = useRoute();
+const router = useRouter();
 const placeId = computed(() => String(route.params.placeId ?? ''));
+
 const place = ref<Place | null>(null);
 const currentStatus = ref<CurrentStatus | null>(null);
 const reviews = ref<Review[]>([]);
 const images = ref<PlaceImage[]>([]);
 const favorited = ref(false);
-const loading = ref(true);
 const actionLoading = ref('');
-const error = ref('');
 const message = ref('');
 
 const profileForm = reactive({
@@ -47,26 +48,18 @@ const imageForm = reactive({
   description: ''
 });
 
-function describeError(value: unknown): string {
-  if (value instanceof ApiError) {
-    const payload = value.payload as { message?: string; code?: string } | undefined;
-    if (value.status === 401) {
-      return '需要先登录后才能执行该操作。';
-    }
-    if (value.status === 403) {
-      return '当前账号权限不足。';
-    }
-    return payload?.message ?? payload?.code ?? `${value.status} ${value.message}`;
-  }
+const { errorMessage, setError, clearError } = useApiError();
 
-  return value instanceof Error ? value.message : '请求失败，请稍后重试。';
-}
+const {
+  loading: detailLoading,
+  execute: loadDetail
+} = useAsyncAction<void>({
+  onError: (msg) => setError(new Error(msg))
+});
 
-async function loadDetail(): Promise<void> {
-  loading.value = true;
-  error.value = '';
-
-  try {
+async function doLoadDetail(): Promise<void> {
+  clearError();
+  await loadDetail(async () => {
     const [detail, status, publicReviews, publicImages] = await Promise.all([
       weekendGoApi.placeDetail(placeId.value),
       weekendGoApi.currentStatus(placeId.value).catch(() => null),
@@ -80,11 +73,7 @@ async function loadDetail(): Promise<void> {
     if (sessionStore.isLoggedIn.value) {
       await loadFavoriteStatus();
     }
-  } catch (err) {
-    error.value = describeError(err);
-  } finally {
-    loading.value = false;
-  }
+  });
 }
 
 async function loadFavoriteStatus(): Promise<void> {
@@ -95,19 +84,23 @@ async function loadFavoriteStatus(): Promise<void> {
   }
 }
 
+function redirectToLogin(): void {
+  router.push({ path: '/login', query: { redirect: route.fullPath } });
+}
+
 async function runAction(name: string, action: () => Promise<void>): Promise<void> {
   if (!sessionStore.isLoggedIn.value) {
-    error.value = '请先登录后再提交。';
+    redirectToLogin();
     return;
   }
 
   actionLoading.value = name;
-  error.value = '';
+  clearError();
   message.value = '';
   try {
     await action();
   } catch (err) {
-    error.value = describeError(err);
+    setError(err);
   } finally {
     actionLoading.value = '';
   }
@@ -180,7 +173,7 @@ async function toggleFavorite(): Promise<void> {
   });
 }
 
-loadDetail();
+doLoadDetail();
 </script>
 
 <template>
@@ -195,9 +188,9 @@ loadDetail();
       </button>
     </header>
 
-    <p v-if="error" class="notice error">{{ error }}</p>
+    <p v-if="errorMessage" class="notice error">{{ errorMessage }}</p>
     <p v-if="message" class="notice success">{{ message }}</p>
-    <p v-if="loading" class="notice">正在加载地点详情...</p>
+    <p v-if="detailLoading" class="notice">正在加载地点详情...</p>
 
     <template v-else-if="place">
       <div class="two-column">

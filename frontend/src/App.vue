@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
 
+import ToastContainer from './components/ToastContainer.vue';
+import { provideToast } from './composables';
+
+provideToast();
+
 const navItems = [
   { to: '/', label: '地点' },
   { to: '/places/1', label: '详情' },
@@ -36,4 +41,6 @@ const navItems = [
       <RouterView />
     </main>
   </div>
+
+  <ToastContainer />
 </template>

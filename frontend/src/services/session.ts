@@ -1,5 +1,7 @@
 import { computed, ref } from 'vue';
 
+import type { WeekendGoApi } from './weekendGoApi';
+
 export interface UserProfile {
   id: number;
   username: string;
@@ -52,13 +54,29 @@ export function createSessionStore() {
     localStorage.removeItem('weekend-go.access-token');
   }
 
+  async function restoreSession(api: WeekendGoApi): Promise<boolean> {
+    if (!token.value) {
+      return false;
+    }
+
+    try {
+      const profile = await api.me();
+      user.value = profile;
+      return true;
+    } catch {
+      clearSession();
+      return false;
+    }
+  }
+
   return {
     token,
     user,
     isLoggedIn: computed(() => Boolean(token.value && user.value)),
     isAdmin: computed(() => user.value?.role === 'ADMIN'),
     setSession,
-    clearSession
+    clearSession,
+    restoreSession
   };
 }
 

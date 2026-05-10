@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { appRoutes } from './routes';
 
@@ -8,7 +10,8 @@ describe('appRoutes', () => {
       '/',
       '/places/:placeId',
       '/profile',
-      '/admin/reviews'
+      '/admin/reviews',
+      '/login'
     ]);
   });
 
@@ -17,7 +20,45 @@ describe('appRoutes', () => {
       'home',
       'place-detail',
       'profile',
-      'admin-reviews'
+      'admin-reviews',
+      'login'
     ]);
+  });
+
+  it('marks protected routes with requiresAuth', () => {
+    const protectedRoutes = appRoutes.filter((r) => r.meta?.requiresAuth);
+    expect(protectedRoutes.map((r) => r.path)).toEqual(['/profile', '/admin/reviews']);
+  });
+
+  it('marks admin routes with requiresAdmin', () => {
+    const adminRoutes = appRoutes.filter((r) => r.meta?.requiresAdmin);
+    expect(adminRoutes.map((r) => r.path)).toEqual(['/admin/reviews']);
+  });
+});
+
+describe('router beforeEach guard', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('redirects unauthenticated users from protected routes to login with redirect', async () => {
+    const { router } = await import('./index');
+    const { sessionStore } = await import('../services');
+
+    vi.spyOn(sessionStore, 'isLoggedIn', 'get').mockReturnValue({ value: false } as never);
+
+    await router.push('/profile');
+    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.query.redirect).toBe('/profile');
+  });
+
+  it('redirects logged-in users away from /login to home', async () => {
+    const { router } = await import('./index');
+    const { sessionStore } = await import('../services');
+
+    vi.spyOn(sessionStore, 'isLoggedIn', 'get').mockReturnValue({ value: true } as never);
+
+    await router.push('/login');
+    expect(router.currentRoute.value.path).toBe('/');
   });
 });

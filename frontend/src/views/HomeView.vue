@@ -2,8 +2,9 @@
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
-import { ApiError, weekendGoApi } from '../services';
+import { weekendGoApi } from '../services';
 import type { Place } from '../services';
+import { useAsyncAction, useApiError } from '../composables';
 import MapView from '../components/MapView.vue';
 
 const keyword = ref('library');
@@ -11,42 +12,34 @@ const city = ref('');
 const longitude = ref('116.481488');
 const latitude = ref('39.990464');
 const searchMode = ref<'keyword' | 'nearby'>('keyword');
-const places = ref<Place[]>([]);
-const loading = ref(false);
-const error = ref('');
 const hasSearched = ref(false);
 
-function describeError(value: unknown): string {
-  if (value instanceof ApiError) {
-    const payload = value.payload as { message?: string; code?: string } | undefined;
-    return payload?.message ?? payload?.code ?? `${value.status} ${value.message}`;
-  }
+const { errorMessage, setError, clearError } = useApiError();
 
-  return value instanceof Error ? value.message : '请求失败，请稍后重试。';
-}
+const {
+  loading,
+  data: places,
+  execute: loadPlaces
+} = useAsyncAction<Place[]>({
+  onError: (msg) => setError(new Error(msg))
+});
 
-async function loadPlaces(): Promise<void> {
-  error.value = '';
-  loading.value = true;
+async function doLoadPlaces(): Promise<void> {
+  clearError();
   hasSearched.value = true;
 
-  try {
-    places.value = searchMode.value === 'keyword'
-      ? await weekendGoApi.searchPlaces({ keyword: keyword.value.trim(), city: city.value.trim() || undefined })
-      : await weekendGoApi.nearbyPlaces({
+  await loadPlaces(() =>
+    searchMode.value === 'keyword'
+      ? weekendGoApi.searchPlaces({ keyword: keyword.value.trim(), city: city.value.trim() || undefined })
+      : weekendGoApi.nearbyPlaces({
         longitude: longitude.value.trim(),
         latitude: latitude.value.trim(),
         keyword: keyword.value.trim() || undefined
-      });
-  } catch (err) {
-    places.value = [];
-    error.value = describeError(err);
-  } finally {
-    loading.value = false;
-  }
+      })
+  );
 }
 
-loadPlaces();
+doLoadPlaces();
 </script>
 
 <template>
@@ -59,7 +52,7 @@ loadPlaces();
       <span class="status-pill">Demo loop</span>
     </header>
 
-    <form class="toolbar" @submit.prevent="loadPlaces">
+    <form class="toolbar" @submit.prevent="doLoadPlaces">
       <div class="segmented" aria-label="搜索模式">
         <button type="button" :class="{ active: searchMode === 'keyword' }" @click="searchMode = 'keyword'">
           搜索
@@ -89,15 +82,15 @@ loadPlaces();
       </template>
 
       <button class="primary-button" type="submit" :disabled="loading">
-        {{ loading ? '查询中' : '查询地点' }}
+        {{ loading ? '查询中...' : '查询地点' }}
       </button>
     </form>
 
-    <MapView v-if="hasSearched && !loading" :places="places" />
+    <MapView v-if="hasSearched && !loading && places && places.length > 0" :places="places" />
 
-    <p v-if="error" class="notice error">{{ error }}</p>
+    <p v-if="errorMessage" class="notice error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="notice">正在加载地点...</p>
-    <p v-else-if="hasSearched && places.length === 0" class="notice">没有找到地点，可换一个关键词或使用本地演示 placeId。</p>
+    <p v-else-if="hasSearched && (!places || places.length === 0)" class="notice">没有找到地点，可换一个关键词或使用本地演示 placeId。</p>
 
     <div class="list-grid">
       <article v-for="place in places" :key="place.id" class="panel place-card">
