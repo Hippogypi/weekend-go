@@ -90,4 +90,31 @@ describe('WeekendGoApi', () => {
     ]);
     expect(calls[1].init?.headers).toMatchObject({ Authorization: 'Bearer token-1' });
   });
+
+  it('sends question and answer requests to documented endpoints', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const api = createWeekendGoApi({
+      baseUrl: 'https://api.example.test/api',
+      accessTokenProvider: () => 'token-1',
+      fetcher: async (input, init) => {
+        calls.push({ input, init });
+        return new Response(JSON.stringify({ success: true, code: 'OK', message: 'success', data: {} }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    });
+
+    await api.createQuestion(7, 'Is Wi-Fi fast?');
+    await api.getQuestions(7);
+    await api.createAnswer(3, 'Yes, very fast.');
+    await api.getAnswers(3);
+
+    expect(calls.map((call) => `${call.init?.method} ${call.input}`)).toEqual([
+      'POST https://api.example.test/api/places/7/questions',
+      'GET https://api.example.test/api/places/7/questions',
+      'POST https://api.example.test/api/questions/3/answers',
+      'GET https://api.example.test/api/questions/3/answers'
+    ]);
+  });
 });

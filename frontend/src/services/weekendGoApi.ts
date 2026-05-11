@@ -233,6 +233,17 @@ export interface AuditStats {
   todayRejected: number;
 }
 
+export interface PlaceQa {
+  id: number;
+  placeId: number;
+  userId: number;
+  type: 'QUESTION' | 'ANSWER';
+  parentId?: number;
+  content: string;
+  createdAt: string;
+  answerCount?: number;
+}
+
 export class WeekendGoApi {
   private readonly client: ApiClient;
 
@@ -384,6 +395,22 @@ export class WeekendGoApi {
     query.set('latitude', params.latitude);
     query.set('radius', String(params.radius ?? 5000));
     return this.client.get(`/map/markers?${query.toString()}`);
+  }
+
+  createQuestion(placeId: number | string, content: string): Promise<PlaceQa> {
+    return this.client.post(`/places/${placeId}/questions`, { content });
+  }
+
+  getQuestions(placeId: number | string): Promise<PlaceQa[]> {
+    return this.client.get(`/places/${placeId}/questions`);
+  }
+
+  createAnswer(questionId: number | string, content: string): Promise<PlaceQa> {
+    return this.client.post(`/questions/${questionId}/answers`, { content });
+  }
+
+  getAnswers(questionId: number | string): Promise<PlaceQa[]> {
+    return this.client.get(`/questions/${questionId}/answers`);
   }
 }
 

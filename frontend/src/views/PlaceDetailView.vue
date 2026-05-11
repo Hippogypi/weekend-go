@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { sessionStore, weekendGoApi } from '../services';
-import type { CurrentStatus, Place, PlaceImage, Review } from '../services';
-import { useAsyncAction, useApiError } from '../composables';
+import type { CurrentStatus, Place, PlaceImage, Review, PlaceQa } from '../services';
+import { useAsyncAction, useApiError, useToast } from '../composables';
 
 const route = useRoute();
 const router = useRouter();
@@ -17,13 +17,27 @@ const images = ref<PlaceImage[]>([]);
 const favorited = ref(false);
 const actionLoading = ref('');
 const message = ref('');
-const activeTab = ref<'overview' | 'reviews' | 'contribute'>('overview');
+const activeTab = ref<'overview' | 'reviews' | 'qa' | 'contribute'>('overview');
 
 const tabs = [
   { key: 'overview' as const, label: '概况' },
   { key: 'reviews' as const, label: '评价' },
+  { key: 'qa' as const, label: '问大家' },
   { key: 'contribute' as const, label: '去贡献' }
 ];
+
+// Q&A state
+const questions = ref<PlaceQa[]>([]);
+const expandedQuestionId = ref<number | null>(null);
+const answersMap = ref<Record<number, PlaceQa[]>>({});
+const newQuestionContent = ref('');
+const newAnswerContent = ref('');
+const qaSubmitting = ref(false);
+const answerSubmitting = ref(false);
+const qaLoading = ref(false);
+const answersLoading = ref<Record<number, boolean>>({});
+
+const { showToast } = useToast();
 
 const { errorMessage, setError, clearError } = useApiError();
 
@@ -51,6 +65,88 @@ async function doLoadDetail(): Promise<void> {
       await loadFavoriteStatus();
     }
   });
+}
+
+async function loadQuestions(): Promise<void> {
+  qaLoading.value = true;
+  try {
+    questions.value = await weekendGoApi.getQuestions(placeId.value);
+  } catch (err) {
+    setError(err);
+  } finally {
+    qaLoading.value = false;
+  }
+}
+
+async function toggleQuestion(questionId: number): Promise<void> {
+  if (expandedQuestionId.value === questionId) {
+    expandedQuestionId.value = null;
+    return;
+  }
+  expandedQuestionId.value = questionId;
+  if (!answersMap.value[questionId]) {
+    answersLoading.value[questionId] = true;
+    try {
+      answersMap.value[questionId] = await weekendGoApi.getAnswers(questionId);
+    } catch (err) {
+      setError(err);
+      answersMap.value[questionId] = [];
+    } finally {
+      answersLoading.value[questionId] = false;
+    }
+  }
+}
+
+async function submitQuestion(): Promise<void> {
+  if (!newQuestionContent.value.trim()) return;
+  if (!sessionStore.isLoggedIn.value) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } });
+    return;
+  }
+  qaSubmitting.value = true;
+  clearError();
+  try {
+    const question = await weekendGoApi.createQuestion(placeId.value, newQuestionContent.value.trim());
+    questions.value.unshift(question);
+    newQuestionContent.value = '';
+    showToast('提问成功', 'success');
+  } catch (err) {
+    setError(err);
+  } finally {
+    qaSubmitting.value = false;
+  }
+}
+
+async function submitAnswer(questionId: number): Promise<void> {
+  if (!newAnswerContent.value.trim()) return;
+  if (!sessionStore.isLoggedIn.value) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } });
+    return;
+  }
+  answerSubmitting.value = true;
+  clearError();
+  try {
+    const answer = await weekendGoApi.createAnswer(questionId, newAnswerContent.value.trim());
+    if (!answersMap.value[questionId]) {
+      answersMap.value[questionId] = [];
+    }
+    answersMap.value[questionId].push(answer);
+    const q = questions.value.find((item) => item.id === questionId);
+    if (q && typeof q.answerCount === 'number') {
+      q.answerCount += 1;
+    }
+    newAnswerContent.value = '';
+    showToast('回答成功', 'success');
+  } catch (err) {
+    setError(err);
+  } finally {
+    answerSubmitting.value = false;
+  }
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 async function loadFavoriteStatus(): Promise<void> {
@@ -85,6 +181,12 @@ async function toggleFavorite(): Promise<void> {
 }
 
 doLoadDetail();
+
+watch(activeTab, (tab) => {
+  if (tab === 'qa') {
+    loadQuestions();
+  }
+});
 </script>
 
 <template>
@@ -187,6 +289,79 @@ doLoadDetail();
         </section>
       </template>
 
+      <template v-if="activeTab === 'qa'">
+        <section class="panel">
+          <h2>问大家</h2>
+
+          <div v-if="sessionStore.isLoggedIn.value" class="qa-input-row">
+            <input
+              v-model="newQuestionContent"
+              type="text"
+              class="text-input"
+              placeholder="请输入你的问题…"
+              :disabled="qaSubmitting"
+              @keydown.enter.prevent="submitQuestion"
+            />
+            <button
+              class="primary-button"
+              type="button"
+              :disabled="qaSubmitting || !newQuestionContent.trim()"
+              @click="submitQuestion"
+            >
+              {{ qaSubmitting ? '提交中…' : '提问' }}
+            </button>
+          </div>
+          <p v-else class="muted">请登录后提问。</p>
+
+          <p v-if="qaLoading" class="notice">正在加载问题…</p>
+          <p v-else-if="questions.length === 0" class="muted">暂无问题，快来提问吧。</p>
+
+          <ul v-else class="simple-list qa-list">
+            <li v-for="question in questions" :key="question.id" class="qa-item">
+              <div class="qa-question-header" @click="toggleQuestion(question.id)">
+                <div class="qa-content">{{ question.content }}</div>
+                <div class="qa-meta">
+                  <span>{{ formatDate(question.createdAt) }}</span>
+                  <span>{{ question.answerCount ?? 0 }} 条回答</span>
+                  <span class="qa-toggle">{{ expandedQuestionId === question.id ? '收起' : '展开' }}</span>
+                </div>
+              </div>
+
+              <div v-if="expandedQuestionId === question.id" class="qa-answers">
+                <p v-if="answersLoading[question.id]" class="notice">正在加载回答…</p>
+                <ul v-else-if="(answersMap[question.id] || []).length > 0" class="simple-list">
+                  <li v-for="answer in answersMap[question.id]" :key="answer.id" class="qa-answer-item">
+                    <div class="qa-content">{{ answer.content }}</div>
+                    <div class="qa-meta">{{ formatDate(answer.createdAt) }}</div>
+                  </li>
+                </ul>
+                <p v-else class="muted">暂无回答。</p>
+
+                <div v-if="sessionStore.isLoggedIn.value" class="qa-input-row answer-input">
+                  <input
+                    v-model="newAnswerContent"
+                    type="text"
+                    class="text-input"
+                    placeholder="请输入你的回答…"
+                    :disabled="answerSubmitting"
+                    @keydown.enter.prevent="submitAnswer(question.id)"
+                  />
+                  <button
+                    class="primary-button"
+                    type="button"
+                    :disabled="answerSubmitting || !newAnswerContent.trim()"
+                    @click="submitAnswer(question.id)"
+                  >
+                    {{ answerSubmitting ? '提交中…' : '回答' }}
+                  </button>
+                </div>
+                <p v-else class="muted">请登录后回答。</p>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </template>
+
       <template v-if="activeTab === 'contribute'">
         <div class="two-column">
           <article class="panel action-card" @click="router.push(`/places/${placeId}/contribute/checkin`)">
@@ -222,5 +397,80 @@ doLoadDetail();
   border-radius: 6px;
   object-fit: cover;
   background: #eef2f6;
+}
+
+.qa-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.qa-input-row .text-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.qa-input-row .text-input:focus {
+  outline: none;
+  border-color: #0969da;
+}
+
+.qa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.qa-item {
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.qa-question-header {
+  cursor: pointer;
+}
+
+.qa-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1f2328;
+  margin-bottom: 4px;
+}
+
+.qa-meta {
+  font-size: 12px;
+  color: #656d76;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.qa-toggle {
+  color: #0969da;
+  font-weight: 500;
+}
+
+.qa-answers {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eaeef2;
+}
+
+.qa-answer-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f6f8fa;
+}
+
+.qa-answer-item:last-child {
+  border-bottom: none;
+}
+
+.answer-input {
+  margin-top: 12px;
+  margin-bottom: 0;
 }
 </style>
