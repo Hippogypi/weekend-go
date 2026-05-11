@@ -16,8 +16,6 @@ import com.weekendgo.place.Place;
 import com.weekendgo.place.PlaceRepository;
 import com.weekendgo.place.PlaceSource;
 import com.weekendgo.place.WorkspaceStatus;
-import com.weekendgo.profile.InMemoryWorkspaceProfileRepository;
-import com.weekendgo.profile.WorkspaceProfileRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -78,13 +76,6 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.data.total").value(0))
                 .andExpect(jsonPath("$.data.page").value(1))
                 .andExpect(jsonPath("$.data.size").value(10));
-
-        mockMvc.perform(get("/api/admin/audits/pending-list?type=profile")
-                        .header("Authorization", "Bearer " + adminToken)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.items").isArray())
-                .andExpect(jsonPath("$.data.total").value(0));
 
         mockMvc.perform(get("/api/admin/audits/pending-list?type=image")
                         .header("Authorization", "Bearer " + adminToken)
@@ -182,12 +173,6 @@ class AdminControllerTest {
         @Primary
         InteractionRepository testInteractionRepository() {
             return new InMemoryInteractionRepository();
-        }
-
-        @Bean
-        @Primary
-        WorkspaceProfileRepository testWorkspaceProfileRepository() {
-            return new InMemoryWorkspaceProfileRepository();
         }
     }
 }

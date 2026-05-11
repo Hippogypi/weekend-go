@@ -1,6 +1,10 @@
 package com.weekendgo.interaction;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weekendgo.place.Place;
+import com.weekendgo.profile.AllowLongStay;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,9 +28,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 @ConditionalOnProperty(name = "spring.datasource.url")
 public class JdbcInteractionRepository implements InteractionRepository {
 
+    private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
+    };
+
     private static final String REVIEW_COLUMNS = """
             SELECT id, place_id, user_id, quiet_score, wifi_score, socket_score,
-                   comfort_score, cost_score, content, audit_status, created_at
+                   comfort_score, cost_score, content, audit_status, created_at,
+                   seat_score, min_consumption, allow_long_stay, suitable_scenes,
+                   like_count, reply_count
             FROM reviews
             """;
 
@@ -37,10 +46,16 @@ public class JdbcInteractionRepository implements InteractionRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate transactionTemplate;
+    private final ObjectMapper objectMapper;
 
-    public JdbcInteractionRepository(JdbcTemplate jdbcTemplate, TransactionTemplate transactionTemplate) {
+    public JdbcInteractionRepository(
+            JdbcTemplate jdbcTemplate,
+            TransactionTemplate transactionTemplate,
+            ObjectMapper objectMapper
+    ) {
         this.jdbcTemplate = jdbcTemplate;
         this.transactionTemplate = transactionTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -52,8 +67,9 @@ public class JdbcInteractionRepository implements InteractionRepository {
                     PreparedStatement statement = connection.prepareStatement("""
                             INSERT INTO reviews (
                               place_id, user_id, quiet_score, wifi_score, socket_score,
-                              comfort_score, cost_score, content, audit_status
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
+                              comfort_score, cost_score, content, seat_score,
+                              min_consumption, allow_long_stay, suitable_scenes, audit_status
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
                             """, new String[]{"id"});
                     statement.setLong(1, placeId);
                     statement.setLong(2, userId);
@@ -63,6 +79,19 @@ public class JdbcInteractionRepository implements InteractionRepository {
                     statement.setBigDecimal(6, request.comfortScore());
                     statement.setBigDecimal(7, request.costScore());
                     statement.setString(8, request.content());
+                    if (request.seatScore() == null) {
+                        statement.setObject(9, null);
+                    } else {
+                        statement.setBigDecimal(9, request.seatScore());
+                    }
+                    if (request.minConsumption() == null) {
+                        statement.setObject(10, null);
+                    } else {
+                        statement.setInt(10, request.minConsumption());
+                    }
+                    String allowLongStay = request.allowLongStay() == null ? "UNKNOWN" : request.allowLongStay();
+                    statement.setString(11, allowLongStay);
+                    statement.setString(12, writeScenes(request.suitableScenes()));
                     return statement;
                 }, keyHolder);
                 return findReviewById(requiredKey(keyHolder));
@@ -79,6 +108,8 @@ public class JdbcInteractionRepository implements InteractionRepository {
             return jdbcTemplate.query("""
                     SELECT r.id, r.place_id, r.user_id, r.quiet_score, r.wifi_score, r.socket_score,
                            r.comfort_score, r.cost_score, r.content, r.audit_status, r.created_at,
+                           r.seat_score, r.min_consumption, r.allow_long_stay, r.suitable_scenes,
+                           r.like_count, r.reply_count,
                            i.id as image_id, i.user_id as image_user_id,
                            i.image_url, i.description, i.created_at as image_created_at
                     FROM reviews r
@@ -97,6 +128,8 @@ public class JdbcInteractionRepository implements InteractionRepository {
             return jdbcTemplate.query("""
                     SELECT r.id, r.place_id, r.user_id, r.quiet_score, r.wifi_score, r.socket_score,
                            r.comfort_score, r.cost_score, r.content, r.audit_status, r.created_at,
+                           r.seat_score, r.min_consumption, r.allow_long_stay, r.suitable_scenes,
+                           r.like_count, r.reply_count,
                            i.id as image_id, i.user_id as image_user_id,
                            i.image_url, i.description, i.audit_status as image_audit_status, i.created_at as image_created_at
                     FROM reviews r
@@ -120,7 +153,13 @@ public class JdbcInteractionRepository implements InteractionRepository {
                                 rs.getBigDecimal("cost_score"),
                                 rs.getString("content"),
                                 AuditStatus.valueOf(rs.getString("audit_status")),
-                                toInstant(rs.getTimestamp("created_at"))
+                                toInstant(rs.getTimestamp("created_at")),
+                                rs.getBigDecimal("seat_score"),
+                                nullableInt(rs, "min_consumption"),
+                                nullableAllowLongStay(rs, "allow_long_stay"),
+                                readScenes(rs.getString("suitable_scenes")),
+                                rs.getInt("like_count"),
+                                rs.getInt("reply_count")
                         );
                         map.put(reviewId, acc);
                     }
@@ -161,7 +200,13 @@ public class JdbcInteractionRepository implements InteractionRepository {
                         rs.getBigDecimal("cost_score"),
                         rs.getString("content"),
                         AuditStatus.valueOf(rs.getString("audit_status")),
-                        toInstant(rs.getTimestamp("created_at"))
+                        toInstant(rs.getTimestamp("created_at")),
+                        rs.getBigDecimal("seat_score"),
+                        nullableInt(rs, "min_consumption"),
+                        nullableAllowLongStay(rs, "allow_long_stay"),
+                        readScenes(rs.getString("suitable_scenes")),
+                        rs.getInt("like_count"),
+                        rs.getInt("reply_count")
                 );
                 map.put(reviewId, acc);
             }
@@ -493,7 +538,13 @@ public class JdbcInteractionRepository implements InteractionRepository {
                 resultSet.getString("content"),
                 AuditStatus.valueOf(resultSet.getString("audit_status")),
                 toInstant(resultSet.getTimestamp("created_at")),
-                null
+                null,
+                resultSet.getBigDecimal("seat_score"),
+                nullableInt(resultSet, "min_consumption"),
+                nullableAllowLongStay(resultSet, "allow_long_stay"),
+                readScenes(resultSet.getString("suitable_scenes")),
+                resultSet.getInt("like_count"),
+                resultSet.getInt("reply_count")
         );
     }
 
@@ -526,6 +577,41 @@ public class JdbcInteractionRepository implements InteractionRepository {
         return timestamp == null ? null : timestamp.toInstant();
     }
 
+    private Integer nullableInt(ResultSet rs, String column) throws SQLException {
+        int value = rs.getInt(column);
+        return rs.wasNull() ? null : value;
+    }
+
+    private AllowLongStay nullableAllowLongStay(ResultSet rs, String column) throws SQLException {
+        String value = rs.getString(column);
+        return value == null ? null : AllowLongStay.valueOf(value);
+    }
+
+    private String writeScenes(List<String> scenes) {
+        if (scenes == null || scenes.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(scenes);
+        } catch (JsonProcessingException exception) {
+            throw new InteractionStorageException("Failed to serialize suitable scenes", exception);
+        }
+    }
+
+    private List<String> readScenes(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            if (raw.startsWith("\"")) {
+                raw = objectMapper.readValue(raw, String.class);
+            }
+            return objectMapper.readValue(raw, STRING_LIST);
+        } catch (JsonProcessingException exception) {
+            throw new InteractionStorageException("Failed to deserialize suitable scenes", exception);
+        }
+    }
+
     private static class ReviewAccumulator {
 
         private final long id;
@@ -540,11 +626,19 @@ public class JdbcInteractionRepository implements InteractionRepository {
         private final AuditStatus auditStatus;
         private final Instant createdAt;
         private final List<ImageResponse> images = new ArrayList<>();
+        private final BigDecimal seatScore;
+        private final Integer minConsumption;
+        private final AllowLongStay allowLongStay;
+        private final List<String> suitableScenes;
+        private final int likeCount;
+        private final int replyCount;
 
         ReviewAccumulator(long id, long placeId, long userId,
                           BigDecimal quietScore, BigDecimal wifiScore, BigDecimal socketScore,
                           BigDecimal comfortScore, BigDecimal costScore, String content,
-                          AuditStatus auditStatus, Instant createdAt) {
+                          AuditStatus auditStatus, Instant createdAt,
+                          BigDecimal seatScore, Integer minConsumption, AllowLongStay allowLongStay,
+                          List<String> suitableScenes, int likeCount, int replyCount) {
             this.id = id;
             this.placeId = placeId;
             this.userId = userId;
@@ -556,6 +650,12 @@ public class JdbcInteractionRepository implements InteractionRepository {
             this.content = content;
             this.auditStatus = auditStatus;
             this.createdAt = createdAt;
+            this.seatScore = seatScore;
+            this.minConsumption = minConsumption;
+            this.allowLongStay = allowLongStay;
+            this.suitableScenes = suitableScenes;
+            this.likeCount = likeCount;
+            this.replyCount = replyCount;
         }
 
         void addImage(ImageResponse image) {
@@ -565,7 +665,8 @@ public class JdbcInteractionRepository implements InteractionRepository {
         ReviewResponse toResponse() {
             return new ReviewResponse(
                     id, placeId, userId, quietScore, wifiScore, socketScore,
-                    comfortScore, costScore, content, auditStatus, createdAt, List.copyOf(images)
+                    comfortScore, costScore, content, auditStatus, createdAt, List.copyOf(images),
+                    seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount
             );
         }
     }

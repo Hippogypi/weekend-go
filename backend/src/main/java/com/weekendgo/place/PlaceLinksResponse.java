@@ -2,7 +2,6 @@ package com.weekendgo.place;
 
 public record PlaceLinksResponse(
         String detail,
-        String profileContributions,
         String checkins,
         String reviews,
         String images
@@ -12,7 +11,6 @@ public record PlaceLinksResponse(
         String basePath = "/api/places/" + placeId;
         return new PlaceLinksResponse(
                 basePath,
-                basePath + "/profile-submissions",
                 basePath + "/checkins",
                 basePath + "/reviews",
                 basePath + "/images"

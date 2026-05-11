@@ -203,6 +203,38 @@ class InteractionControllerTest {
                 .andExpect(jsonPath("$.data[0].placeName").value("City Library"));
     }
 
+    @Test
+    void submitReviewWithNewContributionFields() throws Exception {
+        String userToken = registerAndLogin("contrib-user", UserRole.USER);
+
+        mockMvc.perform(post("/api/places/42/reviews")
+                        .header("Authorization", "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "quietScore": 4.5,
+                                  "wifiScore": 4.0,
+                                  "socketScore": 5.0,
+                                  "comfortScore": 4.0,
+                                  "costScore": 3.5,
+                                  "content": "great workspace",
+                                  "seatScore": 4.5,
+                                  "minConsumption": 25,
+                                  "allowLongStay": "TRUE",
+                                  "suitableScenes": ["READING", "REMOTE_WORK"]
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.quietScore").value(4.5))
+                .andExpect(jsonPath("$.data.seatScore").value(4.5))
+                .andExpect(jsonPath("$.data.minConsumption").value(25))
+                .andExpect(jsonPath("$.data.allowLongStay").value("TRUE"))
+                .andExpect(jsonPath("$.data.suitableScenes[0]").value("READING"))
+                .andExpect(jsonPath("$.data.suitableScenes[1]").value("REMOTE_WORK"))
+                .andExpect(jsonPath("$.data.likeCount").value(0))
+                .andExpect(jsonPath("$.data.replyCount").value(0));
+    }
+
     private String registerAndLogin(String username, UserRole role) throws Exception {
         userAccountRepository.save(username, passwordEncoder.encode("secret123"), role, username);
         MvcResult result = mockMvc.perform(post("/api/auth/login")

@@ -9,7 +9,6 @@ import com.weekendgo.interaction.InteractionStorageException;
 import com.weekendgo.place.PlaceNotFoundException;
 import com.weekendgo.place.PlaceStorageException;
 import com.weekendgo.profile.ProfileStorageException;
-import com.weekendgo.profile.ProfileSubmissionNotFoundException;
 import com.weekendgo.profile.WorkspaceProfileNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -151,21 +150,6 @@ public class GlobalExceptionHandler {
         ErrorResponse error = ErrorResponse.of(
                 "WORKSPACE_PROFILE_NOT_FOUND",
                 "Workspace profile not found",
-                request.getRequestURI()
-        );
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.fail(error.code(), error.message(), error));
-    }
-
-    @ExceptionHandler(ProfileSubmissionNotFoundException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleProfileSubmissionNotFound(
-            ProfileSubmissionNotFoundException exception,
-            HttpServletRequest request
-    ) {
-        ErrorResponse error = ErrorResponse.of(
-                "PROFILE_SUBMISSION_NOT_FOUND",
-                "Profile submission not found",
                 request.getRequestURI()
         );
         return ResponseEntity
