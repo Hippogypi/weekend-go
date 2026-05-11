@@ -325,3 +325,38 @@ Phase 1: database-reviews-refactor（无依赖，最先启动）
 - `dev_seed.sql` 需要同步适配新 schema（去掉 profile_submissions 数据，改为 reviews 格式）。
 - `audit_logs` 中的 `PROFILE_SUBMISSION` target_type 需要迁移为 `REVIEW`。
 - 前端写评价页表单需要扩展共建字段，UI 复杂度增加。
+
+## 2026-05-11 Phase 2 后端重构完成
+
+### database-reviews-refactor
+- 已合并到 main。
+- 审查发现并修复了冗余索引问题（`idx_reviews_time` 与 `idx_reviews_place_status_created` 重复）。
+
+### backend-reviews-as-contribution
+- 已合并到 main。
+- 删除了 `ProfileSubmission` / `ProfileSubmissionRequest` / `MyProfileSubmissionResponse` 及相关接口。
+- `WorkspaceProfileService` 聚合逻辑改为从 `reviews` 表取 `APPROVED` 数据。
+- `ReviewRequest` 扩展了 `seatScore` / `minConsumption` / `allowLongStay` / `suitableScenes` 字段。
+- `InteractionService.createReview` 不再创建 `profile_submissions`，评分直接写入 `reviews`。
+- 审查中发现并修复了 `allowLongStay` null 时 `setString` NPE 问题（默认 `"UNKNOWN"`）。
+- 后端测试：61 tests, 0 failures。
+
+### backend-review-interaction
+- 已合并到 main。
+- 与 `backend-reviews-as-contribution` 合并时产生冲突（`ReviewResponse` / `JdbcInteractionRepository` / `InteractionService` / `InMemoryInteractionRepository`）。
+- 冲突原因：两个 worker 对 `ReviewResponse` 的修改不同（一个加共建字段，一个加 `liked`）。
+- 解决方案：以 `backend-reviews-as-contribution` 版本为基础，手动添加点赞/回复/排序功能。
+- 审查中发现并修复了 `ORDER BY` 字符串拼接缺少空格导致的 H2 SQL 语法错误。
+- 后端测试：77 tests, 0 failures。
+
+### backend-ask-everyone
+- 已合并到 main。
+- 与 `backend-review-interaction` 合并时 `SecurityConfig.java` 产生轻微冲突（`permitAll` 路径列表）。
+- 冲突解决方案：同时保留 `/api/reviews/*/replies` 和 `/api/questions/*/answers` 两条公开路径。
+- 后端测试：77 tests, 0 failures。
+
+### 当前状态
+- `main` 分支完整测试通过：77 tests, 0 failures, 0 errors。
+- 已完成 feature：`database-reviews-refactor`, `backend-reviews-as-contribution`, `backend-review-interaction`, `backend-ask-everyone`。
+- 待启动 Phase 3：`frontend-review-interaction`, `frontend-ask-everyone`。
+- 阻塞中的 feature：`user-profile-expansion`, `admin-workbench`（等待前端 Phase 3 完成后或同步启动）。
