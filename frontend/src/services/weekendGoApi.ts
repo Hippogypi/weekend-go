@@ -137,12 +137,6 @@ export interface CurrentStatus {
   seatAvailabilityRatio?: number | null;
 }
 
-export interface ProfileAttributeRequest {
-  minConsumption?: number | null;
-  allowLongStay?: string | null;
-  suitableScenes?: string[];
-}
-
 export interface ReviewImageAttachment {
   imageUrl: string;
   description?: string;
@@ -154,18 +148,42 @@ export interface ReviewRequest {
   socketScore: number;
   comfortScore: number;
   costScore: number;
+  seatScore?: number;
+  minConsumption?: number;
+  allowLongStay?: string;
+  suitableScenes?: string[];
   content: string;
-  profileAttributes?: ProfileAttributeRequest | null;
   images?: ReviewImageAttachment[];
 }
 
-export interface Review extends ReviewRequest {
+export interface Review {
   id: number;
   placeId: number;
   userId: number;
+  quietScore: number;
+  wifiScore: number;
+  socketScore: number;
+  comfortScore: number;
+  costScore: number;
+  seatScore?: number;
+  minConsumption?: number;
+  allowLongStay?: string;
+  suitableScenes?: string[];
+  content: string;
   auditStatus?: string | null;
   createdAt?: string;
   images?: PlaceImage[];
+  likeCount: number;
+  replyCount: number;
+  liked?: boolean;
+}
+
+export interface ReviewReply {
+  id: number;
+  reviewId: number;
+  userId: number;
+  content: string;
+  createdAt: string;
 }
 
 export interface ImageRequest {
@@ -314,8 +332,25 @@ export class WeekendGoApi {
     return this.client.post(`/places/${placeId}/reviews`, body);
   }
 
-  reviews(placeId: number | string): Promise<Review[]> {
-    return this.client.get(`/places/${placeId}/reviews`);
+  getReviews(placeId: number | string, sort?: 'time' | 'hot'): Promise<Review[]> {
+    const query = sort ? `?sort=${sort}` : '';
+    return this.client.get(`/places/${placeId}/reviews${query}`);
+  }
+
+  likeReview(reviewId: number | string): Promise<void> {
+    return this.client.post(`/reviews/${reviewId}/likes`, {});
+  }
+
+  unlikeReview(reviewId: number | string): Promise<void> {
+    return this.client.delete(`/reviews/${reviewId}/likes`);
+  }
+
+  getReplies(reviewId: number | string): Promise<ReviewReply[]> {
+    return this.client.get(`/reviews/${reviewId}/replies`);
+  }
+
+  createReply(reviewId: number | string, content: string): Promise<ReviewReply> {
+    return this.client.post(`/reviews/${reviewId}/replies`, { content });
   }
 
   submitImage(placeId: number | string, body: ImageRequest): Promise<PlaceImage> {

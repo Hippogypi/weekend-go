@@ -20,12 +20,20 @@ const reviewForm = reactive({
 
 const showAttributes = ref(false);
 const attrForm = reactive({
+  seatScore: undefined as number | undefined,
   minConsumption: undefined as number | undefined,
   allowLongStay: null as string | null,
   suitableScenes: [] as string[]
 });
 
-const sceneOptions = ['自习', '阅读', '远程办公', '临时办公', '小组讨论', '视频会议'];
+const sceneOptions = [
+  { value: 'SELF_STUDY', label: '自习' },
+  { value: 'READING', label: '阅读' },
+  { value: 'REMOTE_WORK', label: '远程办公' },
+  { value: 'TEMPORARY_WORK', label: '临时办公' },
+  { value: 'GROUP_DISCUSSION', label: '小组讨论' },
+  { value: 'VIDEO_MEETING', label: '视频会议' }
+];
 
 const imageList = ref<Array<{ imageUrl: string; description: string }>>([]);
 const showAddImage = ref(false);
@@ -40,12 +48,12 @@ function goBack(): void {
   router.push(`/places/${placeId.value}`);
 }
 
-function toggleScene(scene: string): void {
-  const idx = attrForm.suitableScenes.indexOf(scene);
+function toggleScene(sceneValue: string): void {
+  const idx = attrForm.suitableScenes.indexOf(sceneValue);
   if (idx >= 0) {
     attrForm.suitableScenes.splice(idx, 1);
   } else {
-    attrForm.suitableScenes.push(scene);
+    attrForm.suitableScenes.push(sceneValue);
   }
 }
 
@@ -76,28 +84,30 @@ async function submitReview(): Promise<void> {
   message.value = '';
 
   try {
-    const hasAttributes = showAttributes.value && (
-      attrForm.minConsumption !== undefined ||
-      attrForm.allowLongStay !== null ||
-      attrForm.suitableScenes.length > 0
-    );
-
-    const review = await weekendGoApi.submitReview(placeId.value, {
+    const body: import('../services').ReviewRequest = {
       quietScore: Number(reviewForm.quietScore),
       wifiScore: Number(reviewForm.wifiScore),
       socketScore: Number(reviewForm.socketScore),
       comfortScore: Number(reviewForm.comfortScore),
       costScore: Number(reviewForm.costScore),
-      content: reviewForm.content,
-      profileAttributes: hasAttributes ? {
-        minConsumption: attrForm.minConsumption ?? null,
-        allowLongStay: attrForm.allowLongStay,
-        suitableScenes: attrForm.suitableScenes.length > 0 ? attrForm.suitableScenes : undefined
-      } : null,
-      images: imageList.value.length > 0 ? imageList.value : undefined
-    });
+      content: reviewForm.content
+    };
+
+    if (showAttributes.value) {
+      if (attrForm.seatScore !== undefined) body.seatScore = attrForm.seatScore;
+      if (attrForm.minConsumption !== undefined) body.minConsumption = attrForm.minConsumption;
+      if (attrForm.allowLongStay !== null) body.allowLongStay = attrForm.allowLongStay;
+      if (attrForm.suitableScenes.length > 0) body.suitableScenes = attrForm.suitableScenes;
+    }
+
+    if (imageList.value.length > 0) {
+      body.images = imageList.value;
+    }
+
+    const review = await weekendGoApi.submitReview(placeId.value, body);
     message.value = `评价已提交，审核状态：${review.auditStatus}`;
     reviewForm.content = '';
+    attrForm.seatScore = undefined;
     attrForm.minConsumption = undefined;
     attrForm.allowLongStay = null;
     attrForm.suitableScenes = [];
@@ -149,7 +159,7 @@ async function submitReview(): Promise<void> {
       </div>
       <label class="field stacked">
         <span>评价内容</span>
-        <textarea v-model="reviewForm.content" required rows="4" placeholder="例如：周末下午人很多，但插座充足，Wi-Fi稳定，适合带电脑工作..."></textarea>
+        <textarea v-model="reviewForm.content" rows="4" placeholder="例如：周末下午人很多，但插座充足，Wi-Fi稳定，适合带电脑工作...（选填，可空）"></textarea>
       </label>
 
       <div class="attributes-section">
@@ -162,6 +172,10 @@ async function submitReview(): Promise<void> {
         </button>
         <div v-if="showAttributes" class="panel attributes-panel">
           <label class="field stacked">
+            <span>座位评分</span>
+            <input v-model.number="attrForm.seatScore" type="number" min="1" max="5" step="0.5" placeholder="选填，1-5" />
+          </label>
+          <label class="field stacked">
             <span>最低消费（元）</span>
             <input v-model.number="attrForm.minConsumption" type="number" min="0" placeholder="例如 30" />
           </label>
@@ -169,11 +183,11 @@ async function submitReview(): Promise<void> {
             <span>适合久坐</span>
             <div class="radio-group">
               <label class="check-field">
-                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="'true'" />
+                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="'TRUE'" />
                 是
               </label>
               <label class="check-field">
-                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="'false'" />
+                <input v-model="attrForm.allowLongStay" type="radio" name="allowLongStay" :value="'FALSE'" />
                 否
               </label>
               <label class="check-field">
@@ -187,13 +201,13 @@ async function submitReview(): Promise<void> {
             <div class="scene-tags">
               <button
                 v-for="scene in sceneOptions"
-                :key="scene"
+                :key="scene.value"
                 type="button"
                 class="tag-button"
-                :class="{ active: attrForm.suitableScenes.includes(scene) }"
-                @click="toggleScene(scene)"
+                :class="{ active: attrForm.suitableScenes.includes(scene.value) }"
+                @click="toggleScene(scene.value)"
               >
-                {{ scene }}
+                {{ scene.label }}
               </button>
             </div>
           </div>
