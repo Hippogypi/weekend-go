@@ -3,14 +3,14 @@ import { computed, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 
 import { sessionStore, weekendGoApi } from '../services';
-import type { FavoritePlace, MyProfileSubmission, MyCheckin, MyReview } from '../services';
+import type { FavoritePlace, MyCheckin, MyReview } from '../services';
 import { useAsyncAction, useApiError } from '../composables';
 
 const router = useRouter();
 const { errorMessage, setError, clearError } = useApiError();
 
 const isLoggedIn = computed(() => sessionStore.isLoggedIn.value);
-const activeTab = ref<'favorites' | 'submissions' | 'checkins' | 'reviews'>('favorites');
+const activeTab = ref<'favorites' | 'checkins' | 'reviews'>('favorites');
 
 const isEditingNickname = ref(false);
 const nicknameDraft = ref('');
@@ -21,14 +21,6 @@ const {
   data: favorites,
   execute: loadFavorites
 } = useAsyncAction<FavoritePlace[]>({
-  onError: (msg) => setError(new Error(msg))
-});
-
-const {
-  loading: submissionsLoading,
-  data: submissions,
-  execute: loadSubmissions
-} = useAsyncAction<MyProfileSubmission[]>({
   onError: (msg) => setError(new Error(msg))
 });
 
@@ -54,12 +46,6 @@ async function doLoadFavorites(): Promise<void> {
   await loadFavorites(() => weekendGoApi.favorites());
 }
 
-async function doLoadSubmissions(): Promise<void> {
-  if (!isLoggedIn.value) return;
-  clearError();
-  await loadSubmissions(() => weekendGoApi.myProfileSubmissions());
-}
-
 async function doLoadCheckins(): Promise<void> {
   if (!isLoggedIn.value) return;
   clearError();
@@ -72,12 +58,10 @@ async function doLoadReviews(): Promise<void> {
   await loadReviews(() => weekendGoApi.myReviews());
 }
 
-function switchTab(tab: 'favorites' | 'submissions' | 'checkins' | 'reviews') {
+function switchTab(tab: 'favorites' | 'checkins' | 'reviews') {
   activeTab.value = tab;
   if (tab === 'favorites' && (!favorites.value || favorites.value.length === 0)) {
     doLoadFavorites();
-  } else if (tab === 'submissions' && (!submissions.value || submissions.value.length === 0)) {
-    doLoadSubmissions();
   } else if (tab === 'checkins' && (!checkins.value || checkins.value.length === 0)) {
     doLoadCheckins();
   } else if (tab === 'reviews' && (!reviews.value || reviews.value.length === 0)) {
@@ -209,13 +193,6 @@ if (isLoggedIn.value) {
           ❤️ 我的收藏
         </button>
         <button
-          :class="['tab-button', { active: activeTab === 'submissions' }]"
-          type="button"
-          @click="switchTab('submissions')"
-        >
-          🏷️ 我的共建
-        </button>
-        <button
           :class="['tab-button', { active: activeTab === 'checkins' }]"
           type="button"
           @click="switchTab('checkins')"
@@ -248,31 +225,6 @@ if (isLoggedIn.value) {
           <li v-for="favorite in favorites" :key="favorite.placeId">
             <RouterLink :to="`/places/${favorite.placeId}`">{{ favorite.placeName }}</RouterLink>
             <span>{{ formatDate(favorite.createdAt) }}</span>
-          </li>
-        </ul>
-      </div>
-
-      <div v-else-if="activeTab === 'submissions'" class="tab-content">
-        <div class="section-heading">
-          <h3>我的共建</h3>
-          <button class="ghost-button" type="button" :disabled="submissionsLoading" @click="doLoadSubmissions">
-            {{ submissionsLoading ? '加载中...' : '刷新' }}
-          </button>
-        </div>
-        <p v-if="!submissions || submissions.length === 0" class="muted">暂无共建记录。</p>
-        <ul v-else class="simple-list">
-          <li v-for="sub in submissions" :key="sub.id">
-            <RouterLink :to="`/places/${sub.placeId}`">{{ sub.placeName }}</RouterLink>
-            <div class="item-meta">
-              <span :class="['audit-badge', auditStatusClass(sub.auditStatus)]">{{ auditStatusLabel(sub.auditStatus) }}</span>
-              <span class="muted">{{ formatDate(sub.createdAt) }}</span>
-            </div>
-            <div class="item-preview">
-              <span>安静 {{ sub.quietScore }}</span>
-              <span>Wi-Fi {{ sub.wifiScore }}</span>
-              <span>插座 {{ sub.socketScore }}</span>
-              <span>座位 {{ sub.seatScore }}</span>
-            </div>
           </li>
         </ul>
       </div>
@@ -322,6 +274,12 @@ if (isLoggedIn.value) {
               <span>插座 {{ review.socketScore }}</span>
               <span>舒适 {{ review.comfortScore }}</span>
               <span>性价比 {{ review.costScore }}</span>
+              <span v-if="review.seatScore !== undefined">座位 {{ review.seatScore }}</span>
+              <span v-if="review.minConsumption !== undefined">最低消费 ¥{{ review.minConsumption }}</span>
+              <span v-if="review.allowLongStay">可久坐 {{ review.allowLongStay }}</span>
+            </div>
+            <div v-if="review.suitableScenes && review.suitableScenes.length > 0" class="scene-tags">
+              <span v-for="scene in review.suitableScenes" :key="scene" class="scene-tag">{{ scene }}</span>
             </div>
             <p class="item-content">{{ review.content }}</p>
             <div v-if="review.images && review.images.length > 0" class="thumb-list">
@@ -453,6 +411,22 @@ if (isLoggedIn.value) {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 8px;
+}
+
+.scene-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.scene-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #e8f3f1;
+  color: #0f5f59;
 }
 
 .thumb {
