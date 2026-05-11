@@ -642,10 +642,10 @@
     {
       "id": "user-profile-expansion",
       "title": "个人中心扩展",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "user-profile-expansion",
+      "worktree": ".worktrees/user-profile-expansion",
       "scope": "扩展个人中心：增加我的评价/打卡/收藏标签页，支持编辑昵称。共建已合并到评价，因此个人中心不再单独展示'我的共建'。",
       "dependencies": [
         "frontend-navigation-restructure",
@@ -667,10 +667,10 @@
     {
       "id": "admin-workbench",
       "title": "管理员工作台",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "admin-workbench",
+      "worktree": ".worktrees/admin-workbench",
       "scope": "替换现有的ID输入审核方式为工作台：后端新增待审核列表API（从reviews表查询PENDING状态），前端实现统计卡片+列表+批量操作的管理员工作台。profile_submissions已废弃，待审核内容统一为reviews。",
       "dependencies": [
         "auth-and-role",
