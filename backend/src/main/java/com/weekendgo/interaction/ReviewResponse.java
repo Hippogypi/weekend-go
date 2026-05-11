@@ -25,7 +25,8 @@ public record ReviewResponse(
         AllowLongStay allowLongStay,
         List<String> suitableScenes,
         int likeCount,
-        int replyCount
+        int replyCount,
+        Boolean liked
 ) {
     public ReviewResponse publicView() {
         List<ImageResponse> publicImages = images == null ? null : images.stream()
@@ -34,7 +35,15 @@ public record ReviewResponse(
         return new ReviewResponse(
                 id, placeId, userId, quietScore, wifiScore, socketScore,
                 comfortScore, costScore, content, null, createdAt, publicImages,
-                seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount
+                seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount, liked
+        );
+    }
+
+    public ReviewResponse withLiked(Boolean liked) {
+        return new ReviewResponse(
+                id, placeId, userId, quietScore, wifiScore, socketScore,
+                comfortScore, costScore, content, auditStatus, createdAt, images,
+                seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount, liked
         );
     }
 }

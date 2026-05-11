@@ -104,8 +104,16 @@ public class JdbcInteractionRepository implements InteractionRepository {
 
     @Override
     public List<ReviewResponse> findApprovedReviews(long placeId) {
+        return findApprovedReviews(placeId, "time");
+    }
+
+    @Override
+    public List<ReviewResponse> findApprovedReviews(long placeId, String sort) {
         try {
-            return jdbcTemplate.query("""
+            String orderBy = "hot".equalsIgnoreCase(sort)
+                    ? "r.like_count DESC, r.created_at DESC, r.id DESC, i.created_at DESC"
+                    : "r.created_at DESC, r.id DESC, i.created_at DESC";
+            String sql = """
                     SELECT r.id, r.place_id, r.user_id, r.quiet_score, r.wifi_score, r.socket_score,
                            r.comfort_score, r.cost_score, r.content, r.audit_status, r.created_at,
                            r.seat_score, r.min_consumption, r.allow_long_stay, r.suitable_scenes,
@@ -115,8 +123,8 @@ public class JdbcInteractionRepository implements InteractionRepository {
                     FROM reviews r
                     LEFT JOIN place_images i ON i.review_id = r.id AND i.audit_status = 'APPROVED'
                     WHERE r.place_id = ? AND r.audit_status = 'APPROVED'
-                    ORDER BY r.created_at DESC, r.id DESC, i.created_at DESC
-                    """, this::extractReviews, placeId);
+                    ORDER BY """ + " " + orderBy;
+            return jdbcTemplate.query(sql, this::extractReviews, placeId);
         } catch (DataAccessException exception) {
             throw new InteractionStorageException("Failed to load reviews", exception);
         }
@@ -525,6 +533,111 @@ public class JdbcInteractionRepository implements InteractionRepository {
         return key.longValue();
     }
 
+    @Override
+    public void likeReview(long reviewId, long userId) {
+        try {
+            int updated = jdbcTemplate.update("""
+                    INSERT IGNORE INTO review_likes (review_id, user_id)
+                    VALUES (?, ?)
+                    """, reviewId, userId);
+            if (updated > 0) {
+                jdbcTemplate.update("""
+                        UPDATE reviews SET like_count = like_count + 1 WHERE id = ?
+                        """, reviewId);
+            }
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to like review", exception);
+        }
+    }
+
+    @Override
+    public void unlikeReview(long reviewId, long userId) {
+        try {
+            int deleted = jdbcTemplate.update("DELETE FROM review_likes WHERE review_id = ? AND user_id = ?", reviewId, userId);
+            if (deleted > 0) {
+                jdbcTemplate.update("""
+                        UPDATE reviews SET like_count = GREATEST(like_count - 1, 0) WHERE id = ?
+                        """, reviewId);
+            }
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to unlike review", exception);
+        }
+    }
+
+    @Override
+    public boolean hasLiked(long reviewId, long userId) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM review_likes WHERE review_id = ? AND user_id = ?",
+                    Integer.class,
+                    reviewId,
+                    userId
+            );
+            return count != null && count > 0;
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load like status", exception);
+        }
+    }
+
+    @Override
+    public ReviewReply createReply(long reviewId, long userId, ReviewReplyRequest request) {
+        try {
+            return transactionTemplate.execute(status -> {
+                KeyHolder keyHolder = new GeneratedKeyHolder();
+                jdbcTemplate.update(connection -> {
+                    PreparedStatement statement = connection.prepareStatement("""
+                            INSERT INTO review_replies (review_id, user_id, content)
+                            VALUES (?, ?, ?)
+                            """, new String[]{"id"});
+                    statement.setLong(1, reviewId);
+                    statement.setLong(2, userId);
+                    statement.setString(3, request.content());
+                    return statement;
+                }, keyHolder);
+                jdbcTemplate.update("""
+                        UPDATE reviews SET reply_count = reply_count + 1 WHERE id = ?
+                        """, reviewId);
+                return findReplyById(requiredKey(keyHolder));
+            });
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to create reply", exception);
+        }
+    }
+
+    @Override
+    public List<ReviewReply> findRepliesByReviewId(long reviewId) {
+        try {
+            return jdbcTemplate.query("""
+                    SELECT id, review_id, user_id, content, created_at
+                    FROM review_replies
+                    WHERE review_id = ?
+                    ORDER BY created_at ASC
+                    """, (rs, rowNum) -> new ReviewReply(
+                    rs.getLong("id"),
+                    rs.getLong("review_id"),
+                    rs.getLong("user_id"),
+                    rs.getString("content"),
+                    toInstant(rs.getTimestamp("created_at"))
+            ), reviewId);
+        } catch (DataAccessException exception) {
+            throw new InteractionStorageException("Failed to load replies", exception);
+        }
+    }
+
+    private ReviewReply findReplyById(long id) {
+        return jdbcTemplate.query("""
+                SELECT id, review_id, user_id, content, created_at
+                FROM review_replies
+                WHERE id = ?
+                """, (rs, rowNum) -> new ReviewReply(
+                rs.getLong("id"),
+                rs.getLong("review_id"),
+                rs.getLong("user_id"),
+                rs.getString("content"),
+                toInstant(rs.getTimestamp("created_at"))
+        ), id).stream().findFirst().orElseThrow();
+    }
+
     private ReviewResponse mapReview(ResultSet resultSet, int rowNum) throws SQLException {
         return new ReviewResponse(
                 resultSet.getLong("id"),
@@ -544,7 +657,8 @@ public class JdbcInteractionRepository implements InteractionRepository {
                 nullableAllowLongStay(resultSet, "allow_long_stay"),
                 readScenes(resultSet.getString("suitable_scenes")),
                 resultSet.getInt("like_count"),
-                resultSet.getInt("reply_count")
+                resultSet.getInt("reply_count"),
+                null
         );
     }
 
@@ -666,7 +780,8 @@ public class JdbcInteractionRepository implements InteractionRepository {
             return new ReviewResponse(
                     id, placeId, userId, quietScore, wifiScore, socketScore,
                     comfortScore, costScore, content, auditStatus, createdAt, List.copyOf(images),
-                    seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount
+                    seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount,
+                    null
             );
         }
     }

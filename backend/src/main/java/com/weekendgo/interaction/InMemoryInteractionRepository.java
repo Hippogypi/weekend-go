@@ -21,6 +21,9 @@ public class InMemoryInteractionRepository implements InteractionRepository {
     private final Map<Long, ImageResponse> images = new ConcurrentHashMap<>();
     private final Map<Long, Long> imageReviewIds = new ConcurrentHashMap<>();
     private final Map<FavoriteKey, FavoritePlaceResponse> favorites = new ConcurrentHashMap<>();
+    private final AtomicLong replyIds = new AtomicLong(1);
+    private final Map<Long, ReviewReply> reviewReplies = new ConcurrentHashMap<>();
+    private final Map<LikeKey, Boolean> reviewLikes = new ConcurrentHashMap<>();
 
     @Override
     public ReviewResponse createReview(long placeId, long userId, ReviewRequest request) {
@@ -42,7 +45,8 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 request.allowLongStay() == null ? null : AllowLongStay.valueOf(request.allowLongStay()),
                 request.suitableScenes(),
                 0,
-                0
+                0,
+                null
         );
         reviews.put(review.id(), review);
         return review;
@@ -50,10 +54,19 @@ public class InMemoryInteractionRepository implements InteractionRepository {
 
     @Override
     public List<ReviewResponse> findApprovedReviews(long placeId) {
+        return findApprovedReviews(placeId, "time");
+    }
+
+    @Override
+    public List<ReviewResponse> findApprovedReviews(long placeId, String sort) {
+        Comparator<ReviewResponse> comparator = "hot".equalsIgnoreCase(sort)
+                ? Comparator.comparing(ReviewResponse::likeCount).reversed()
+                    .thenComparing(Comparator.comparing(ReviewResponse::createdAt).reversed())
+                : Comparator.comparing(ReviewResponse::createdAt).reversed();
         return reviews.values().stream()
                 .filter(review -> review.placeId() == placeId)
                 .filter(review -> review.auditStatus() == AuditStatus.APPROVED)
-                .sorted(Comparator.comparing(ReviewResponse::createdAt).reversed())
+                .sorted(comparator)
                 .map(review -> {
                     List<ImageResponse> reviewImages = imageReviewIds.entrySet().stream()
                             .filter(entry -> entry.getValue() == review.id())
@@ -67,7 +80,8 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                             review.comfortScore(), review.costScore(), review.content(),
                             review.auditStatus(), review.createdAt(), reviewImages,
                             review.seatScore(), review.minConsumption(), review.allowLongStay(),
-                            review.suitableScenes(), review.likeCount(), review.replyCount()
+                            review.suitableScenes(), review.likeCount(), review.replyCount(),
+                            null
                     );
                 })
                 .toList();
@@ -93,7 +107,8 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 review.allowLongStay(),
                 review.suitableScenes(),
                 review.likeCount(),
-                review.replyCount()
+                review.replyCount(),
+                null
         )));
     }
 
@@ -234,7 +249,8 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                         review.comfortScore(), review.costScore(), review.content(),
                         review.auditStatus(), review.createdAt(), reviewImages,
                         review.seatScore(), review.minConsumption(), review.allowLongStay(),
-                        review.suitableScenes(), review.likeCount(), review.replyCount()
+                        review.suitableScenes(), review.likeCount(), review.replyCount(),
+                        null
                 ));
             }
         }
@@ -243,6 +259,76 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 .toList();
     }
 
+    @Override
+    public void likeReview(long reviewId, long userId) {
+        LikeKey key = new LikeKey(reviewId, userId);
+        if (reviewLikes.putIfAbsent(key, true) == null) {
+            reviews.computeIfPresent(reviewId, (id, review) -> new ReviewResponse(
+                    review.id(), review.placeId(), review.userId(),
+                    review.quietScore(), review.wifiScore(), review.socketScore(),
+                    review.comfortScore(), review.costScore(), review.content(),
+                    review.auditStatus(), review.createdAt(), review.images(),
+                    review.seatScore(), review.minConsumption(), review.allowLongStay(),
+                    review.suitableScenes(), review.likeCount() + 1, review.replyCount(),
+                    null
+            ));
+        }
+    }
+
+    @Override
+    public void unlikeReview(long reviewId, long userId) {
+        LikeKey key = new LikeKey(reviewId, userId);
+        if (reviewLikes.remove(key) != null) {
+            reviews.computeIfPresent(reviewId, (id, review) -> new ReviewResponse(
+                    review.id(), review.placeId(), review.userId(),
+                    review.quietScore(), review.wifiScore(), review.socketScore(),
+                    review.comfortScore(), review.costScore(), review.content(),
+                    review.auditStatus(), review.createdAt(), review.images(),
+                    review.seatScore(), review.minConsumption(), review.allowLongStay(),
+                    review.suitableScenes(), Math.max(review.likeCount() - 1, 0), review.replyCount(),
+                    null
+            ));
+        }
+    }
+
+    @Override
+    public boolean hasLiked(long reviewId, long userId) {
+        return reviewLikes.containsKey(new LikeKey(reviewId, userId));
+    }
+
+    @Override
+    public ReviewReply createReply(long reviewId, long userId, ReviewReplyRequest request) {
+        ReviewReply reply = new ReviewReply(
+                replyIds.getAndIncrement(),
+                reviewId,
+                userId,
+                request.content(),
+                Instant.now()
+        );
+        reviewReplies.put(reply.id(), reply);
+        reviews.computeIfPresent(reviewId, (id, review) -> new ReviewResponse(
+                review.id(), review.placeId(), review.userId(),
+                review.quietScore(), review.wifiScore(), review.socketScore(),
+                review.comfortScore(), review.costScore(), review.content(),
+                review.auditStatus(), review.createdAt(), review.images(),
+                review.seatScore(), review.minConsumption(), review.allowLongStay(),
+                review.suitableScenes(), review.likeCount(), review.replyCount() + 1,
+                null
+        ));
+        return reply;
+    }
+
+    @Override
+    public List<ReviewReply> findRepliesByReviewId(long reviewId) {
+        return reviewReplies.values().stream()
+                .filter(reply -> reply.reviewId() == reviewId)
+                .sorted(Comparator.comparing(ReviewReply::createdAt))
+                .toList();
+    }
+
     private record FavoriteKey(long userId, long placeId) {
+    }
+
+    private record LikeKey(long reviewId, long userId) {
     }
 }

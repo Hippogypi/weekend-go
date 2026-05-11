@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,8 +38,15 @@ public class InteractionController {
     }
 
     @GetMapping("/api/places/{placeId}/reviews")
-    public ApiResponse<List<ReviewResponse>> publicReviews(@PathVariable long placeId) {
-        return ApiResponse.ok(interactionService.publicReviews(placeId));
+    public ApiResponse<List<ReviewResponse>> publicReviews(
+            @PathVariable long placeId,
+            @RequestParam(defaultValue = "time") String sort,
+            Authentication authentication
+    ) {
+        if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUser user) {
+            return ApiResponse.ok(interactionService.publicReviews(placeId, sort, user));
+        }
+        return ApiResponse.ok(interactionService.publicReviews(placeId, sort));
     }
 
     @PostMapping("/api/places/{placeId}/images")
@@ -90,6 +99,40 @@ public class InteractionController {
     @GetMapping("/api/me/reviews")
     public ApiResponse<List<MyReviewResponse>> myReviews(@AuthenticationPrincipal AuthenticatedUser user) {
         return ApiResponse.ok(interactionService.myReviews(user.account().id()));
+    }
+
+    @PostMapping("/api/reviews/{reviewId}/likes")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<Void> likeReview(
+            @PathVariable long reviewId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        interactionService.likeReview(reviewId, user);
+        return ApiResponse.ok(null);
+    }
+
+    @DeleteMapping("/api/reviews/{reviewId}/likes")
+    public ApiResponse<Void> unlikeReview(
+            @PathVariable long reviewId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        interactionService.unlikeReview(reviewId, user);
+        return ApiResponse.ok(null);
+    }
+
+    @PostMapping("/api/reviews/{reviewId}/replies")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<ReviewReply> createReply(
+            @PathVariable long reviewId,
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @Valid @RequestBody ReviewReplyRequest request
+    ) {
+        return ApiResponse.ok(interactionService.createReply(reviewId, user, request));
+    }
+
+    @GetMapping("/api/reviews/{reviewId}/replies")
+    public ApiResponse<List<ReviewReply>> replies(@PathVariable long reviewId) {
+        return ApiResponse.ok(interactionService.replies(reviewId));
     }
 
     @PatchMapping("/api/admin/reviews/{reviewId}/audit")

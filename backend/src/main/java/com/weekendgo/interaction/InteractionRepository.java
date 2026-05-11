@@ -10,6 +10,8 @@ public interface InteractionRepository {
 
     List<ReviewResponse> findApprovedReviews(long placeId);
 
+    List<ReviewResponse> findApprovedReviews(long placeId, String sort);
+
     Optional<ReviewResponse> auditReview(long reviewId, long adminId, AuditStatus auditStatus, String reason);
 
     ImageResponse createImage(long placeId, long userId, ImageRequest request);
@@ -43,4 +45,14 @@ public interface InteractionRepository {
     List<FavoritePlaceResponse> findFavorites(long userId);
 
     List<ReviewResponse> findReviewsByUserId(long userId);
+
+    void likeReview(long reviewId, long userId);
+
+    void unlikeReview(long reviewId, long userId);
+
+    boolean hasLiked(long reviewId, long userId);
+
+    ReviewReply createReply(long reviewId, long userId, ReviewReplyRequest request);
+
+    List<ReviewReply> findRepliesByReviewId(long reviewId);
 }

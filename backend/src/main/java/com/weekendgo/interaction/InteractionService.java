@@ -46,13 +46,22 @@ public class InteractionService {
                 review.comfortScore(), review.costScore(), review.content(),
                 review.auditStatus(), review.createdAt(), images,
                 review.seatScore(), review.minConsumption(), review.allowLongStay(),
-                review.suitableScenes(), review.likeCount(), review.replyCount()
+                review.suitableScenes(), review.likeCount(), review.replyCount(), review.liked()
         );
     }
 
-    public List<ReviewResponse> publicReviews(long placeId) {
+    public List<ReviewResponse> publicReviews(long placeId, String sort) {
         requirePlace(placeId);
-        return interactionRepository.findApprovedReviews(placeId).stream()
+        return interactionRepository.findApprovedReviews(placeId, sort).stream()
+                .map(ReviewResponse::publicView)
+                .toList();
+    }
+
+    public List<ReviewResponse> publicReviews(long placeId, String sort, AuthenticatedUser user) {
+        requirePlace(placeId);
+        long userId = user.account().id();
+        return interactionRepository.findApprovedReviews(placeId, sort).stream()
+                .map(review -> review.withLiked(interactionRepository.hasLiked(review.id(), userId)))
                 .map(ReviewResponse::publicView)
                 .toList();
     }
@@ -126,6 +135,26 @@ public class InteractionService {
                     );
                 })
                 .toList();
+    }
+
+    public void likeReview(long reviewId, AuthenticatedUser user) {
+        interactionRepository.likeReview(reviewId, user.account().id());
+    }
+
+    public void unlikeReview(long reviewId, AuthenticatedUser user) {
+        interactionRepository.unlikeReview(reviewId, user.account().id());
+    }
+
+    public boolean hasLiked(long reviewId, AuthenticatedUser user) {
+        return interactionRepository.hasLiked(reviewId, user.account().id());
+    }
+
+    public ReviewReply createReply(long reviewId, AuthenticatedUser user, ReviewReplyRequest request) {
+        return interactionRepository.createReply(reviewId, user.account().id(), request);
+    }
+
+    public List<ReviewReply> replies(long reviewId) {
+        return interactionRepository.findRepliesByReviewId(reviewId);
     }
 
     private Place requirePlace(long placeId) {
