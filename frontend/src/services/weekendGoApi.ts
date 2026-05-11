@@ -244,7 +244,6 @@ export interface PageResult<T> {
 }
 
 export interface AuditStats {
-  pendingProfiles: number;
   pendingReviews: number;
   pendingImages: number;
   todayApproved: number;
