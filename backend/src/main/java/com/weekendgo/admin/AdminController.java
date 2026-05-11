@@ -52,6 +52,6 @@ public class AdminController {
         long pendingImages = interactionRepository.countPendingImages();
         long todayApproved = interactionRepository.countTodayApproved();
         long todayRejected = interactionRepository.countTodayRejected();
-        return ApiResponse.ok(new AuditStats(0, pendingReviews, pendingImages, todayApproved, todayRejected));
+        return ApiResponse.ok(new AuditStats(pendingReviews, pendingImages, todayApproved, todayRejected));
     }
 }

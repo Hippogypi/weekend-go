@@ -88,7 +88,6 @@ class AdminControllerTest {
                         .header("Authorization", "Bearer " + adminToken)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.pendingProfiles").value(0))
                 .andExpect(jsonPath("$.data.pendingReviews").value(0))
                 .andExpect(jsonPath("$.data.pendingImages").value(0))
                 .andExpect(jsonPath("$.data.todayApproved").value(0))
