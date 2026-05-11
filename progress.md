@@ -73,45 +73,6 @@ frontend verification
 - `map-default-markers`：首页地图默认展示周边已标记与收藏点（已合并到 main）。
 - 准备真实后端、本地 MySQL、高德服务与前端浏览器端到端 smoke。
 
-## 2026-05-10 map-default-markers coordinator 立项
-
-- 用户反馈：希望首页地图默认展示周边【已被标记】的点以及当前登录账号收藏的点，两种点用不同标识。
-- Coordinator 评估：
-  - 地点关联表确认：`places` 直接关联 `checkins`、`reviews`、`profile_submissions`、`workspace_profiles`、`favorites` 等。
-  - "已被标记"口径：`workspace_profiles.approved_submission_count > 0` 或 `checkins` 存在记录或 `reviews.audit_status = 'APPROVED'`。
-  - 冲突处理：后端返回 `marked` + `favorited` 两个布尔标志；前端优先展示收藏标识（红心），其次展示已标记标识（蓝点）。
-  - `home-page-enhancement` 确认已合并到 main（自动定位、加载更多、marker 点击详情），状态更新为 `completed`。
-  - 决定新建独立 feature `map-default-markers`，worktree 为 `.worktrees/map-default-markers`，基于 main。
-- 前后端改动范围：
-  - 后端：新增 `MapMarkerController` + `MapMarkerRepository`，提供 `GET /api/map/markers`。
-  - 前端：`weekendGoApi.ts` 新增类型与接口；`MapView.vue` 支持按 `markerType` 渲染不同颜色；`HomeView.vue` 挂载后自动定位并调用新接口。
-
-## 2026-05-10 auth-guard-discovery 合并
-
-- 已合并 `auth-guard-discovery` 到 `main`。
-- 审查确认：`/` 和 `/places/:placeId` 路由已添加 `requiresAuth: true`；未登录自动跳转 `/login?redirect=...`；登录后按 redirect 返回原页面。
-- 补充路由守卫测试 4 个用例：未登录访问 `/`、未登录访问 `/places/123`、已登录访问 `/`、已登录访问 `/places/123`。
-- 验证记录：前端测试 50 passed / 8 test files；构建通过；diff 空白检查通过。
-
-## 2026-05-10 home-search-mode-refactor 合并
-
-- 已合并 `home-search-mode-refactor` 到 `main`。
-- 审查确认：首页默认进入附近模式，自动定位并加载 `mapMarkers`；附近模式隐藏经纬度输入框，仅保留半径；附近查询调用 `mapMarkers`（只展示有内容/收藏的点），搜索保持 `searchPlaces`（暴露全部高德 POI）。
-- 验证记录：前端测试 50 passed / 8 test files；构建通过。
-
-## 2026-05-10 map-default-markers 合并
-
-- 已合并 `map-default-markers` 到 `main`。
-- 审查确认：
-  - 后端新增 `JdbcMapMarkerRepository`，使用矩形边界框粗筛 + Haversine 精确过滤；支持按 `workspace_profiles.approved_submission_count > 0` / `checkins` / `reviews(APPROVED)` 判定"已标记"；未登录时不返回收藏点。
-  - `SecurityConfig` 将 `/api/map/markers` 加入 `permitAll`，支持匿名访问。
-  - 前端 `HomeView.vue` 在 `onMounted` 中自动定位并调用 `mapMarkers`；`MapView.vue` 通过 `markerMeta` prop 区分红色（收藏）与蓝绿色（已标记）自定义 HTML marker。
-- 验证记录：后端测试 62 passed / 0 failures；前端测试 46 passed / 8 test files；前端构建通过；`git diff --check` 通过。
-
-## 下一步
-
-- 使用已注入的演示数据补充真实 MySQL + Amap + 浏览器端到端 smoke，覆盖登录、搜索、详情、共建、打卡、评价、收藏、图片和审核。
-
 ## 阻塞与风险
 
 - 高德 Web 服务 Key 依赖公网出口 IP 白名单，网络变化时可能需要更新。
@@ -360,3 +321,34 @@ Phase 1: database-reviews-refactor（无依赖，最先启动）
 - 已完成 feature：`database-reviews-refactor`, `backend-reviews-as-contribution`, `backend-review-interaction`, `backend-ask-everyone`。
 - 待启动 Phase 3：`frontend-review-interaction`, `frontend-ask-everyone`。
 - 阻塞中的 feature：`user-profile-expansion`, `admin-workbench`（等待前端 Phase 3 完成后或同步启动）。
+
+## 2026-05-11 Phase 3 前端完成
+
+### frontend-review-interaction
+- 已合并到 main。
+- 审查确认：
+  - `weekendGoApi.ts`：扩展 `Review` 接口（`seatScore/minConsumption/allowLongStay/suitableScenes/likeCount/replyCount/liked`），新增 `ReviewReply` 接口，新增 `likeReview/unlikeReview/getReplies/createReply/getReviews(sort)` API。
+  - `ContributeReviewView.vue`：新增共建属性折叠区域（`seatScore` 1-5 星、`minConsumption` 数字、`allowLongStay` 是/否/未知、`suitableScenes` 多选标签），`content` 变为可选。
+  - `PlaceDetailView.vue`：评价列表顶部新增最新/最热排序切换；每条评价展示完整评分与图片；点赞按钮（登录用户）+ 点赞数（所有用户）；回复展开/收起，可异步加载回复列表并提交新回复。
+  - `weekendGoApi.test.ts`：新增 sort 参数 URL 断言和 interaction 端点测试。
+- 验证记录：前端测试 52 passed / 8 test files；构建通过。
+
+### frontend-ask-everyone
+- 已合并到 main。
+- 审查确认：
+  - `weekendGoApi.ts`：新增 `PlaceQa` 接口和 `createQuestion/getQuestions/createAnswer/getAnswers` 4 个 API。
+  - `PlaceDetailView.vue`：新增第四个「问大家」标签页；问题列表按时间倒序；每个问题展示内容、时间和回答数量；点击展开异步加载回答列表；已登录用户可提交问题和回答；使用 `useToast` 提示成功。
+  - `weekendGoApi.test.ts`：新增问答端点请求验证。
+- 注意：worker 最初在错误的 worktree 工作（直接在 main 上留下未提交改动），coordinator 发现并重新整理到正确流程中。
+- 验证记录：前端测试 53 passed / 8 test files；构建通过。
+
+### 合并冲突处理
+- `frontend-review-interaction` 和 `frontend-ask-everyone` 并行修改了 `PlaceDetailView.vue`、`weekendGoApi.ts` 和 `weekendGoApi.test.ts`。
+- coordinator 手动解决冲突，保留双方所有功能（评价排序/点赞/回复 + 问大家标签页）。
+- 合并后验证：前端测试 53 passed / 8 test files；`npm run build` 通过。
+
+### 当前状态
+- `main` 分支前端测试：53 passed, 0 failures。
+- `main` 分支后端测试：77 passed, 0 failures。
+- 已完成 Phase 3 全部 feature：`frontend-review-interaction`, `frontend-ask-everyone`。
+- 待启动：`user-profile-expansion`, `admin-workbench`。
