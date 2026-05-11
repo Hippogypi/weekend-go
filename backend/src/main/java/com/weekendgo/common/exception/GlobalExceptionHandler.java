@@ -10,6 +10,8 @@ import com.weekendgo.place.PlaceNotFoundException;
 import com.weekendgo.place.PlaceStorageException;
 import com.weekendgo.profile.ProfileStorageException;
 import com.weekendgo.profile.WorkspaceProfileNotFoundException;
+import com.weekendgo.qa.QaStorageException;
+import com.weekendgo.qa.QuestionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -165,6 +167,36 @@ public class GlobalExceptionHandler {
         ErrorResponse error = ErrorResponse.of(
                 "PROFILE_STORAGE_ERROR",
                 "Workspace profile storage is unavailable",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(QuestionNotFoundException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleQuestionNotFound(
+            QuestionNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "QUESTION_NOT_FOUND",
+                "Question not found",
+                request.getRequestURI()
+        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail(error.code(), error.message(), error));
+    }
+
+    @ExceptionHandler(QaStorageException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleQaStorageException(
+            QaStorageException exception,
+            HttpServletRequest request
+    ) {
+        ErrorResponse error = ErrorResponse.of(
+                "QA_STORAGE_ERROR",
+                "Qa storage is unavailable",
                 request.getRequestURI()
         );
         return ResponseEntity

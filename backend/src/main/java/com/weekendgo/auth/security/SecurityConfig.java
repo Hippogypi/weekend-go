@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 "/api/workspaces/search",
                                 "/api/places/**",
                                 "/api/reviews/*/replies",
+                                "/api/questions/*/answers",
                                 "/api/map/markers"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
