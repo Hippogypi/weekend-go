@@ -2,6 +2,7 @@ package com.weekendgo.interaction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weekendgo.place.Place;
 import com.weekendgo.place.PlaceSource;
 import com.weekendgo.place.WorkspaceStatus;
@@ -29,7 +30,8 @@ class JdbcInteractionRepositoryTest {
         jdbcTemplate = new JdbcTemplate(dataSource);
         repository = new JdbcInteractionRepository(
                 jdbcTemplate,
-                new TransactionTemplate(new DataSourceTransactionManager(dataSource))
+                new TransactionTemplate(new DataSourceTransactionManager(dataSource)),
+                new ObjectMapper()
         );
 
         jdbcTemplate.execute("DROP TABLE IF EXISTS audit_logs");
@@ -76,7 +78,10 @@ class JdbcInteractionRepositoryTest {
                 new BigDecimal("4.0"),
                 new BigDecimal("3.5"),
                 "quiet tables",
-                null,
+                new BigDecimal("4.0"),
+                20,
+                "TRUE",
+                List.of("READING"),
                 null
         ));
         ImageResponse image = repository.createImage(42, 1, new ImageRequest(
@@ -85,6 +90,10 @@ class JdbcInteractionRepositoryTest {
         ));
 
         assertThat(review.auditStatus()).isEqualTo(AuditStatus.PENDING);
+        assertThat(review.seatScore()).isEqualByComparingTo("4.0");
+        assertThat(review.minConsumption()).isEqualTo(20);
+        assertThat(review.allowLongStay()).isNotNull();
+        assertThat(review.suitableScenes()).containsExactly("READING");
         assertThat(image.auditStatus()).isEqualTo(AuditStatus.PENDING);
         assertThat(repository.findApprovedReviews(42)).isEmpty();
         assertThat(repository.findApprovedImages(42)).isEmpty();
@@ -122,6 +131,9 @@ class JdbcInteractionRepositoryTest {
                 new BigDecimal("3.5"),
                 "quiet tables",
                 null,
+                null,
+                null,
+                null,
                 null
         ));
 
@@ -150,6 +162,9 @@ class JdbcInteractionRepositoryTest {
                 new BigDecimal("4.0"),
                 new BigDecimal("3.5"),
                 "quiet tables",
+                null,
+                null,
+                null,
                 null,
                 null
         ));
@@ -203,10 +218,16 @@ class JdbcInteractionRepositoryTest {
                   comfort_score DECIMAL(2, 1) NOT NULL,
                   cost_score DECIMAL(2, 1) NOT NULL,
                   content VARCHAR(1000) NOT NULL,
+                  seat_score DECIMAL(2, 1),
+                  min_consumption INT,
+                  allow_long_stay VARCHAR(16) DEFAULT 'UNKNOWN',
+                  suitable_scenes JSON,
                   audit_status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
                   audited_by BIGINT,
                   audited_at DATETIME,
                   audit_reason VARCHAR(500),
+                  like_count INT NOT NULL DEFAULT 0,
+                  reply_count INT NOT NULL DEFAULT 0,
                   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
                 """);

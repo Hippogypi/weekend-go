@@ -56,7 +56,6 @@ class PlaceDiscoveryControllerTest {
                 .andExpect(jsonPath("$.data[0].longitude").value(116.3))
                 .andExpect(jsonPath("$.data[0].latitude").value(39.9))
                 .andExpect(jsonPath("$.data[0].links.detail").value("/api/places/42"))
-                .andExpect(jsonPath("$.data[0].links.profileContributions").value("/api/places/42/profile-submissions"))
                 .andExpect(jsonPath("$.data[0].links.checkins").value("/api/places/42/checkins"))
                 .andExpect(jsonPath("$.data[0].links.reviews").value("/api/places/42/reviews"))
                 .andExpect(jsonPath("$.data[0].links.images").value("/api/places/42/images"));

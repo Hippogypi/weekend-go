@@ -4,9 +4,6 @@ import com.weekendgo.auth.AuthenticatedUser;
 import com.weekendgo.place.Place;
 import com.weekendgo.place.PlaceNotFoundException;
 import com.weekendgo.place.PlaceRepository;
-import com.weekendgo.profile.AllowLongStay;
-import com.weekendgo.profile.ProfileSubmissionRequest;
-import com.weekendgo.profile.WorkspaceProfileRepository;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,37 +15,19 @@ public class InteractionService {
 
     private final InteractionRepository interactionRepository;
     private final PlaceRepository placeRepository;
-    private final WorkspaceProfileRepository workspaceProfileRepository;
 
     public InteractionService(
             InteractionRepository interactionRepository,
-            PlaceRepository placeRepository,
-            WorkspaceProfileRepository workspaceProfileRepository
+            PlaceRepository placeRepository
     ) {
         this.interactionRepository = interactionRepository;
         this.placeRepository = placeRepository;
-        this.workspaceProfileRepository = workspaceProfileRepository;
     }
 
     @Transactional
     public ReviewResponse createReview(long placeId, AuthenticatedUser user, ReviewRequest request) {
         requirePlace(placeId);
         ReviewResponse review = interactionRepository.createReview(placeId, user.account().id(), request);
-
-        if (request.profileAttributes() != null) {
-            ProfileAttributeRequest attrs = request.profileAttributes();
-            workspaceProfileRepository.createSubmission(placeId, user.account().id(), new ProfileSubmissionRequest(
-                    request.quietScore(),
-                    request.wifiScore(),
-                    request.socketScore(),
-                    request.comfortScore(),
-                    request.costScore(),
-                    attrs.minConsumption(),
-                    parseAllowLongStay(attrs.allowLongStay()),
-                    attrs.suitableScenes() == null ? List.of() : List.copyOf(attrs.suitableScenes()),
-                    null
-            ));
-        }
 
         List<ImageResponse> images = List.of();
         if (request.images() != null && !request.images().isEmpty()) {
@@ -65,19 +44,10 @@ public class InteractionService {
                 review.id(), review.placeId(), review.userId(),
                 review.quietScore(), review.wifiScore(), review.socketScore(),
                 review.comfortScore(), review.costScore(), review.content(),
-                review.auditStatus(), review.createdAt(), images
+                review.auditStatus(), review.createdAt(), images,
+                review.seatScore(), review.minConsumption(), review.allowLongStay(),
+                review.suitableScenes(), review.likeCount(), review.replyCount()
         );
-    }
-
-    private AllowLongStay parseAllowLongStay(String value) {
-        if (value == null) {
-            return AllowLongStay.UNKNOWN;
-        }
-        return switch (value.toLowerCase()) {
-            case "true" -> AllowLongStay.TRUE;
-            case "false" -> AllowLongStay.FALSE;
-            default -> AllowLongStay.UNKNOWN;
-        };
     }
 
     public List<ReviewResponse> publicReviews(long placeId) {

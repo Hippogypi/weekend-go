@@ -2,15 +2,12 @@ package com.weekendgo.profile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
-import java.util.List;
+import java.sql.Timestamp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.transaction.support.TransactionTemplate;
 
 class JdbcWorkspaceProfileRepositoryTest {
 
@@ -23,15 +20,9 @@ class JdbcWorkspaceProfileRepositoryTest {
     void setUp() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource(JDBC_URL);
         jdbcTemplate = new JdbcTemplate(dataSource);
-        repository = new JdbcWorkspaceProfileRepository(
-                jdbcTemplate,
-                new TransactionTemplate(new DataSourceTransactionManager(dataSource)),
-                new ObjectMapper()
-        );
+        repository = new JdbcWorkspaceProfileRepository(jdbcTemplate);
 
-        jdbcTemplate.execute("DROP TABLE IF EXISTS audit_logs");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS workspace_profiles");
-        jdbcTemplate.execute("DROP TABLE IF EXISTS profile_submissions");
+        jdbcTemplate.execute("DROP TABLE IF EXISTS reviews");
         jdbcTemplate.execute("DROP TABLE IF EXISTS places");
         jdbcTemplate.execute("DROP TABLE IF EXISTS users");
         createTables();
@@ -39,52 +30,11 @@ class JdbcWorkspaceProfileRepositoryTest {
     }
 
     @Test
-    void createSubmissionStoresPendingStatus() {
-        ProfileSubmission submission = repository.createSubmission(42, 7, new ProfileSubmissionRequest(
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("3.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("3.0"),
-                20,
-                AllowLongStay.TRUE,
-                List.of("READING", "REMOTE_WORK"),
-                "stable wifi"
-        ));
-
-        assertThat(submission.auditStatus()).isEqualTo(AuditStatus.PENDING);
-        assertThat(submission.placeId()).isEqualTo(42);
-        assertThat(submission.userId()).isEqualTo(7);
-        assertThat(submission.suitableScenes()).containsExactly("READING", "REMOTE_WORK");
-    }
-
-    @Test
-    void approveSubmissionRebuildsAggregatedPublicWorkspaceProfile() {
-        ProfileSubmission first = repository.createSubmission(42, 7, new ProfileSubmissionRequest(
-                new BigDecimal("4.0"),
-                new BigDecimal("5.0"),
-                new BigDecimal("3.0"),
-                new BigDecimal("4.0"),
-                new BigDecimal("2.0"),
-                30,
-                AllowLongStay.TRUE,
-                List.of("READING"),
-                "first"
-        ));
-        ProfileSubmission second = repository.createSubmission(42, 8, new ProfileSubmissionRequest(
-                new BigDecimal("2.0"),
-                new BigDecimal("3.0"),
-                new BigDecimal("5.0"),
-                new BigDecimal("4.0"),
-                null,
-                10,
-                AllowLongStay.FALSE,
-                List.of("REMOTE_WORK"),
-                "second"
-        ));
-
-        repository.audit(first.id(), 99, AuditStatus.APPROVED, "ok");
-        repository.audit(second.id(), 99, AuditStatus.REJECTED, "noisy");
+    void aggregatesPublicWorkspaceProfileFromApprovedReviews() {
+        insertReview(42, 7, new BigDecimal("4.0"), new BigDecimal("5.0"), new BigDecimal("3.0"),
+                new BigDecimal("4.0"), new BigDecimal("2.0"), 30, "TRUE", "APPROVED");
+        insertReview(42, 8, new BigDecimal("2.0"), new BigDecimal("3.0"), new BigDecimal("5.0"),
+                new BigDecimal("4.0"), new BigDecimal("4.0"), 10, "FALSE", "REJECTED");
 
         WorkspaceProfile profile = repository.findProfileByPlaceId(42).orElseThrow();
 
@@ -97,9 +47,25 @@ class JdbcWorkspaceProfileRepositoryTest {
         assertThat(profile.score()).isEqualByComparingTo("3.60");
         assertThat(profile.approvedSubmissionCount()).isEqualTo(1);
         assertThat(profile.contributorCount()).isEqualTo(1);
+        assertThat(profile.trustLevel()).isEqualTo(TrustLevel.LOW);
+    }
 
-        Integer auditLogs = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM audit_logs", Integer.class);
-        assertThat(auditLogs).isEqualTo(2);
+    @Test
+    void returnsEmptyWhenNoApprovedReviews() {
+        assertThat(repository.findProfileByPlaceId(42)).isEmpty();
+    }
+
+    private void insertReview(long placeId, long userId, BigDecimal quietScore, BigDecimal wifiScore,
+                              BigDecimal socketScore, BigDecimal seatScore, BigDecimal costScore,
+                              Integer minConsumption, String allowLongStay, String auditStatus) {
+        jdbcTemplate.update("""
+                INSERT INTO reviews (
+                  place_id, user_id, quiet_score, wifi_score, socket_score, comfort_score, cost_score,
+                  content, seat_score, min_consumption, allow_long_stay, audit_status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'content', ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                """,
+                placeId, userId, quietScore, wifiScore, socketScore,
+                new BigDecimal("4.0"), costScore, seatScore, minConsumption, allowLongStay, auditStatus);
     }
 
     private void createTables() {
@@ -123,55 +89,24 @@ class JdbcWorkspaceProfileRepositoryTest {
                 )
                 """);
         jdbcTemplate.execute("""
-                CREATE TABLE profile_submissions (
+                CREATE TABLE reviews (
                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
                   place_id BIGINT NOT NULL,
                   user_id BIGINT NOT NULL,
                   quiet_score DECIMAL(2, 1) NOT NULL,
                   wifi_score DECIMAL(2, 1) NOT NULL,
                   socket_score DECIMAL(2, 1) NOT NULL,
-                  seat_score DECIMAL(2, 1) NOT NULL,
-                  cost_score DECIMAL(2, 1),
+                  comfort_score DECIMAL(2, 1) NOT NULL,
+                  cost_score DECIMAL(2, 1) NOT NULL,
+                  content VARCHAR(1000) NOT NULL,
+                  seat_score DECIMAL(2, 1),
                   min_consumption INT,
-                  allow_long_stay VARCHAR(16) NOT NULL DEFAULT 'UNKNOWN',
+                  allow_long_stay VARCHAR(16) DEFAULT 'UNKNOWN',
                   suitable_scenes JSON,
-                  remark VARCHAR(500),
                   audit_status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
                   audited_by BIGINT,
                   audited_at DATETIME,
                   audit_reason VARCHAR(500),
-                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-                """);
-        jdbcTemplate.execute("""
-                CREATE TABLE workspace_profiles (
-                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                  place_id BIGINT NOT NULL UNIQUE,
-                  quiet_score DECIMAL(2, 1),
-                  wifi_score DECIMAL(2, 1),
-                  socket_score DECIMAL(2, 1),
-                  seat_score DECIMAL(2, 1),
-                  cost_score DECIMAL(2, 1),
-                  min_consumption INT,
-                  allow_long_stay VARCHAR(16) NOT NULL DEFAULT 'UNKNOWN',
-                  score DECIMAL(3, 2),
-                  trust_level VARCHAR(16) NOT NULL DEFAULT 'LOW',
-                  approved_submission_count INT NOT NULL DEFAULT 0,
-                  contributor_count INT NOT NULL DEFAULT 0,
-                  last_contributed_at DATETIME,
-                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-                """);
-        jdbcTemplate.execute("""
-                CREATE TABLE audit_logs (
-                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                  target_type VARCHAR(32) NOT NULL,
-                  target_id BIGINT NOT NULL,
-                  admin_id BIGINT NOT NULL,
-                  action VARCHAR(16) NOT NULL,
-                  reason VARCHAR(500),
                   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
                 """);
@@ -186,9 +121,6 @@ class JdbcWorkspaceProfileRepositoryTest {
         );
         jdbcTemplate.update(
                 "INSERT INTO users (id, username, password_hash, role) VALUES (8, 'bob', 'x', 'USER')"
-        );
-        jdbcTemplate.update(
-                "INSERT INTO users (id, username, password_hash, role) VALUES (99, 'root', 'x', 'ADMIN')"
         );
     }
 }

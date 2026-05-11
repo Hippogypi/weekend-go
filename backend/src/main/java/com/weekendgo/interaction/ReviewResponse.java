@@ -1,6 +1,7 @@
 package com.weekendgo.interaction;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.weekendgo.profile.AllowLongStay;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -18,7 +19,13 @@ public record ReviewResponse(
         String content,
         AuditStatus auditStatus,
         Instant createdAt,
-        List<ImageResponse> images
+        List<ImageResponse> images,
+        BigDecimal seatScore,
+        Integer minConsumption,
+        AllowLongStay allowLongStay,
+        List<String> suitableScenes,
+        int likeCount,
+        int replyCount
 ) {
     public ReviewResponse publicView() {
         List<ImageResponse> publicImages = images == null ? null : images.stream()
@@ -26,7 +33,8 @@ public record ReviewResponse(
                 .toList();
         return new ReviewResponse(
                 id, placeId, userId, quietScore, wifiScore, socketScore,
-                comfortScore, costScore, content, null, createdAt, publicImages
+                comfortScore, costScore, content, null, createdAt, publicImages,
+                seatScore, minConsumption, allowLongStay, suitableScenes, likeCount, replyCount
         );
     }
 }

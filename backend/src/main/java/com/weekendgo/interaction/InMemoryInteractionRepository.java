@@ -1,6 +1,7 @@
 package com.weekendgo.interaction;
 
 import com.weekendgo.place.Place;
+import com.weekendgo.profile.AllowLongStay;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,7 +36,13 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 request.content(),
                 AuditStatus.PENDING,
                 Instant.now(),
-                null
+                null,
+                request.seatScore(),
+                request.minConsumption(),
+                request.allowLongStay() == null ? null : AllowLongStay.valueOf(request.allowLongStay()),
+                request.suitableScenes(),
+                0,
+                0
         );
         reviews.put(review.id(), review);
         return review;
@@ -58,7 +65,9 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                             review.id(), review.placeId(), review.userId(),
                             review.quietScore(), review.wifiScore(), review.socketScore(),
                             review.comfortScore(), review.costScore(), review.content(),
-                            review.auditStatus(), review.createdAt(), reviewImages
+                            review.auditStatus(), review.createdAt(), reviewImages,
+                            review.seatScore(), review.minConsumption(), review.allowLongStay(),
+                            review.suitableScenes(), review.likeCount(), review.replyCount()
                     );
                 })
                 .toList();
@@ -78,7 +87,13 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                 review.content(),
                 auditStatus,
                 review.createdAt(),
-                review.images()
+                review.images(),
+                review.seatScore(),
+                review.minConsumption(),
+                review.allowLongStay(),
+                review.suitableScenes(),
+                review.likeCount(),
+                review.replyCount()
         )));
     }
 
@@ -217,7 +232,9 @@ public class InMemoryInteractionRepository implements InteractionRepository {
                         review.id(), review.placeId(), review.userId(),
                         review.quietScore(), review.wifiScore(), review.socketScore(),
                         review.comfortScore(), review.costScore(), review.content(),
-                        review.auditStatus(), review.createdAt(), reviewImages
+                        review.auditStatus(), review.createdAt(), reviewImages,
+                        review.seatScore(), review.minConsumption(), review.allowLongStay(),
+                        review.suitableScenes(), review.likeCount(), review.replyCount()
                 ));
             }
         }
