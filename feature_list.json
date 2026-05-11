@@ -642,18 +642,19 @@
     {
       "id": "user-profile-expansion",
       "title": "个人中心扩展",
-      "status": "in_progress",
+      "status": "pending",
       "completedAt": null,
       "branch": null,
       "worktree": null,
-      "scope": "扩展个人中心：增加我的共建/打卡/评价标签页，支持编辑昵称。依赖frontend-navigation-restructure完成后启动。",
+      "scope": "扩展个人中心：增加我的评价/打卡/收藏标签页，支持编辑昵称。共建已合并到评价，因此个人中心不再单独展示'我的共建'。",
       "dependencies": [
         "frontend-navigation-restructure",
-        "auth-persistence"
+        "auth-persistence",
+        "backend-reviews-as-contribution"
       ],
       "acceptanceCriteria": [
         "ProfileView增加标签页导航",
-        "我的收藏/共建/打卡/评价四个标签页",
+        "我的收藏/评价/打卡三个标签页",
         "支持编辑昵称",
         "npm run test和npm run build通过"
       ],
@@ -661,25 +662,25 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "待定。"
+      "notes": "等待 backend-reviews-as-contribution 完成后启动，因共建已合并到 reviews 表。"
     },
     {
       "id": "admin-workbench",
       "title": "管理员工作台",
-      "status": "in_progress",
+      "status": "pending",
       "completedAt": null,
       "branch": null,
       "worktree": null,
-      "scope": "替换现有的ID输入审核方式为工作台：后端新增待审核列表API，前端实现统计卡片+列表+批量操作的管理员工作台。",
+      "scope": "替换现有的ID输入审核方式为工作台：后端新增待审核列表API（从reviews表查询PENDING状态），前端实现统计卡片+列表+批量操作的管理员工作台。profile_submissions已废弃，待审核内容统一为reviews。",
       "dependencies": [
         "auth-and-role",
-        "workspace-profile-contribution",
-        "reviews-favorites-images"
+        "reviews-favorites-images",
+        "backend-reviews-as-contribution"
       ],
       "acceptanceCriteria": [
-        "后端提供待审核列表API（分页）",
+        "后端提供待审核列表API（分页，从reviews查询PENDING）",
         "前端工作台展示统计卡片",
-        "属性共建/评价/图片三个待审核标签页",
+        "评价/图片两个待审核标签页（共建已合并到评价）",
         "支持通过/驳回操作",
         "前后端测试通过"
       ],
@@ -688,15 +689,15 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "待定。"
+      "notes": "等待 backend-reviews-as-contribution 完成后启动，因共建已合并到 reviews，待审核口径变化。"
     },
     {
       "id": "home-page-enhancement",
       "title": "首页搜索增强",
-      "status": "in_progress",
-      "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "status": "completed",
+      "completedAt": "2026-05-10",
+      "branch": "home-page-enhancement",
+      "worktree": ".worktrees/home-page-enhancement",
       "scope": "增强首页搜索体验：浏览器Geolocation API自动定位、搜索结果分页控件、地图marker点击进入详情。",
       "dependencies": [
         "frontend-bootstrap",
@@ -712,7 +713,229 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "待定。"
+      "notes": "已合并到 main。自动定位、加载更多（分页）、marker 点击查看详情均已实现。"
+    },
+    {
+      "id": "map-default-markers",
+      "title": "首页地图默认展示周边已标记与收藏点",
+      "status": "completed",
+      "completedAt": "2026-05-10",
+      "branch": "map-default-markers",
+      "worktree": ".worktrees/map-default-markers",
+      "scope": "后端新增 GET /api/map/markers 接口，按地理范围返回周边已被标记（有过有效共建）的地点和当前登录用户收藏的地点，并区分标识；前端首页加载后自动定位并默认展示这两类点，地图使用不同颜色/图标区分。",
+      "dependencies": [
+        "home-page-enhancement",
+        "checkin-current-status",
+        "reviews-favorites-images",
+        "auth-frontend-enhancement",
+        "place-discovery"
+      ],
+      "acceptanceCriteria": [
+        "未登录时默认展示周边已被标记的点。",
+        "登录用户（USER 角色）额外展示周边收藏点，两种点使用不同标识。",
+        "后端接口支持按 longitude、latitude、radius 查询。",
+        "地图 marker 可点击并进入地点详情。",
+        "npm run test 与 npm run build 通过。",
+        "后端测试通过。"
+      ],
+      "checkCommands": [
+        "cd backend; .\\mvnw.cmd test",
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "默认标记口径：workspace_profiles.approved_submission_count > 0 或存在 checkins 或存在 APPROVED reviews。收藏点仅对登录用户返回。"
+    },
+    {
+      "id": "auth-guard-discovery",
+      "title": "发现页与详情页强制登录",
+      "status": "completed",
+      "completedAt": "2026-05-10",
+      "branch": "auth-guard-discovery",
+      "worktree": ".worktrees/auth-guard-discovery",
+      "scope": "将首页地点发现（/）和地点详情页（/places/:placeId）加入路由守卫，未登录用户自动重定向到登录页，登录成功后返回原页面。",
+      "dependencies": [
+        "auth-frontend-enhancement"
+      ],
+      "acceptanceCriteria": [
+        "未登录用户访问 / 自动跳转到 /login。",
+        "未登录用户访问 /places/:placeId 自动跳转到 /login。",
+        "登录成功后按 redirect 参数返回原页面。",
+        "已有 requiresAuth 页面行为保持不变。",
+        "npm run test 与 npm run build 通过。"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "改动范围极小，仅前端路由配置与对应测试。"
+    },
+    {
+      "id": "home-search-mode-refactor",
+      "title": "首页默认附近模式与搜索职责分离",
+      "status": "completed",
+      "completedAt": "2026-05-10",
+      "branch": "home-search-mode-refactor",
+      "worktree": ".worktrees/home-search-mode-refactor",
+      "scope": "首页默认展示附近模式（而非搜索），附近只展示有共建/收藏/打卡/评论内容的地点以及用户收藏点；搜索模式用于发现新地点（暴露全部高德 POI）。",
+      "dependencies": [
+        "map-default-markers",
+        "auth-guard-discovery"
+      ],
+      "acceptanceCriteria": [
+        "首页默认进入附近模式，自动定位并加载 mapMarkers。",
+        "附近模式只展示有内容的地点（marked/favorited），不暴露全部 POI。",
+        "附近模式查询按钮调用 mapMarkers API，不再调用 nearbyPlaces。",
+        "搜索模式保持 keyword + city 输入，调用 searchPlaces 暴露全部地点。",
+        "附近模式 UI 隐藏经纬度输入框（自动定位即可）。",
+        "npm run test 与 npm run build 通过。"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "主要改动 HomeView.vue 的默认模式、查询逻辑和 UI。"
+    },
+    {
+      "id": "database-reviews-refactor",
+      "title": "数据库 reviews 重构与新增互动表",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "改造 reviews 表（增加 like_count/reply_count/共建字段），废弃 profile_submissions，新建 review_likes/review_replies/place_qa 表，更新 dev_seed.sql 和 audit_logs target_type。",
+      "dependencies": [],
+      "acceptanceCriteria": [
+        "schema.sql 可执行并通过 MySQL 建表验证",
+        "reviews 表新增 like_count/reply_count/seat_score/min_consumption/allow_long_stay/suitable_scenes",
+        "新建 review_likes/review_replies/place_qa 三张表",
+        "profile_submissions 已废弃（DROP 或注释）",
+        "dev_seed.sql 适配新 schema 可重复执行"
+      ],
+      "checkCommands": [
+        "mysql -u <user> -p weekend_go < database/schema.sql",
+        "python -m json.tool feature_list.json"
+      ],
+      "notes": "所有后续重构 feature 的前置依赖，最先启动。"
+    },
+    {
+      "id": "backend-reviews-as-contribution",
+      "title": "后端 reviews 成为共建载体",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "废弃 profile_submissions 概念：删除 ProfileSubmission 实体/请求/仓储，改造 WorkspaceProfileService 聚合逻辑从 reviews 取数据，审核接口统一为 reviews，允许 content 为空表示纯共建提交。",
+      "dependencies": [
+        "database-reviews-refactor"
+      ],
+      "acceptanceCriteria": [
+        "profile_submissions 相关代码已删除或迁移",
+        "POST /places/{placeId}/reviews 的评分直接作为共建数据",
+        "WorkspaceProfileService 从 reviews(APPROVED) 聚合公开属性",
+        "审核接口统一处理 reviews 的 PENDING/APPROVED/REJECTED",
+        "后端测试全部通过"
+      ],
+      "checkCommands": [
+        "cd backend; .\\mvnw.cmd test"
+      ],
+      "notes": "核心重构：reviews 吞并 profile_submissions。"
+    },
+    {
+      "id": "backend-review-interaction",
+      "title": "后端评价互动（点赞/回复/排序）",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "实现评价点赞（幂等）、取消点赞、评价回复、评价列表支持按时间/热度排序。",
+      "dependencies": [
+        "database-reviews-refactor",
+        "backend-reviews-as-contribution"
+      ],
+      "acceptanceCriteria": [
+        "POST /api/reviews/{id}/likes 点赞幂等",
+        "DELETE /api/reviews/{id}/likes 取消点赞",
+        "POST /api/reviews/{id}/replies 回复评价",
+        "GET /api/reviews/{id}/replies 获取回复列表",
+        "GET /places/{placeId}/reviews 支持 sort=time|hot",
+        "后端测试全部通过"
+      ],
+      "checkCommands": [
+        "cd backend; .\\mvnw.cmd test"
+      ],
+      "notes": "可与 backend-ask-everyone 并行开发。"
+    },
+    {
+      "id": "backend-ask-everyone",
+      "title": "后端问大家",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "实现地点问答 API：提问、回答问题、问题列表、回答列表。",
+      "dependencies": [
+        "database-reviews-refactor"
+      ],
+      "acceptanceCriteria": [
+        "POST /api/places/{placeId}/questions 提问",
+        "GET /api/places/{placeId}/questions 问题列表",
+        "POST /api/questions/{questionId}/answers 回答",
+        "GET /api/questions/{questionId}/answers 回答列表",
+        "后端测试全部通过"
+      ],
+      "checkCommands": [
+        "cd backend; .\\mvnw.cmd test"
+      ],
+      "notes": "可与 backend-review-interaction 并行开发。"
+    },
+    {
+      "id": "frontend-review-interaction",
+      "title": "前端评价互动（点赞/排序/回复）",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "前端评价标签改造：评价列表支持最新/最热排序、点赞按钮、回复展开；写评价页扩展共建字段（seatScore/minConsumption/allowLongStay/suitableScenes），content 变为可选。",
+      "dependencies": [
+        "backend-reviews-as-contribution",
+        "backend-review-interaction"
+      ],
+      "acceptanceCriteria": [
+        "评价列表支持 sort=time|hot 切换",
+        "每条评价可点赞/取消点赞，展示点赞数",
+        "每条评价可展开回复列表，可提交回复",
+        "写评价页新增 seatScore/minConsumption/allowLongStay/suitableScenes 字段",
+        "npm run test 和 npm run build 通过"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "等待后端两个互动 API 完成后启动。"
+    },
+    {
+      "id": "frontend-ask-everyone",
+      "title": "前端问大家",
+      "status": "pending",
+      "completedAt": null,
+      "branch": null,
+      "worktree": null,
+      "scope": "地点详情页新增'问大家'标签：提问列表、提问输入框、问题展开显示回答列表、回答输入框。",
+      "dependencies": [
+        "backend-ask-everyone"
+      ],
+      "acceptanceCriteria": [
+        "地点详情页新增'问大家'标签",
+        "问题列表展示提问者和回答数",
+        "点击问题展开回答列表",
+        "可提问和回答",
+        "npm run test 和 npm run build 通过"
+      ],
+      "checkCommands": [
+        "cd frontend; npm run test",
+        "cd frontend; npm run build"
+      ],
+      "notes": "等待 backend-ask-everyone 完成后启动。"
     }
   ]
 }

@@ -68,7 +68,45 @@ frontend verification
 
 ## 进行中
 
+- `home-search-mode-refactor`：首页默认附近模式与搜索职责分离（已合并到 main）。
+- `auth-guard-discovery`：发现页与详情页强制登录（已合并到 main）。
+- `map-default-markers`：首页地图默认展示周边已标记与收藏点（已合并到 main）。
 - 准备真实后端、本地 MySQL、高德服务与前端浏览器端到端 smoke。
+
+## 2026-05-10 map-default-markers coordinator 立项
+
+- 用户反馈：希望首页地图默认展示周边【已被标记】的点以及当前登录账号收藏的点，两种点用不同标识。
+- Coordinator 评估：
+  - 地点关联表确认：`places` 直接关联 `checkins`、`reviews`、`profile_submissions`、`workspace_profiles`、`favorites` 等。
+  - "已被标记"口径：`workspace_profiles.approved_submission_count > 0` 或 `checkins` 存在记录或 `reviews.audit_status = 'APPROVED'`。
+  - 冲突处理：后端返回 `marked` + `favorited` 两个布尔标志；前端优先展示收藏标识（红心），其次展示已标记标识（蓝点）。
+  - `home-page-enhancement` 确认已合并到 main（自动定位、加载更多、marker 点击详情），状态更新为 `completed`。
+  - 决定新建独立 feature `map-default-markers`，worktree 为 `.worktrees/map-default-markers`，基于 main。
+- 前后端改动范围：
+  - 后端：新增 `MapMarkerController` + `MapMarkerRepository`，提供 `GET /api/map/markers`。
+  - 前端：`weekendGoApi.ts` 新增类型与接口；`MapView.vue` 支持按 `markerType` 渲染不同颜色；`HomeView.vue` 挂载后自动定位并调用新接口。
+
+## 2026-05-10 auth-guard-discovery 合并
+
+- 已合并 `auth-guard-discovery` 到 `main`。
+- 审查确认：`/` 和 `/places/:placeId` 路由已添加 `requiresAuth: true`；未登录自动跳转 `/login?redirect=...`；登录后按 redirect 返回原页面。
+- 补充路由守卫测试 4 个用例：未登录访问 `/`、未登录访问 `/places/123`、已登录访问 `/`、已登录访问 `/places/123`。
+- 验证记录：前端测试 50 passed / 8 test files；构建通过；diff 空白检查通过。
+
+## 2026-05-10 home-search-mode-refactor 合并
+
+- 已合并 `home-search-mode-refactor` 到 `main`。
+- 审查确认：首页默认进入附近模式，自动定位并加载 `mapMarkers`；附近模式隐藏经纬度输入框，仅保留半径；附近查询调用 `mapMarkers`（只展示有内容/收藏的点），搜索保持 `searchPlaces`（暴露全部高德 POI）。
+- 验证记录：前端测试 50 passed / 8 test files；构建通过。
+
+## 2026-05-10 map-default-markers 合并
+
+- 已合并 `map-default-markers` 到 `main`。
+- 审查确认：
+  - 后端新增 `JdbcMapMarkerRepository`，使用矩形边界框粗筛 + Haversine 精确过滤；支持按 `workspace_profiles.approved_submission_count > 0` / `checkins` / `reviews(APPROVED)` 判定"已标记"；未登录时不返回收藏点。
+  - `SecurityConfig` 将 `/api/map/markers` 加入 `permitAll`，支持匿名访问。
+  - 前端 `HomeView.vue` 在 `onMounted` 中自动定位并调用 `mapMarkers`；`MapView.vue` 通过 `markerMeta` prop 区分红色（收藏）与蓝绿色（已标记）自定义 HTML marker。
+- 验证记录：后端测试 62 passed / 0 failures；前端测试 46 passed / 8 test files；前端构建通过；`git diff --check` 通过。
 
 ## 下一步
 
@@ -233,3 +271,57 @@ frontend verification
 - 演示账号：`api-user-demo` / `api-admin-demo`，演示密码均为 `secret123`。
 - 验证结果：演示账号 2 个、演示地点 3 个、`workspace_profiles` 3 条、最近 2 小时打卡 3 条、审核通过评价 2 条、审核通过图片 2 条、演示收藏 2 条。
 - 已更新 `database/README.md` 和 `docs/api/README.md`，记录导入方式、演示账号和用途。
+
+## 2026-05-11 评论系统重构方案确认与 feature 拆分
+
+- 用户提出需求：评论和共建绑定、评论点赞+排序、评论回复、问大家功能。
+- Coordinator 评估后给出重构方案：
+  - `reviews` 表吞并 `profile_submissions`，评分直接作为共建数据参与 `workspace_profiles` 聚合。
+  - 废弃 `profile_submissions` 表，删除相关实体/仓储/接口。
+  - `reviews` 表扩展 `like_count`、`reply_count` 和共建字段（`seat_score`、`min_consumption`、`allow_long_stay`、`suitable_scenes`）。
+  - 新建 `review_likes`（点赞）、`review_replies`（回复）、`place_qa`（问大家自关联）三张表。
+  - 回复和问答各自独立成表，不跟评价混；`content` 变为可选，允许纯共建提交。
+- 用户确认方案，要求拆分 feature。
+
+### feature 拆分结果
+
+新增 6 个 feature，调整 2 个现有 in_progress feature：
+
+| Feature | 状态 | 说明 |
+|---------|------|------|
+| `database-reviews-refactor` | pending | 数据库 schema 变更，所有后续重构的前置依赖 |
+| `backend-reviews-as-contribution` | pending | reviews 吞并 profile_submissions，聚合逻辑改造 |
+| `backend-review-interaction` | pending | 点赞/回复/排序 API，可与 backend-ask-everyone 并行 |
+| `backend-ask-everyone` | pending | 问大家 API，可与 backend-review-interaction 并行 |
+| `frontend-review-interaction` | pending | 前端评价互动（排序/点赞/回复），等后端完成后启动 |
+| `frontend-ask-everyone` | pending | 前端问大家标签页，等后端完成后启动 |
+| `user-profile-expansion` | **pending**（从 in_progress 调整） | 个人中心扩展，等待 backend-reviews-as-contribution（共建已合并到 reviews） |
+| `admin-workbench` | **pending**（从 in_progress 调整） | 管理员工作台，等待 backend-reviews-as-contribution（待审核口径改为 reviews） |
+
+### 依赖关系与执行顺序
+
+```
+Phase 1: database-reviews-refactor（无依赖，最先启动）
+         │
+         ├──→ Phase 2a: backend-reviews-as-contribution
+         │              │
+         │              ├──→ Phase 3a: frontend-review-interaction
+         │              │              （需 backend-review-interaction 也完成）
+         │              │
+         │              ├──→ Phase 3b: user-profile-expansion
+         │              │
+         │              └──→ Phase 3c: admin-workbench
+         │
+         ├──→ Phase 2b: backend-review-interaction（可与 2a 并行）
+         │
+         └──→ Phase 2c: backend-ask-everyone（可与 2a/2b 并行）
+                        │
+                        └──→ Phase 3d: frontend-ask-everyone
+```
+
+### 阻塞与风险
+
+- `user-profile-expansion` 和 `admin-workbench` 原为 in_progress，现因 schema 重构基础变化，状态回退为 pending。
+- `dev_seed.sql` 需要同步适配新 schema（去掉 profile_submissions 数据，改为 reviews 格式）。
+- `audit_logs` 中的 `PROFILE_SUBMISSION` target_type 需要迁移为 `REVIEW`。
+- 前端写评价页表单需要扩展共建字段，UI 复杂度增加。
