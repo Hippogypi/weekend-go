@@ -352,3 +352,33 @@ Phase 1: database-reviews-refactor（无依赖，最先启动）
 - `main` 分支后端测试：77 passed, 0 failures。
 - 已完成 Phase 3 全部 feature：`frontend-review-interaction`, `frontend-ask-everyone`。
 - 待启动：`user-profile-expansion`, `admin-workbench`。
+
+## 2026-05-11 user-profile-expansion + admin-workbench 完成
+
+### user-profile-expansion
+- 已合并到 main。
+- 审查确认：
+  - `ProfileView.vue`：移除"我的共建"标签页，保留收藏/打卡/评价三个标签；更新"我的评价"展示，增加 `seatScore`、`minConsumption`、`allowLongStay`、`suitableScenes` 字段及样式。
+  - `weekendGoApi.ts`：移除 `ProfileSubmissionRequest`、`ProfileSubmission`、`MyProfileSubmission` 接口和 `submitProfile`、`approveProfileSubmission`、`rejectProfileSubmission`、`myProfileSubmissions` 方法。
+  - `weekendGoApi.test.ts`：移除废弃的 `submitProfile`、`approveProfileSubmission`、`myProfileSubmissions` 调用和断言。
+  - `AdminDashboardView.vue` / `AdminReviewView.vue`：同步移除废弃的 `profile` 审核引用。
+- 验证记录：前端测试 53 passed / 8 test files；构建通过。
+
+### admin-workbench
+- 已合并到 main。
+- 审查确认：
+  - `AuditStats.java`：移除 `pendingProfiles` 字段。
+  - `AdminController.java`：更新 `stats()` 方法传参。
+  - `AdminControllerTest.java`：移除 `pendingProfiles` 的 jsonPath 断言。
+  - `AdminDashboardView.vue`：移除"属性共建"标签和统计卡片中的 `pendingProfiles`，subtitle 更新为"管理待审核的评价与图片"。
+  - `weekendGoApi.ts`：`AuditStats` 接口移除 `pendingProfiles`。
+- 验证记录：后端测试 77 passed / 0 failures；前端测试 53 passed / 8 test files；构建通过。
+
+### 合并
+- 两个分支都对 `AdminDashboardView.vue` 和 `weekendGoApi.ts` 做了相同方向的修改（移除废弃 `profile` 代码）。
+- 先合并 `admin-workbench`，再合并 `user-profile-expansion`，git 自动合并成功，无冲突。
+
+### 当前状态
+- `main` 分支前端测试：53 passed, 0 failures。
+- `main` 分支后端测试：77 passed, 0 failures。
+- 第一版核心 feature 全部完成。
