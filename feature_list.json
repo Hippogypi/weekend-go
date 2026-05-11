@@ -849,8 +849,7 @@
       "worktree": null,
       "scope": "实现评价点赞（幂等）、取消点赞、评价回复、评价列表支持按时间/热度排序。",
       "dependencies": [
-        "database-reviews-refactor",
-        "backend-reviews-as-contribution"
+        "database-reviews-refactor"
       ],
       "acceptanceCriteria": [
         "POST /api/reviews/{id}/likes 点赞幂等",
