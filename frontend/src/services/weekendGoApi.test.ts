@@ -91,6 +91,55 @@ describe('WeekendGoApi', () => {
     expect(calls[1].init?.headers).toMatchObject({ Authorization: 'Bearer token-1' });
   });
 
+  it('builds review list URL with optional sort parameter', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const api = createWeekendGoApi({
+      baseUrl: 'https://api.example.test/api',
+      fetcher: async (input, init) => {
+        calls.push({ input, init });
+        return new Response(JSON.stringify({ success: true, code: 'OK', message: 'success', data: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    });
+
+    await api.getReviews(7);
+    await api.getReviews(7, 'time');
+    await api.getReviews(7, 'hot');
+
+    expect(calls[0].input).toBe('https://api.example.test/api/places/7/reviews');
+    expect(calls[1].input).toBe('https://api.example.test/api/places/7/reviews?sort=time');
+    expect(calls[2].input).toBe('https://api.example.test/api/places/7/reviews?sort=hot');
+  });
+
+  it('sends review interaction requests to correct endpoints', async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const api = createWeekendGoApi({
+      baseUrl: 'https://api.example.test/api',
+      fetcher: async (input, init) => {
+        calls.push({ input, init });
+        return new Response(JSON.stringify({ success: true, code: 'OK', message: 'success', data: {} }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    });
+
+    await api.likeReview(3);
+    await api.unlikeReview(3);
+    await api.getReplies(3);
+    await api.createReply(3, 'Thanks for sharing!');
+
+    expect(calls.map((call) => `${call.init?.method} ${call.input}`)).toEqual([
+      'POST https://api.example.test/api/reviews/3/likes',
+      'DELETE https://api.example.test/api/reviews/3/likes',
+      'GET https://api.example.test/api/reviews/3/replies',
+      'POST https://api.example.test/api/reviews/3/replies'
+    ]);
+    expect(JSON.parse(calls[3].init?.body as string)).toEqual({ content: 'Thanks for sharing!' });
+  });
+
   it('sends question and answer requests to documented endpoints', async () => {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
     const api = createWeekendGoApi({
