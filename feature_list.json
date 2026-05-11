@@ -820,8 +820,8 @@
     {
       "id": "backend-reviews-as-contribution",
       "title": "后端 reviews 成为共建载体",
-      "status": "in_progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-11",
       "branch": "backend-reviews-as-contribution",
       "worktree": ".worktrees/backend-reviews-as-contribution",
       "scope": "废弃 profile_submissions 概念：删除 ProfileSubmission 实体/请求/仓储，改造 WorkspaceProfileService 聚合逻辑从 reviews 取数据，审核接口统一为 reviews，允许 content 为空表示纯共建提交。",
@@ -843,8 +843,8 @@
     {
       "id": "backend-review-interaction",
       "title": "后端评价互动（点赞/回复/排序）",
-      "status": "in_progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-11",
       "branch": "backend-review-interaction",
       "worktree": ".worktrees/backend-review-interaction",
       "scope": "实现评价点赞（幂等）、取消点赞、评价回复、评价列表支持按时间/热度排序。",
@@ -867,8 +867,8 @@
     {
       "id": "backend-ask-everyone",
       "title": "后端问大家",
-      "status": "in_progress",
-      "completedAt": null,
+      "status": "completed",
+      "completedAt": "2026-05-11",
       "branch": "backend-ask-everyone",
       "worktree": ".worktrees/backend-ask-everyone",
       "scope": "实现地点问答 API：提问、回答问题、问题列表、回答列表。",
