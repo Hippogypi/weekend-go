@@ -77,31 +77,6 @@ export interface NearbyPlacesParams {
   offset?: number;
 }
 
-export interface ProfileSubmissionRequest {
-  quietScore: number;
-  wifiScore: number;
-  socketScore: number;
-  seatScore: number;
-  costScore?: number | null;
-  minConsumption?: number | null;
-  allowLongStay?: string | null;
-  suitableScenes?: string[];
-  remark?: string;
-}
-
-export interface ProfileSubmission extends ProfileSubmissionRequest {
-  id: number;
-  placeId: number;
-  userId: number;
-  auditStatus: string;
-  auditReason?: string | null;
-  createdAt?: string;
-}
-
-export interface MyProfileSubmission extends ProfileSubmission {
-  placeName: string;
-}
-
 export interface MyCheckin {
   id: number;
   placeId: number;
@@ -319,18 +294,6 @@ export class WeekendGoApi {
     return this.client.get(`/places/${placeId}/workspace-profile`);
   }
 
-  submitProfile(placeId: number | string, body: ProfileSubmissionRequest): Promise<ProfileSubmission> {
-    return this.client.post(`/places/${placeId}/profile-submissions`, body);
-  }
-
-  approveProfileSubmission(submissionId: number | string, reason?: string): Promise<ProfileSubmission> {
-    return this.client.post(`/admin/profile-submissions/${submissionId}/approve`, { reason });
-  }
-
-  rejectProfileSubmission(submissionId: number | string, reason: string): Promise<ProfileSubmission> {
-    return this.client.post(`/admin/profile-submissions/${submissionId}/reject`, { reason });
-  }
-
   submitCheckin(placeId: number | string, body: CheckinRequest): Promise<unknown> {
     return this.client.post(`/places/${placeId}/checkins`, body);
   }
@@ -392,11 +355,7 @@ export class WeekendGoApi {
     return this.client.patch('/auth/me', { nickname });
   }
 
-  myProfileSubmissions(): Promise<MyProfileSubmission[]> {
-    return this.client.get('/me/profile-submissions');
-  }
-
-  myCheckins(): Promise<MyCheckin[]> {
+myCheckins(): Promise<MyCheckin[]> {
     return this.client.get('/me/checkins');
   }
 

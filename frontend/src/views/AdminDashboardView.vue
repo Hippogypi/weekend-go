@@ -8,7 +8,7 @@ import type { PendingAuditItem, PageResult, AuditStats } from '../services/weeke
 const { errorMessage, setError, clearError } = useApiError();
 const toast = useToast();
 
-const activeTab = ref<'profile' | 'review' | 'image'>('review');
+const activeTab = ref<'review' | 'image'>('review');
 const stats = ref<AuditStats | null>(null);
 const pendingResult = ref<PageResult<PendingAuditItem> | null>(null);
 const currentPage = ref(1);
@@ -16,7 +16,6 @@ const pageSize = ref(20);
 const auditingId = ref<number | null>(null);
 
 const tabs = [
-  { key: 'profile' as const, label: '🏷️ 属性共建' },
   { key: 'review' as const, label: '⭐ 评价' },
   { key: 'image' as const, label: '🖼️ 图片' }
 ];
@@ -70,13 +69,7 @@ async function auditItem(item: PendingAuditItem, status: 'APPROVED' | 'REJECTED'
   clearError();
   auditingId.value = item.id;
   try {
-    if (item.type === 'profile') {
-      if (status === 'APPROVED') {
-        await weekendGoApi.approveProfileSubmission(item.id, 'ok');
-      } else {
-        await weekendGoApi.rejectProfileSubmission(item.id, '不符合要求');
-      }
-    } else if (item.type === 'review') {
+    if (item.type === 'review') {
       await weekendGoApi.auditReview(item.id, { auditStatus: status, reason: 'ok' });
     } else if (item.type === 'image') {
       await weekendGoApi.auditImage(item.id, { auditStatus: status, reason: 'ok' });
@@ -94,7 +87,6 @@ async function auditItem(item: PendingAuditItem, status: 'APPROVED' | 'REJECTED'
 
 function getTypeLabel(type: string): string {
   switch (type) {
-    case 'profile': return '属性共建';
     case 'review': return '评价';
     case 'image': return '图片';
     default: return type;

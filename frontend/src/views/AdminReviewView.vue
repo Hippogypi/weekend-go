@@ -38,12 +38,6 @@ async function doSubmitAudit(): Promise<void> {
         reason: form.reason
       });
       message.value = `图片 ${result.id} 已更新为 ${result.auditStatus}`;
-    } else if (form.auditStatus === 'APPROVED') {
-      const result = await weekendGoApi.approveProfileSubmission(form.targetId, form.reason);
-      message.value = `属性共建 ${result.id} 已通过`;
-    } else {
-      const result = await weekendGoApi.rejectProfileSubmission(form.targetId, form.reason);
-      message.value = `属性共建 ${result.id} 已驳回`;
     }
   });
 }
@@ -69,7 +63,6 @@ async function doSubmitAudit(): Promise<void> {
         <select v-model="form.targetType">
           <option value="review">评价</option>
           <option value="image">图片</option>
-          <option value="profile">属性共建</option>
         </select>
       </label>
       <label class="field stacked">
@@ -95,10 +88,6 @@ async function doSubmitAudit(): Promise<void> {
     <section class="panel">
       <h2>审核入口说明</h2>
       <ul class="simple-list">
-        <li>
-          <strong>属性共建</strong>
-          <span>详情页提交后返回 profile submission id，可在这里通过或驳回。</span>
-        </li>
         <li>
           <strong>评价 / 图片</strong>
           <span>详情页提交后默认为 PENDING，管理员审核通过后才会出现在公开列表。</span>
