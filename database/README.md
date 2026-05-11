@@ -12,11 +12,13 @@
 - `users` 保存普通用户和管理员账号，`role` 枚举为 `USER`、`ADMIN`。
 - `places` 保存高德 POI 基础数据，使用 `amap_poi_id` 唯一去重；`workspace_status` 枚举为 `CANDIDATE`、`PENDING`、`APPROVED`、`REJECTED`。
 - `workspace_profiles` 是地点公开聚合后的学习办公属性，与 `places` 一对一。
-- `profile_submissions` 保存用户提交的原始共建属性，默认 `audit_status = PENDING`，审核通过后再参与聚合。
 - `checkins` 保存打卡反馈，用 `created_at` 支持最近 2 小时状态聚合。
 - `reviews`、`place_images`、`place_tags` 都带 `audit_status`，只应公开展示 `APPROVED` 数据。
+- `reviews` 同时承载用户对地点的体验评分、文本评价和共建属性（如 `seat_score`、`allow_long_stay`、`suitable_scenes`）。
+- `review_likes`、`review_replies` 支持评价的点赞和回复互动。
+- `place_qa` 提供地点问答（问大家）功能。
 - `favorites` 使用 `(user_id, place_id)` 唯一约束支持重复收藏冲突或幂等处理。
-- `audit_logs` 记录管理员对属性、评价、图片、标签和地点的审核动作。
+- `audit_logs` 记录管理员对评价、图片、标签和地点的审核动作。
 - `tags` 与 `search_keywords` 是初始化字典表，不包含真实生产数据或密钥。
 
 ## 关键索引
@@ -97,7 +99,7 @@ mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p --default-character-s
 mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u weekend_go -p weekend_go -e "SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema='weekend_go'; SELECT COUNT(*) AS tag_count FROM tags; SELECT COUNT(*) AS search_keyword_count FROM search_keywords;"
 ```
 
-当前 schema 验证结果：`table_count = 12`，`tag_count = 10`，`search_keyword_count = 9`。
+当前 schema 验证结果：`table_count = 14`，`tag_count = 10`，`search_keyword_count = 9`。
 
 ## MySQL 8.0.43 验证记录
 
@@ -117,7 +119,7 @@ mysql --protocol=TCP -h 127.0.0.1 -P 33307 -u root \
 验证结果：
 
 - `schema.sql` 可在 MySQL 8.0.43 执行建表，导入退出码为 0。
-- `information_schema.tables` 统计得到 12 张表。
-- `information_schema.statistics` 覆盖所有核心表索引：`users`、`places`、`workspace_profiles`、`profile_submissions`、`checkins`、`reviews`、`place_images`、`tags`、`place_tags`、`favorites`、`audit_logs`、`search_keywords`。
+- `information_schema.tables` 统计得到 14 张表。
+- `information_schema.statistics` 覆盖所有核心表索引：`users`、`places`、`workspace_profiles`、`checkins`、`reviews`、`review_likes`、`review_replies`、`place_qa`、`place_images`、`tags`、`place_tags`、`favorites`、`audit_logs`、`search_keywords`。
 - `information_schema.table_constraints` 确认外键约束已创建，包括地点、用户、审核员、标签、收藏和审核日志关系。
 - 初始化字典数据验证通过：`tags` 为 10 条，`search_keywords` 为 9 条。

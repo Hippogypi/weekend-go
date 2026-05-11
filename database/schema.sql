@@ -80,45 +80,6 @@ CREATE TABLE IF NOT EXISTS workspace_profiles (
   CONSTRAINT chk_workspace_profiles_score CHECK (score IS NULL OR score BETWEEN 1.0 AND 5.0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='地点聚合后的公开学习办公属性';
 
-CREATE TABLE IF NOT EXISTS profile_submissions (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  place_id BIGINT UNSIGNED NOT NULL,
-  user_id BIGINT UNSIGNED NOT NULL,
-  quiet_score DECIMAL(2, 1) NOT NULL,
-  wifi_score DECIMAL(2, 1) NOT NULL,
-  socket_score DECIMAL(2, 1) NOT NULL,
-  seat_score DECIMAL(2, 1) NOT NULL,
-  cost_score DECIMAL(2, 1) NULL,
-  min_consumption INT UNSIGNED NULL,
-  allow_long_stay ENUM('TRUE', 'FALSE', 'UNKNOWN') NOT NULL DEFAULT 'UNKNOWN',
-  suitable_scenes JSON NULL,
-  remark VARCHAR(500) NULL,
-  audit_status ENUM('PENDING', 'APPROVED', 'REJECTED', 'DELETED') NOT NULL DEFAULT 'PENDING',
-  audited_by BIGINT UNSIGNED NULL,
-  audited_at DATETIME NULL,
-  audit_reason VARCHAR(500) NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_profile_submissions_place_status (place_id, audit_status),
-  KEY idx_profile_submissions_user_created (user_id, created_at),
-  KEY idx_profile_submissions_audit_status (audit_status),
-  CONSTRAINT fk_profile_submissions_place
-    FOREIGN KEY (place_id) REFERENCES places (id)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_profile_submissions_user
-    FOREIGN KEY (user_id) REFERENCES users (id)
-    ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_profile_submissions_auditor
-    FOREIGN KEY (audited_by) REFERENCES users (id)
-    ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT chk_profile_submissions_quiet_score CHECK (quiet_score BETWEEN 1.0 AND 5.0),
-  CONSTRAINT chk_profile_submissions_wifi_score CHECK (wifi_score BETWEEN 1.0 AND 5.0),
-  CONSTRAINT chk_profile_submissions_socket_score CHECK (socket_score BETWEEN 1.0 AND 5.0),
-  CONSTRAINT chk_profile_submissions_seat_score CHECK (seat_score BETWEEN 1.0 AND 5.0),
-  CONSTRAINT chk_profile_submissions_cost_score CHECK (cost_score IS NULL OR cost_score BETWEEN 1.0 AND 5.0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户提交的学习办公属性共建记录';
-
 CREATE TABLE IF NOT EXISTS checkins (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   place_id BIGINT UNSIGNED NOT NULL,
@@ -149,7 +110,13 @@ CREATE TABLE IF NOT EXISTS reviews (
   socket_score DECIMAL(2, 1) NOT NULL,
   comfort_score DECIMAL(2, 1) NOT NULL,
   cost_score DECIMAL(2, 1) NOT NULL,
+  seat_score DECIMAL(2, 1) NULL,
+  min_consumption INT UNSIGNED NULL,
+  allow_long_stay ENUM('TRUE', 'FALSE', 'UNKNOWN') NOT NULL DEFAULT 'UNKNOWN',
+  suitable_scenes JSON NULL,
   content VARCHAR(1000) NOT NULL,
+  like_count INT UNSIGNED NOT NULL DEFAULT 0,
+  reply_count INT UNSIGNED NOT NULL DEFAULT 0,
   audit_status ENUM('PENDING', 'APPROVED', 'REJECTED', 'DELETED') NOT NULL DEFAULT 'PENDING',
   audited_by BIGINT UNSIGNED NULL,
   audited_at DATETIME NULL,
@@ -160,6 +127,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   KEY idx_reviews_place_status_created (place_id, audit_status, created_at),
   KEY idx_reviews_user_created (user_id, created_at),
   KEY idx_reviews_audit_status (audit_status),
+  KEY idx_reviews_hot (place_id, audit_status, like_count, created_at),
   CONSTRAINT fk_reviews_place
     FOREIGN KEY (place_id) REFERENCES places (id)
     ON DELETE CASCADE ON UPDATE CASCADE,
@@ -173,8 +141,47 @@ CREATE TABLE IF NOT EXISTS reviews (
   CONSTRAINT chk_reviews_wifi_score CHECK (wifi_score BETWEEN 1.0 AND 5.0),
   CONSTRAINT chk_reviews_socket_score CHECK (socket_score BETWEEN 1.0 AND 5.0),
   CONSTRAINT chk_reviews_comfort_score CHECK (comfort_score BETWEEN 1.0 AND 5.0),
-  CONSTRAINT chk_reviews_cost_score CHECK (cost_score BETWEEN 1.0 AND 5.0)
+  CONSTRAINT chk_reviews_cost_score CHECK (cost_score BETWEEN 1.0 AND 5.0),
+  CONSTRAINT chk_reviews_seat_score CHECK (seat_score IS NULL OR seat_score BETWEEN 1.0 AND 5.0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户对地点学习办公体验的评价';
+
+CREATE TABLE IF NOT EXISTS review_likes (
+  review_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (review_id, user_id),
+  FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='评价点赞记录';
+
+CREATE TABLE IF NOT EXISTS review_replies (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  review_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  content VARCHAR(1000) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_review_replies_review (review_id, created_at),
+  FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='评价回复';
+
+CREATE TABLE IF NOT EXISTS place_qa (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  place_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  type ENUM('QUESTION','ANSWER') NOT NULL,
+  parent_id BIGINT UNSIGNED NULL,
+  content VARCHAR(1000) NOT NULL,
+  answer_count INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_place_qa_place (place_id, type, created_at),
+  KEY idx_place_qa_parent (parent_id, type, created_at),
+  FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (parent_id) REFERENCES place_qa(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='地点问答（问大家）';
 
 CREATE TABLE IF NOT EXISTS place_images (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -270,7 +277,7 @@ CREATE TABLE IF NOT EXISTS favorites (
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  target_type ENUM('PROFILE_SUBMISSION', 'REVIEW', 'PLACE_IMAGE', 'PLACE_TAG', 'PLACE') NOT NULL,
+  target_type ENUM('REVIEW', 'PLACE_IMAGE', 'PLACE_TAG', 'PLACE') NOT NULL,
   target_id BIGINT UNSIGNED NOT NULL,
   admin_id BIGINT UNSIGNED NOT NULL,
   action ENUM('APPROVED', 'REJECTED', 'DELETED') NOT NULL,
@@ -334,5 +341,7 @@ ALTER TABLE place_images
   ADD CONSTRAINT IF NOT EXISTS fk_place_images_review
     FOREIGN KEY (review_id) REFERENCES reviews(id)
     ON DELETE CASCADE ON UPDATE CASCADE;
+
+UPDATE audit_logs SET target_type = 'REVIEW' WHERE target_type = 'PROFILE_SUBMISSION';
 
 SET FOREIGN_KEY_CHECKS = 1;

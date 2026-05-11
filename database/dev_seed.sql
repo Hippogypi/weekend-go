@@ -70,11 +70,6 @@ WHERE user_id = @demo_user_id
   AND place_id IN (@library_id, @cafe_id, @bookstore_id)
   AND remark IN ('工作日上午座位充足。', '午后客流较多，建议早到。', '长桌还有空位。');
 
-DELETE FROM profile_submissions
-WHERE user_id = @demo_user_id
-  AND place_id IN (@library_id, @cafe_id, @bookstore_id)
-  AND (audit_reason <=> 'demo seed' OR remark IN ('二楼东侧更安静，适合长时间阅读。', '靠窗位置插座较多，午后人会变多。', '长桌适合阅读，网络稳定性一般。'));
-
 INSERT INTO workspace_profiles (
   place_id, quiet_score, wifi_score, socket_score, seat_score, cost_score,
   min_consumption, allow_long_stay, score, trust_level,
@@ -98,22 +93,6 @@ ON DUPLICATE KEY UPDATE
   last_contributed_at = VALUES(last_contributed_at),
   updated_at = CURRENT_TIMESTAMP;
 
-INSERT INTO profile_submissions (
-  place_id, user_id, quiet_score, wifi_score, socket_score, seat_score, cost_score,
-  min_consumption, allow_long_stay, suitable_scenes, remark,
-  audit_status, audited_by, audited_at, audit_reason
-) VALUES
-  (@library_id, @demo_user_id, 5.0, 4.0, 4.0, 4.5, 5.0, 0, 'TRUE', JSON_ARRAY('READING', 'SELF_STUDY'), '二楼东侧更安静，适合长时间阅读。', 'APPROVED', @demo_admin_id, NOW(), 'demo seed'),
-  (@cafe_id, @demo_user_id, 3.5, 4.5, 4.0, 3.5, 3.0, 28, 'TRUE', JSON_ARRAY('REMOTE_WORK', 'LIGHT_MEETING'), '靠窗位置插座较多，午后人会变多。', 'APPROVED', @demo_admin_id, NOW(), 'demo seed'),
-  (@bookstore_id, @demo_user_id, 4.0, 3.5, 3.0, 4.0, 4.0, 0, 'UNKNOWN', JSON_ARRAY('READING'), '长桌适合阅读，网络稳定性一般。', 'PENDING', NULL, NULL, NULL)
-ON DUPLICATE KEY UPDATE
-  remark = VALUES(remark),
-  audit_status = VALUES(audit_status),
-  audited_by = VALUES(audited_by),
-  audited_at = VALUES(audited_at),
-  audit_reason = VALUES(audit_reason),
-  updated_at = CURRENT_TIMESTAMP;
-
 INSERT INTO checkins (place_id, user_id, crowd_level, noise_level, has_seat, remark, created_at) VALUES
   (@library_id, @demo_user_id, 'NORMAL', 'QUIET', 1, '工作日上午座位充足。', NOW() - INTERVAL 40 MINUTE),
   (@cafe_id, @demo_user_id, 'CROWDED', 'NORMAL', 0, '午后客流较多，建议早到。', NOW() - INTERVAL 70 MINUTE),
@@ -121,11 +100,12 @@ INSERT INTO checkins (place_id, user_id, crowd_level, noise_level, has_seat, rem
 
 INSERT INTO reviews (
   place_id, user_id, quiet_score, wifi_score, socket_score, comfort_score, cost_score,
+  seat_score, min_consumption, allow_long_stay, suitable_scenes,
   content, audit_status, audited_by, audited_at, audit_reason
 ) VALUES
-  (@library_id, @demo_user_id, 5.0, 4.0, 4.0, 4.5, 5.0, '安静程度很高，适合集中写作和备考。', 'APPROVED', @demo_admin_id, NOW(), 'demo seed'),
-  (@cafe_id, @demo_user_id, 3.5, 4.5, 4.5, 4.0, 3.0, '网络和插座不错，但下午噪音会升高。', 'APPROVED', @demo_admin_id, NOW(), 'demo seed'),
-  (@bookstore_id, @demo_user_id, 4.0, 3.5, 3.0, 4.0, 4.0, '环境舒服，适合阅读，不太适合视频会议。', 'PENDING', NULL, NULL, NULL);
+  (@library_id, @demo_user_id, 5.0, 4.0, 4.0, 4.5, 5.0, 4.5, 0, 'TRUE', JSON_ARRAY('READING', 'SELF_STUDY'), '安静程度很高，适合集中写作和备考。', 'APPROVED', @demo_admin_id, NOW(), 'demo seed'),
+  (@cafe_id, @demo_user_id, 3.5, 4.5, 4.5, 4.0, 3.0, 3.5, 28, 'TRUE', JSON_ARRAY('REMOTE_WORK', 'LIGHT_MEETING'), '网络和插座不错，但下午噪音会升高。', 'APPROVED', @demo_admin_id, NOW(), 'demo seed'),
+  (@bookstore_id, @demo_user_id, 4.0, 3.5, 3.0, 4.0, 4.0, 4.0, 0, 'UNKNOWN', JSON_ARRAY('READING'), '环境舒服，适合阅读，不太适合视频会议。', 'PENDING', NULL, NULL, NULL);
 
 INSERT INTO place_images (
   place_id, user_id, image_url, description, audit_status, audited_by, audited_at, audit_reason
