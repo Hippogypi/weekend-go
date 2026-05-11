@@ -798,10 +798,10 @@
     {
       "id": "database-reviews-refactor",
       "title": "数据库 reviews 重构与新增互动表",
-      "status": "pending",
-      "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "status": "completed",
+      "completedAt": "2026-05-11",
+      "branch": "database-reviews-refactor",
+      "worktree": ".worktrees/database-reviews-refactor",
       "scope": "改造 reviews 表（增加 like_count/reply_count/共建字段），废弃 profile_submissions，新建 review_likes/review_replies/place_qa 表，更新 dev_seed.sql 和 audit_logs target_type。",
       "dependencies": [],
       "acceptanceCriteria": [
@@ -815,7 +815,7 @@
         "mysql -u <user> -p weekend_go < database/schema.sql",
         "python -m json.tool feature_list.json"
       ],
-      "notes": "所有后续重构 feature 的前置依赖，最先启动。"
+      "notes": "已合并到 main。审查发现并修复了冗余索引（idx_reviews_time 与 idx_reviews_place_status_created 重复）。"
     },
     {
       "id": "backend-reviews-as-contribution",
