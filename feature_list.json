@@ -890,10 +890,10 @@
     {
       "id": "frontend-review-interaction",
       "title": "前端评价互动（点赞/排序/回复）",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "frontend-review-interaction",
+      "worktree": ".worktrees/frontend-review-interaction",
       "scope": "前端评价标签改造：评价列表支持最新/最热排序、点赞按钮、回复展开；写评价页扩展共建字段（seatScore/minConsumption/allowLongStay/suitableScenes），content 变为可选。",
       "dependencies": [
         "backend-reviews-as-contribution",
@@ -915,10 +915,10 @@
     {
       "id": "frontend-ask-everyone",
       "title": "前端问大家",
-      "status": "pending",
+      "status": "in_progress",
       "completedAt": null,
-      "branch": null,
-      "worktree": null,
+      "branch": "frontend-ask-everyone",
+      "worktree": ".worktrees/frontend-ask-everyone",
       "scope": "地点详情页新增'问大家'标签：提问列表、提问输入框、问题展开显示回答列表、回答输入框。",
       "dependencies": [
         "backend-ask-everyone"
