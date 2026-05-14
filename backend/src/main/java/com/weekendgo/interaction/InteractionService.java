@@ -131,7 +131,14 @@ public class InteractionService {
                             review.content(),
                             review.auditStatus(),
                             review.createdAt(),
-                            review.images()
+                            review.images(),
+                            review.seatScore(),
+                            review.minConsumption(),
+                            review.allowLongStay(),
+                            review.suitableScenes(),
+                            review.likeCount(),
+                            review.replyCount(),
+                            review.liked()
                     );
                 })
                 .toList();

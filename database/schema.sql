@@ -337,8 +337,8 @@ ON DUPLICATE KEY UPDATE
   updated_at = CURRENT_TIMESTAMP;
 
 ALTER TABLE place_images
-  ADD COLUMN IF NOT EXISTS review_id BIGINT UNSIGNED NULL AFTER user_id,
-  ADD CONSTRAINT IF NOT EXISTS fk_place_images_review
+  ADD COLUMN review_id BIGINT UNSIGNED NULL AFTER user_id,
+  ADD CONSTRAINT fk_place_images_review
     FOREIGN KEY (review_id) REFERENCES reviews(id)
     ON DELETE CASCADE ON UPDATE CASCADE;
 
