@@ -336,12 +336,6 @@ ON DUPLICATE KEY UPDATE
   sort_order = VALUES(sort_order),
   updated_at = CURRENT_TIMESTAMP;
 
-ALTER TABLE place_images
-  ADD COLUMN review_id BIGINT UNSIGNED NULL AFTER user_id,
-  ADD CONSTRAINT fk_place_images_review
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
-    ON DELETE CASCADE ON UPDATE CASCADE;
-
 UPDATE audit_logs SET target_type = 'REVIEW' WHERE target_type = 'PROFILE_SUBMISSION';
 
 SET FOREIGN_KEY_CHECKS = 1;
