@@ -4,6 +4,20 @@
 
 frontend verification
 
+## 2026-05-15 E2E 测试报告问题修复
+
+- 阅读 `e2e-test-report.md`，确认仅 1 个已知问题：左侧导航栏"审核"链接指向 `/admin/reviews`（404）。
+- 修复 `frontend/src/App.vue` 第 17 行：将 `{ to: '/admin/reviews', label: '审核' }` 改为 `{ to: '/admin', label: '审核' }`。
+- 验证：`cd frontend; npm run test` 通过，53 passed / 8 test files，0 failures。
+- 已更新 `e2e-test-report.md`，标记该问题为已修复。
+
+## 2026-05-15 登录页独立布局
+
+- 用户要求：登录页与首页分开，登录成功后才能看到带侧边栏的首页。
+- 方案：App.vue 条件渲染——`/login` 路由独立全屏（`.login-shell`），其余路由保留 `.app-shell` 侧边栏布局。
+- 修改文件：`frontend/src/App.vue`——引入 `useRoute()`，模板 `v-if` 分支渲染两种布局，新增 `<style scoped>` 定义 `.login-shell`。
+- 验证：`cd frontend; npm run test` 通过，53 passed / 8 test files，0 failures；`npm run build` 通过。
+
 ## 2026-05-10 前端业务组织逻辑重构方案确认
 
 - 用户确认前端业务逻辑不符合直觉，要求从使用者视角重构。

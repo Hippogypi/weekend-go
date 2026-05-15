@@ -5,6 +5,66 @@
 
 ---
 
+## 2026-05-15 20:30
+
+**角色**: coordinator  
+**操作类型**: 登录页独立布局执行
+
+### 修改文件
+
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `frontend/src/App.vue` | 修改 | 引入 `useRoute()`，模板 `v-if` 分支：`<div v-if="route.path === '/login'" class="login-shell">` 独立全屏渲染登录页，`v-else` 保留 `.app-shell` 侧边栏布局；新增 `<style scoped>` 定义 `.login-shell`（min-height: 100vh; padding: 28px） |
+| `progress.md` | 修改 | 追加"2026-05-15 登录页独立布局"小节，记录需求、方案、修改文件、验证结果 |
+
+### 验证结果
+
+| 检查项 | 结果 |
+|--------|------|
+| 前端单元测试 | ✅ 通过 — 53 passed, 8 test files |
+| 前端构建 | ✅ 通过 — dist/ 生成成功 |
+
+### 路由行为确认
+
+- 未登录访问 `/` → 守卫重定向到 `/login` → **无侧边栏**
+- 登录成功 → 跳回 `/` → **有侧边栏**
+- 已登录访问 `/login` → 守卫拦截跳回 `/` → **有侧边栏**
+
+---
+
+## 2026-05-15 15:07
+
+**角色**: coordinator  
+**操作类型**: E2E 报告问题修复 + 布局优化计划确认
+
+### 修改文件
+
+| 文件 | 操作 | 说明 |
+|------|------|------|
+| `frontend/src/App.vue` | 修改 | 导航栏"审核"链接路由：`/admin/reviews` → `/admin`，修复 404 |
+| `e2e-test-report.md` | 修改 | 标记导航路由错误为已修复，注明修复文件 |
+| `progress.md` | 修改 | 追加"2026-05-15 E2E 测试报告问题修复"小节，记录问题、修复、验证事实 |
+
+### 验证结果
+
+| 检查项 | 结果 |
+|--------|------|
+| 前端单元测试 | ✅ 通过 — 53 passed, 8 test files |
+| 前端构建 | ✅ 通过 — dist/ 生成成功 |
+
+### 已确认计划（待执行）
+
+- **登录页独立布局**：用户要求登录页（`/login`）与首页分开，登录成功后才能看到带侧边栏的首页。
+- 方案：App.vue 条件渲染——`/login` 路由独立全屏，其余路由保留 `.app-shell` 侧边栏布局。
+- 预计改动文件：`frontend/src/App.vue`
+- 计划记录于 `progress.md`，文档更新规则已同步说明。
+
+### 工作区状态说明
+
+- 存在 1 个无关未提交改动：`backend/src/main/java/com/weekendgo/common/exception/GlobalExceptionHandler.java` 被修改（添加 `exception.printStackTrace()` 和错误消息增强）。按 AGENTS.md 规则保持原样。
+
+---
+
 ## 2026-05-14 23:23
 
 **角色**: coordinator  

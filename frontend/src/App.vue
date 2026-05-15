@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
 
 import ToastContainer from './components/ToastContainer.vue';
 import { provideToast } from './composables';
@@ -8,20 +8,26 @@ import { sessionStore } from './services';
 
 provideToast();
 
+const route = useRoute();
+
 const navItems = computed(() => {
   const items = [
     { to: '/', label: '发现' },
     { to: '/profile', label: '我的' }
   ];
   if (sessionStore.isAdmin.value) {
-    items.push({ to: '/admin/reviews', label: '审核' });
+    items.push({ to: '/admin', label: '审核' });
   }
   return items;
 });
 </script>
 
 <template>
-  <div class="app-shell">
+  <div v-if="route.path === '/login'" class="login-shell">
+    <RouterView />
+  </div>
+
+  <div v-else class="app-shell">
     <aside class="sidebar" aria-label="主导航">
       <div class="brand">
         <span class="brand-mark">W</span>
@@ -50,3 +56,10 @@ const navItems = computed(() => {
 
   <ToastContainer />
 </template>
+
+<style scoped>
+.login-shell {
+  min-height: 100vh;
+  padding: 28px;
+}
+</style>
