@@ -225,9 +225,10 @@ public class GlobalExceptionHandler {
             Exception exception,
             HttpServletRequest request
     ) {
+        exception.printStackTrace();
         ErrorResponse error = ErrorResponse.of(
                 "INTERNAL_SERVER_ERROR",
-                "Unexpected server error",
+                "Unexpected server error: " + exception.getClass().getSimpleName() + ": " + exception.getMessage(),
                 request.getRequestURI()
         );
         return ResponseEntity
