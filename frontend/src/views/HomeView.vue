@@ -210,9 +210,10 @@ async function loadMore(): Promise<void> {
     </div>
 
     <MapView
-      v-if="hasSearched && !loading && allPlaces.length > 0"
+      v-if="hasSearched && !loading"
       :places="allPlaces"
       :marker-meta="markerMeta"
+      :center="longitude && latitude ? [parseFloat(longitude), parseFloat(latitude)] : undefined"
       @open-detail="id => router.push(`/places/${id}`)"
     />
 

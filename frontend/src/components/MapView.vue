@@ -5,6 +5,7 @@ import type { Place } from '../services';
 const props = defineProps<{
   places: Place[];
   markerMeta?: Record<number, { marked: boolean; favorited: boolean }>;
+  center?: [number, number];
 }>()
 
 const emit = defineEmits<{
@@ -63,8 +64,8 @@ function loadAMapScript(): Promise<void> {
 function initMap(): void {
   if (!mapContainer.value || !window.AMap) return;
 
-  const defaultLng = 116.481488;
-  const defaultLat = 39.990464;
+  const defaultLng = props.center?.[0] ?? 116.481488;
+  const defaultLat = props.center?.[1] ?? 39.990464;
 
   map = new window.AMap.Map(mapContainer.value, {
     zoom: 12,
