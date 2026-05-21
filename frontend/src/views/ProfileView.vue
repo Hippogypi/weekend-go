@@ -244,8 +244,8 @@ if (isLoggedIn.value) {
               <span>{{ formatDate(checkin.createdAt) }}</span>
             </div>
             <div class="item-preview">
-              <span>拥挤 {{ checkin.crowdLevel }}</span>
-              <span>噪音 {{ checkin.noiseLevel }}</span>
+              <span>拥挤 {{ checkin.crowdLevel === 'NORMAL' ? '正常' : checkin.crowdLevel === 'CROWDED' ? '拥挤' : checkin.crowdLevel }}</span>
+              <span>噪音 {{ checkin.noiseLevel === 'RELATIVELY_QUIET' ? '较安静' : checkin.noiseLevel === 'NOISY' ? '吵闹' : checkin.noiseLevel }}</span>
               <span>有座 {{ checkin.hasSeat ? '是' : '否' }}</span>
             </div>
             <p v-if="checkin.remark" class="item-remark">{{ checkin.remark }}</p>
@@ -276,7 +276,7 @@ if (isLoggedIn.value) {
               <span>性价比 {{ review.costScore }}</span>
               <span v-if="review.seatScore !== undefined">座位 {{ review.seatScore }}</span>
               <span v-if="review.minConsumption !== undefined">最低消费 ¥{{ review.minConsumption }}</span>
-              <span v-if="review.allowLongStay">可久坐 {{ review.allowLongStay }}</span>
+              <span v-if="review.allowLongStay && review.allowLongStay !== 'UNKNOWN'">可久坐 {{ review.allowLongStay === 'TRUE' ? '是' : '否' }}</span>
             </div>
             <div v-if="review.suitableScenes && review.suitableScenes.length > 0" class="scene-tags">
               <span v-for="scene in review.suitableScenes" :key="scene" class="scene-tag">{{ scene }}</span>

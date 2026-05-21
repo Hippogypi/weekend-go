@@ -60,6 +60,11 @@ const navItems = computed(() => {
 <style scoped>
 .login-shell {
   min-height: 100vh;
-  padding: 28px;
+  background: url('/login-bg.jpg') no-repeat center center;
+  background-size: cover;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

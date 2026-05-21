@@ -330,6 +330,12 @@ export class WeekendGoApi {
     return this.client.post(`/places/${placeId}/images`, body);
   }
 
+  uploadFile(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.client.upload<string>('/upload', formData);
+  }
+
   images(placeId: number | string): Promise<PlaceImage[]> {
     return this.client.get(`/places/${placeId}/images`);
   }

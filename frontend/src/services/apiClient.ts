@@ -71,6 +71,14 @@ export class ApiClient {
     return this.request<TResponse>(path, { ...init, method: 'DELETE' });
   }
 
+  upload<TResponse>(path: string, formData: FormData, init?: RequestInit): Promise<TResponse> {
+    return this.request<TResponse>(path, {
+      ...init,
+      method: 'POST',
+      body: formData
+    });
+  }
+
   async request<TResponse>(path: string, init: RequestInit = {}): Promise<TResponse> {
     const response = await this.fetcher(this.buildUrl(path), {
       ...init,

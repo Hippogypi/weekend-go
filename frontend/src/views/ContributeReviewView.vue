@@ -36,9 +36,8 @@ const sceneOptions = [
 ];
 
 const imageList = ref<Array<{ imageUrl: string; description: string }>>([]);
-const showAddImage = ref(false);
-const newImageUrl = ref('');
-const newImageDesc = ref('');
+const fileInput = ref<HTMLInputElement | null>(null);
+const uploadingImage = ref(false);
 
 const loading = ref(false);
 const message = ref('');
@@ -57,20 +56,29 @@ function toggleScene(sceneValue: string): void {
   }
 }
 
-function addImage(): void {
-  const url = newImageUrl.value.trim();
-  if (!url) return;
-  imageList.value.push({
-    imageUrl: url,
-    description: newImageDesc.value.trim()
-  });
-  newImageUrl.value = '';
-  newImageDesc.value = '';
-  showAddImage.value = false;
-}
-
 function removeImage(index: number): void {
   imageList.value.splice(index, 1);
+}
+
+async function handleFileSelect(event: Event): Promise<void> {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  uploadingImage.value = true;
+  clearError();
+  try {
+    const url = await weekendGoApi.uploadFile(file);
+    imageList.value.push({
+      imageUrl: url,
+      description: ''
+    });
+  } catch (e: any) {
+    setError(new Error(e.message || '图片上传失败'));
+  } finally {
+    uploadingImage.value = false;
+    target.value = '';
+  }
 }
 
 async function submitReview(): Promise<void> {
@@ -137,23 +145,23 @@ async function submitReview(): Promise<void> {
     <form class="panel form-panel" @submit.prevent="submitReview">
       <div class="compact-grid">
         <label class="field stacked">
-          <span>安静程度</span>
+          <span>安静程度（满分5分）</span>
           <input v-model.number="reviewForm.quietScore" type="number" min="1" max="5" step="0.5" />
         </label>
         <label class="field stacked">
-          <span>Wi-Fi</span>
+          <span>Wi-Fi（满分5分）</span>
           <input v-model.number="reviewForm.wifiScore" type="number" min="1" max="5" step="0.5" />
         </label>
         <label class="field stacked">
-          <span>插座</span>
+          <span>插座（满分5分）</span>
           <input v-model.number="reviewForm.socketScore" type="number" min="1" max="5" step="0.5" />
         </label>
         <label class="field stacked">
-          <span>舒适度</span>
+          <span>舒适度（满分5分）</span>
           <input v-model.number="reviewForm.comfortScore" type="number" min="1" max="5" step="0.5" />
         </label>
         <label class="field stacked">
-          <span>性价比</span>
+          <span>性价比（满分5分）</span>
           <input v-model.number="reviewForm.costScore" type="number" min="1" max="5" step="0.5" />
         </label>
       </div>
@@ -172,7 +180,7 @@ async function submitReview(): Promise<void> {
         </button>
         <div v-if="showAttributes" class="panel attributes-panel">
           <label class="field stacked">
-            <span>座位评分</span>
+            <span>座位评分（满分5分）</span>
             <input v-model.number="attrForm.seatScore" type="number" min="1" max="5" step="0.5" placeholder="选填，1-5" />
           </label>
           <label class="field stacked">
@@ -231,27 +239,21 @@ async function submitReview(): Promise<void> {
           </div>
         </div>
         <button
-          v-if="!showAddImage"
           type="button"
-          class="text-button add-image-button"
-          @click="showAddImage = true"
+          class="add-image-btn"
+          :disabled="uploadingImage"
+          @click="fileInput?.click()"
         >
-          + 添加图片
+          <span v-if="uploadingImage" class="btn-spinner"></span>
+          <span v-else>+</span>
         </button>
-        <div v-else class="panel add-image-panel">
-          <label class="field stacked">
-            <span>图片 URL</span>
-            <input v-model="newImageUrl" type="url" placeholder="https://example.com/image.jpg" />
-          </label>
-          <label class="field stacked">
-            <span>描述</span>
-            <input v-model="newImageDesc" type="text" placeholder="例如：座位区" />
-          </label>
-          <div class="add-image-actions">
-            <button type="button" class="ghost-button" @click="showAddImage = false">取消</button>
-            <button type="button" class="primary-button" :disabled="!newImageUrl.trim()" @click="addImage">确认添加</button>
-          </div>
-        </div>
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="handleFileSelect"
+        />
       </div>
 
       <button class="primary-button" type="submit" :disabled="loading">
@@ -347,18 +349,43 @@ async function submitReview(): Promise<void> {
   font-size: 13px;
 }
 
-.add-image-button {
-  justify-self: start;
-}
-
-.add-image-panel {
-  display: grid;
-  gap: 10px;
-}
-
-.add-image-actions {
+.add-image-btn {
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 28px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-image-btn:hover:not(:disabled) {
+  border-color: #0f766e;
+  color: #0f766e;
+  background: #f0fdf4;
+}
+
+.add-image-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #0f766e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

@@ -317,8 +317,7 @@ watch(activeTab, (tab) => {
             <dl class="meta-list vertical">
               <div><dt>区域</dt><dd>{{ place.city || place.district || '未知' }}</dd></div>
               <div><dt>类型</dt><dd>{{ place.amapType || '未知' }}</dd></div>
-              <div><dt>状态</dt><dd>{{ place.workspaceStatus || '候选' }}</dd></div>
-              <div><dt>坐标</dt><dd>{{ place.longitude || '-' }}, {{ place.latitude || '-' }}</dd></div>
+
             </dl>
           </article>
 
@@ -327,8 +326,8 @@ watch(activeTab, (tab) => {
             <p class="metric">{{ currentStatus?.message || '暂无近期反馈' }}</p>
             <dl class="meta-list">
               <div><dt>样本</dt><dd>{{ currentStatus?.sampleCount ?? 0 }}</dd></div>
-              <div><dt>拥挤</dt><dd>{{ currentStatus?.crowdLevel || '-' }}</dd></div>
-              <div><dt>噪音</dt><dd>{{ currentStatus?.noiseLevel || '-' }}</dd></div>
+              <div><dt>拥挤</dt><dd>{{ currentStatus?.crowdLevel === 'NORMAL' ? '正常' : currentStatus?.crowdLevel === 'CROWDED' ? '拥挤' : currentStatus?.crowdLevel || '-' }}</dd></div>
+              <div><dt>噪音</dt><dd>{{ currentStatus?.noiseLevel === 'RELATIVELY_QUIET' ? '较安静' : currentStatus?.noiseLevel === 'NOISY' ? '吵闹' : currentStatus?.noiseLevel || '-' }}</dd></div>
               <div><dt>空座</dt><dd>{{ currentStatus?.hasSeat === true ? '有' : currentStatus?.hasSeat === false ? '无' : '-' }}</dd></div>
             </dl>
           </article>
@@ -343,7 +342,7 @@ watch(activeTab, (tab) => {
             <div><dt>Wi-Fi</dt><dd>{{ place.workspaceProfile.wifiScore }}</dd></div>
             <div><dt>插座</dt><dd>{{ place.workspaceProfile.socketScore }}</dd></div>
             <div><dt>座位</dt><dd>{{ place.workspaceProfile.seatScore }}</dd></div>
-            <div><dt>可信度</dt><dd>{{ place.workspaceProfile.trustLevel }}</dd></div>
+            <div><dt>可信度</dt><dd>{{ place.workspaceProfile.trustLevel === 'LOW' ? '低' : place.workspaceProfile.trustLevel === 'MEDIUM' ? '中' : place.workspaceProfile.trustLevel === 'HIGH' ? '高' : place.workspaceProfile.trustLevel }}</dd></div>
           </dl>
         </article>
 

@@ -186,15 +186,15 @@ onUnmounted(() => {
 <style scoped>
 .map-container {
   width: 100%;
-  height: 360px;
-  border: 1px solid #d9dee7;
-  border-radius: 8px;
+  height: 420px;
+  border-radius: 12px;
   background: #eef2f6;
+  overflow: hidden;
 }
 
 @media (max-width: 780px) {
   .map-container {
-    height: 280px;
+    height: 300px;
   }
 }
 </style>
