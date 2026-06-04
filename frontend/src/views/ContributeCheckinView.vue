@@ -41,7 +41,7 @@ async function submitCheckin(): Promise<void> {
       hasSeat: checkinForm.hasSeat,
       remark: checkinForm.remark
     });
-    message.value = '打卡反馈已提交。';
+    message.value = '打卡已提交。';
     checkinForm.remark = '';
   } catch (err) {
     setError(err);
@@ -55,8 +55,8 @@ async function submitCheckin(): Promise<void> {
   <section class="page">
     <header class="page-header">
       <div>
-        <h1 class="page-title">打卡反馈</h1>
-        <p class="page-subtitle">分享这个地方现在的实时状态。</p>
+        <h1 class="page-title">打卡</h1>
+        <p class="page-subtitle">记录你到过这里；下面的实时状态可以顺手补充。</p>
       </div>
       <button class="ghost-button" type="button" @click="goBack">返回详情</button>
     </header>
@@ -66,7 +66,7 @@ async function submitCheckin(): Promise<void> {
 
     <form class="panel form-panel narrow" @submit.prevent="submitCheckin">
       <label class="field stacked">
-        <span>拥挤度</span>
+        <span>当前人流（可选）</span>
         <select v-model="checkinForm.crowdLevel">
           <option value="FREE">空闲</option>
           <option value="NORMAL">适中</option>
@@ -75,7 +75,7 @@ async function submitCheckin(): Promise<void> {
         </select>
       </label>
       <label class="field stacked">
-        <span>噪音</span>
+        <span>当前噪音（可选）</span>
         <select v-model="checkinForm.noiseLevel">
           <option value="QUIET">安静</option>
           <option value="RELATIVELY_QUIET">较安静</option>
@@ -86,7 +86,7 @@ async function submitCheckin(): Promise<void> {
       </label>
       <label class="check-field">
         <input v-model="checkinForm.hasSeat" type="checkbox" />
-        <span>有空座</span>
+        <span>现在有空座（可选）</span>
       </label>
       <label class="field stacked">
         <span>备注（可选）</span>

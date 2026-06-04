@@ -1,8 +1,8 @@
 # weekend-go
 
-weekend-go 是一个基于位置服务的城市学习办公空间共建平台。项目目标是帮助用户发现附近适合学习、阅读、远程办公或临时办公的地点，并通过用户共建补充安静度、Wi-Fi、插座、座位、消费、实时打卡、评价、图片和标签等场景化信息。
+weekend-go 是一个基于位置服务的城市学习办公空间共建平台。项目目标是帮助用户发现附近适合学习、阅读、远程办公或临时办公的地点，并通过用户评价/上传照片沉淀安静度、Wi-Fi、插座、座位、消费和场景标签等长期画像；打卡用于记录到访，也可顺手补充实时人流、噪音和座位状态。
 
-当前项目处于 `first bootstrap merged` 阶段，已完成协作规范、数据库 schema、Spring Boot 后端骨架和 Vue 前端骨架初始化，尚未实现具体业务功能。
+当前项目处于 `core feature complete / product wording alignment` 阶段。第一版核心闭环已经完成：用户注册登录、地点发现、地点详情、打卡、评价/上传照片、文件上传、收藏、问大家、评价点赞/回复、个人中心和管理员审核工作台均已有前后端实现，并通过本地 MySQL 联调 smoke、后端测试、前端测试和前端构建验证。首页附近模式会以浏览器定位坐标作为地图中心点，搜索/附近完成后即使暂无结果也保留地图基础视图。当前重点是保持产品口径、文档、feature 记录和实际代码一致。
 
 ## 技术方向
 
@@ -20,19 +20,30 @@ weekend-go/
 ├── README.md
 ├── feature_list.json
 ├── progress.md
+├── OPERATIONS_LOG.md
+├── e2e-test-report.md
 ├── backend/
+├── database/
 ├── frontend/
 └── docs/
-    └── 城市学习办公空间共建平台_软件需求说明书.docx
+    ├── 城市学习办公空间共建平台_软件需求说明书.docx
+    ├── project-overview.md
+    ├── service-development-report.md
+    ├── software-requirements-v2.md
+    ├── frontend-rules.md
+    ├── screenshot/
+    └── api/
 ```
 
 - `AGENTS.md`：所有 AI 窗口长期遵守的协作规则。
 - `feature_list.json`：机器可读 feature 清单，由 coordinator 维护。
 - `progress.md`：人类可读项目进度记录，由 coordinator 维护总览。
-- `docs/`：需求文档和后续设计文档。需求文档原文不得随意修改。
+- `OPERATIONS_LOG.md`：跨窗口共享的修改、验证和风险记录。
+- `e2e-test-report.md`：本地端到端联调验证报告。
+- `docs/`：需求文档、项目总览、课程报告、第二版需求说明、截图素材、前端规则和 API 验证文档。需求文档原文不得随意修改。
 - `database/`：MySQL schema 和数据库说明。
-- `backend/`：Spring Boot 后端工程骨架，包含统一响应、异常处理和健康检查。
-- `frontend/`：Vue 前端工程骨架，包含基础布局、路由占位和 API client。
+- `backend/`：Spring Boot 后端工程，包含认证授权、地点发现、共建聚合、打卡、评价互动、文件上传、问大家、地图标记和管理员审核接口。
+- `frontend/`：Vue 前端工程，包含登录页、地点发现、详情标签页、贡献流程、个人中心和管理员工作台。
 
 ## 本地高德地图配置
 
@@ -43,7 +54,7 @@ weekend-go/
 
 真实 Key、数据库密码和本地覆盖配置不得提交到 Git。当前本地验证结果：
 
-- 前端 JS API Key 已可从 `http://127.0.0.1:5173` 加载高德脚本。
+- 前端 JS API Key 已可从本地 Vite dev server 加载高德脚本，常用地址为 `http://127.0.0.1:5173` 或验证时指定的其他端口。
 - 后端 Web服务 Key 已通过高德行政区查询接口验证。
 - 后端 Web服务 Key 的 IP 白名单绑定的是公网出口 IP；如果网络环境变化并出现 `INVALID_USER_IP`，需要在高德控制台更新白名单。
 
@@ -57,4 +68,4 @@ weekend-go/
 4. worker 只在自己负责的 worktree 和 feature scope 内实现，不负责合并到 main。
 5. coordinator 负责审查 worker 结果、更新总览、处理合并和后续拆分。
 
-当前阶段已进入多 worktree 协作。后续业务功能应继续按 feature 拆分，在独立 branch/worktree 中实现并由 coordinator 审查合并。
+第一版核心 feature 已全部合并到 `main`。后续新增功能或较大重构仍应按 feature 拆分，在独立 branch/worktree 中实现并由 coordinator 审查合并；小型文档同步或验证记录可由 coordinator 直接在主工作区处理。

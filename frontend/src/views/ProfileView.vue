@@ -4,6 +4,13 @@ import { RouterLink, useRouter } from 'vue-router';
 
 import { sessionStore, weekendGoApi } from '../services';
 import type { FavoritePlace, MyCheckin, MyReview } from '../services';
+import {
+  allowLongStayLabel,
+  auditStatusLabel,
+  crowdLevelLabel,
+  noiseLevelLabel,
+  sceneLabel
+} from '../services/displayLabels';
 import { useAsyncAction, useApiError } from '../composables';
 
 const router = useRouter();
@@ -113,16 +120,6 @@ function formatDate(iso: string | undefined): string {
 function auditStatusClass(status: string | null | undefined): string {
   if (!status) return '';
   return 'status-' + status.toLowerCase();
-}
-
-function auditStatusLabel(status: string | null | undefined): string {
-  if (!status) return '';
-  const map: Record<string, string> = {
-    PENDING: '审核中',
-    APPROVED: '已通过',
-    REJECTED: '已拒绝'
-  };
-  return map[status] || status;
 }
 
 if (isLoggedIn.value) {
@@ -244,8 +241,8 @@ if (isLoggedIn.value) {
               <span>{{ formatDate(checkin.createdAt) }}</span>
             </div>
             <div class="item-preview">
-              <span>拥挤 {{ checkin.crowdLevel === 'NORMAL' ? '正常' : checkin.crowdLevel === 'CROWDED' ? '拥挤' : checkin.crowdLevel }}</span>
-              <span>噪音 {{ checkin.noiseLevel === 'RELATIVELY_QUIET' ? '较安静' : checkin.noiseLevel === 'NOISY' ? '吵闹' : checkin.noiseLevel }}</span>
+              <span>拥挤 {{ crowdLevelLabel(checkin.crowdLevel) }}</span>
+              <span>噪音 {{ noiseLevelLabel(checkin.noiseLevel) }}</span>
               <span>有座 {{ checkin.hasSeat ? '是' : '否' }}</span>
             </div>
             <p v-if="checkin.remark" class="item-remark">{{ checkin.remark }}</p>
@@ -276,10 +273,10 @@ if (isLoggedIn.value) {
               <span>性价比 {{ review.costScore }}</span>
               <span v-if="review.seatScore !== undefined">座位 {{ review.seatScore }}</span>
               <span v-if="review.minConsumption !== undefined">最低消费 ¥{{ review.minConsumption }}</span>
-              <span v-if="review.allowLongStay && review.allowLongStay !== 'UNKNOWN'">可久坐 {{ review.allowLongStay === 'TRUE' ? '是' : '否' }}</span>
+              <span v-if="review.allowLongStay">{{ allowLongStayLabel(review.allowLongStay) }}</span>
             </div>
             <div v-if="review.suitableScenes && review.suitableScenes.length > 0" class="scene-tags">
-              <span v-for="scene in review.suitableScenes" :key="scene" class="scene-tag">{{ scene }}</span>
+              <span v-for="scene in review.suitableScenes" :key="scene" class="scene-tag">{{ sceneLabel(scene) }}</span>
             </div>
             <p class="item-content">{{ review.content }}</p>
             <div v-if="review.images && review.images.length > 0" class="thumb-list">

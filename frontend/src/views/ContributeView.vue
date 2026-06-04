@@ -24,7 +24,7 @@ function goBack(): void {
     <header class="page-header">
       <div>
         <h1 class="page-title">贡献信息</h1>
-        <p class="page-subtitle">分享你对这个地点的实时状态或体验感受。</p>
+        <p class="page-subtitle">打卡记录到访；评价和照片用于沉淀地点长期画像。</p>
       </div>
       <button class="ghost-button" type="button" @click="goBack">返回详情</button>
     </header>
@@ -32,16 +32,16 @@ function goBack(): void {
     <div class="two-column">
       <article class="panel action-card" @click="goCheckin">
         <div class="action-icon">📍</div>
-        <h2>打卡反馈</h2>
-        <p class="muted">告诉其他人这里现在人多不多、吵不吵、有没有座位。</p>
+        <h2>打卡</h2>
+        <p class="muted">记录你到过这里；也可以顺手反馈当前人流、噪音和座位情况。</p>
         <button class="primary-button">去打卡</button>
       </article>
 
       <article class="panel action-card" @click="goReview">
         <div class="action-icon">⭐</div>
-        <h2>写评价</h2>
-        <p class="muted">分享你的整体体验：环境怎么样、适不适合学习办公。</p>
-        <button class="primary-button">写评价</button>
+        <h2>写评价 / 上传照片</h2>
+        <p class="muted">分享整体体验，补充地点照片、Wi-Fi、插座和座位等信息。</p>
+        <button class="primary-button">写评价 / 上传照片</button>
       </article>
     </div>
   </section>

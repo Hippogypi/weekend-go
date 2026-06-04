@@ -1,6 +1,6 @@
 {
   "project": "weekend-go",
-  "currentPhase": "frontend verification",
+  "currentPhase": "core feature complete / product wording alignment",
   "features": [
     {
       "id": "requirements-analysis",
@@ -392,7 +392,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "已合并到 main。coordinator 审查确认：前端已覆盖搜索/附近地点、详情、登录注册、共建、打卡、评价、图片、收藏和管理员按 id 审核入口；新增业务 API 封装与 session store；未修改后端业务功能，未提交真实密钥。验证通过：npm run test 4 files / 12 tests，npm run build 通过。剩余风险：尚未做真实 MySQL + Amap + 浏览器端到端 smoke；管理员待审核列表后端当前没有 pending list 接口。"
+      "notes": "已合并到 main。coordinator 审查确认：前端已覆盖搜索/附近地点、详情、登录注册、共建、打卡、评价、图片、收藏和管理员入口；新增业务 API 封装与 session store；未修改后端业务功能，未提交真实密钥。该阶段遗留的真实 MySQL + Amap + 浏览器 smoke 与待审核列表缺口已由后续 E2E 验证和 admin-workbench 关闭。"
     },
     {
       "id": "local-database-setup",
@@ -569,7 +569,7 @@
         "概况标签展示基础信息+学习办公属性+实时状态",
         "评价标签展示公开评价列表",
         "去贡献标签跳转到贡献选择页",
-        "新增贡献选择页：打卡反馈/写评价两个入口",
+        "新增贡献选择页：打卡/写评价上传照片两个入口",
         "打卡页为独立页面，从详情页提取",
         "写评价页为独立页面（先只迁移现有表单，图文增强等Feature 3）",
         "npm run test和npm run build通过",
@@ -582,7 +582,7 @@
         "git diff --check",
         "git status --short"
       ],
-      "notes": "Worker在.worktrees/frontend-navigation-restructure中实现。"
+      "notes": "已合并到main；当前实际路由为 /places/:placeId/contribute、/places/:placeId/contribute/checkin、/places/:placeId/contribute/review 和 /admin。2026-06-04 产品口径对齐：打卡为到访记录/可选实时状态反馈，写评价/上传照片为主要共建入口。"
     },
     {
       "id": "review-image-binding-backend",
@@ -591,7 +591,7 @@
       "completedAt": "2026-05-10",
       "branch": null,
       "worktree": null,
-      "scope": "改造后端使评价成为图片和属性的载体：place_images表新增review_id字段，ReviewRequest支持profileAttributes和images，ReviewResponse内嵌images，提交评价时同时写入reviews+profile_submissions+place_images三张表。",
+      "scope": "改造后端使评价成为图片和属性的载体：place_images表新增review_id字段，ReviewRequest支持属性字段和images，ReviewResponse内嵌images。历史实现曾经写入reviews+profile_submissions+place_images；当前代码已由backend-reviews-as-contribution重构为reviews统一承载共建属性和评价，profile_submissions已废弃。",
       "dependencies": [
         "reviews-favorites-images",
         "workspace-profile-contribution"
@@ -600,7 +600,7 @@
         "place_images表新增review_id字段及外键",
         "ReviewRequest支持profileAttributes和images字段",
         "ReviewResponse内嵌images列表",
-        "POST /places/{placeId}/reviews同时写入reviews+profile_submissions+place_images",
+        "POST /places/{placeId}/reviews写入reviews，并在包含图片时写入place_images；共建属性当前由reviews字段承载，profile_submissions已废弃",
         "GET /places/{placeId}/reviews返回评价及附带图片",
         "现有无图片评价不受影响",
         "后端测试全部通过"
@@ -611,7 +611,7 @@
         "git diff --check",
         "git status --short"
       ],
-      "notes": "待定。"
+      "notes": "已完成；后续backend-reviews-as-contribution将profile_submissions重构为reviews统一载体，当前以reviews为准。"
     },
     {
       "id": "review-image-binding-frontend",
@@ -637,7 +637,7 @@
         "python -m json.tool feature_list.json",
         "git diff --check"
       ],
-      "notes": "待定，依赖Feature 2完成后启动。"
+      "notes": "已完成；当前写评价/上传照片页支持共建属性和图片，详情页评价标签展示图片，个人中心展示我的评价。打卡暂不支持上传图片。2026-06-05 同步远程 646560e 222 后确认：前端图片添加已升级为先调用 POST /api/upload 上传本地文件，后端保存到 uploads/ 并返回 /uploads/... 路径，再随评价提交图片记录。"
     },
     {
       "id": "user-profile-expansion",
@@ -662,7 +662,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "等待 backend-reviews-as-contribution 完成后启动，因共建已合并到 reviews 表。"
+      "notes": "已完成并合并到main；个人中心当前保留收藏/打卡/评价三个标签，已移除废弃的我的共建入口。"
     },
     {
       "id": "admin-workbench",
@@ -689,7 +689,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "等待 backend-reviews-as-contribution 完成后启动，因共建已合并到 reviews，待审核口径变化。"
+      "notes": "已完成并合并到main；管理员工作台当前按reviews和images两个审核口径展示待审核列表和统计。"
     },
     {
       "id": "home-page-enhancement",
@@ -743,7 +743,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "默认标记口径：workspace_profiles.approved_submission_count > 0 或存在 checkins 或存在 APPROVED reviews。收藏点仅对登录用户返回。"
+      "notes": "默认标记口径：workspace_profiles.approved_submission_count > 0 或存在 checkins 或存在 APPROVED reviews。收藏点仅对登录用户返回。2026-06-05 同步远程后确认 MapView 支持 center prop，首页附近模式会用浏览器定位坐标作为地图中心点。"
     },
     {
       "id": "auth-guard-discovery",
@@ -793,7 +793,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "主要改动 HomeView.vue 的默认模式、查询逻辑和 UI。"
+      "notes": "主要改动 HomeView.vue 的默认模式、查询逻辑和 UI。2026-06-05 同步远程后确认搜索/附近完成后始终保留地图基础视图，即使暂无地点结果也不会让页面主体空白。"
     },
     {
       "id": "database-reviews-refactor",
@@ -910,7 +910,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "等待后端两个互动 API 完成后启动。"
+      "notes": "已完成并合并到main；详情页评价标签支持最新/最热、点赞/取消点赞和回复。"
     },
     {
       "id": "frontend-ask-everyone",
@@ -934,7 +934,7 @@
         "cd frontend; npm run test",
         "cd frontend; npm run build"
       ],
-      "notes": "等待 backend-ask-everyone 完成后启动。"
+      "notes": "已完成并合并到main；详情页已新增问大家标签，支持提问、展开回答和提交回答。"
     }
   ]
 }

@@ -23,13 +23,13 @@ export const appRoutes = [
     path: '/places/:placeId/contribute/checkin',
     name: 'contribute-checkin',
     component: () => import('../views/ContributeCheckinView.vue'),
-    meta: { title: '打卡反馈', requiresAuth: true }
+    meta: { title: '打卡', requiresAuth: true }
   },
   {
     path: '/places/:placeId/contribute/review',
     name: 'contribute-review',
     component: () => import('../views/ContributeReviewView.vue'),
-    meta: { title: '写评价', requiresAuth: true }
+    meta: { title: '写评价 / 上传照片', requiresAuth: true }
   },
   {
     path: '/profile',

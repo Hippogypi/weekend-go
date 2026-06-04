@@ -14,11 +14,16 @@
 |------|------|---------|--------|
 | 首页/地图列表页 | `/` | P-01, P-02, P-06 | P0 |
 | 地点详情页 | `/places/:placeId` | D-01 ~ D-05 | P0 |
-| 属性共建页 | `/places/:placeId/contribute` | C-01, C-04 | P0 |
-| 打卡反馈页 | `/places/:placeId/checkin` | K-01 ~ K-05 | P0 |
-| 评价与图片页 | `/places/:placeId/review` | R-01 ~ R-05, I-01 ~ I-04 | P1 |
+| 贡献选择页 | `/places/:placeId/contribute` | C-01, C-04, K-01, R-03, I-01 | P0 |
+| 打卡页 | `/places/:placeId/contribute/checkin` | K-01 ~ K-05 | P0 |
+| 写评价 / 上传照片页 | `/places/:placeId/contribute/review` | C-01, C-04, R-01 ~ R-05, I-01 ~ I-04 | P0/P1 |
 | 个人中心页 | `/profile` | U-03, U-04 | P1 |
-| 管理员审核页 | `/admin/reviews` | A-01 ~ A-05 | P1 |
+| 管理员审核工作台 | `/admin` | A-01 ~ A-05 | P1 |
+| 登录/注册页 | `/login` | U-01, U-02 | P0 |
+
+当前前端不再提供单独的“属性共建页”。产品口径为：打卡 = 到访记录 / 可选实时状态反馈，不作为主要共建入口，且当前不支持打卡上传图片；写评价 / 上传照片 = 主要共建入口，评价、评分、地点照片、Wi-Fi、插座、座位等客观属性都从这里进入，用于沉淀地点长期画像。管理员审核口径统一为评价和图片。
+
+首页附近模式必须以浏览器定位坐标作为地图中心点；搜索/附近查询完成后，即使当前结果为空，也应保留地图基础视图，避免页面主体变成空白。
 
 ### FR-Router-02 路由 Meta 字段
 
@@ -42,7 +47,7 @@ interface RouteMeta {
 
 全局 `router.beforeEach` 守卫：
 - 目标路由 `meta.requiresAdmin === true` 且用户非管理员 → 跳转首页并显示权限不足提示
-- 禁止仅在 UI 层隐藏管理员入口（当前 `AdminReviewView.vue` 的客户端判断是不充分的）
+- 禁止仅在 UI 层隐藏管理员入口，必须依赖路由守卫和后端 `ROLE_ADMIN` 校验
 
 ### FR-Router-05 登录后重定向
 

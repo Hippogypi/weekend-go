@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { sessionStore, weekendGoApi } from '../services';
+import { auditStatusLabel } from '../services/displayLabels';
 import { useApiError } from '../composables';
 
 const route = useRoute();
@@ -113,7 +114,7 @@ async function submitReview(): Promise<void> {
     }
 
     const review = await weekendGoApi.submitReview(placeId.value, body);
-    message.value = `评价已提交，审核状态：${review.auditStatus}`;
+    message.value = `评价已提交，审核状态：${auditStatusLabel(review.auditStatus)}`;
     reviewForm.content = '';
     attrForm.seatScore = undefined;
     attrForm.minConsumption = undefined;
@@ -133,8 +134,8 @@ async function submitReview(): Promise<void> {
   <section class="page">
     <header class="page-header">
       <div>
-        <h1 class="page-title">写评价</h1>
-        <p class="page-subtitle">分享你对这个地方的整体体验。</p>
+        <h1 class="page-title">写评价 / 上传照片</h1>
+        <p class="page-subtitle">分享整体体验，补充地点照片和学习办公信息。</p>
       </div>
       <button class="ghost-button" type="button" @click="goBack">返回详情</button>
     </header>
@@ -171,6 +172,10 @@ async function submitReview(): Promise<void> {
       </label>
 
       <div class="attributes-section">
+        <div class="section-heading">
+          <h3>补充地点信息</h3>
+          <span class="muted">选填，用于完善长期画像</span>
+        </div>
         <button
           type="button"
           class="text-button toggle-button"
@@ -224,7 +229,7 @@ async function submitReview(): Promise<void> {
 
       <div class="images-section">
         <div class="section-heading">
-          <h3>已添加图片</h3>
+          <h3>地点照片</h3>
           <span v-if="imageList.length === 0" class="muted">暂无</span>
         </div>
         <div v-if="imageList.length > 0" class="image-list">
@@ -245,7 +250,7 @@ async function submitReview(): Promise<void> {
           @click="fileInput?.click()"
         >
           <span v-if="uploadingImage" class="btn-spinner"></span>
-          <span v-else>+</span>
+          <span v-else>+ 添加地点照片</span>
         </button>
         <input
           ref="fileInput"
@@ -257,7 +262,7 @@ async function submitReview(): Promise<void> {
       </div>
 
       <button class="primary-button" type="submit" :disabled="loading">
-        {{ loading ? '提交中...' : '提交评价' }}
+        {{ loading ? '提交中...' : '提交评价 / 照片' }}
       </button>
     </form>
   </section>
@@ -353,14 +358,16 @@ async function submitReview(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
+  width: fit-content;
+  min-width: 132px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
   border: 2px dashed #cbd5e1;
   background: #f8fafc;
   color: #64748b;
-  font-size: 28px;
-  font-weight: 300;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }

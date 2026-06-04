@@ -2,7 +2,55 @@
 
 ## 当前阶段
 
-frontend verification
+core feature complete / product wording alignment
+
+## 2026-06-05 远程 222 同步与上传链路文档更新
+
+- 已拉取远程提交 `646560e 222`：新增登录页背景图、首页视觉重构、后端 `POST /api/upload` 文件上传接口、`/uploads/**` 静态资源映射、前端 `uploadFile` 调用和 Vite `/uploads` 代理。
+- 合入处理：先 stash 保护本地未提交改动，fast-forward 到 `origin/main`，再恢复本地改动；`ContributeReviewView.vue`、`HomeView.vue`、`PlaceDetailView.vue`、`ProfileView.vue` 出现冲突，已按“保留 222 新能力 + 保留产品口径和中文标签”的原则解决。
+- 文档同步：README、项目总览、API 文档、课程报告、第二版需求说明和 feature note 已更新为“先上传文件得到 `/uploads/...`，再随评价提交图片记录”的当前链路；删除或改写旧图片存储相关的过时描述。
+- 验证：前端 `npm run test` 56 passed；前端 `npm run build` 通过；后端 `.\mvnw.cmd test` 77 passed；`git diff --cached --name-only` 为空，未提交。
+- 截图刷新：已按 `222` 后界面重新覆盖 `docs/screenshot/01-login.png` ~ `08-admin-dashboard.png`；其中详情、贡献、打卡和写评价页使用当前有效地点 `100` 重新截取。
+
+## 2026-06-05 远程同步与截图刷新
+
+- 发现 2026-06-04 文档与前端口径调整前未先拉取远程更新；已先 `git fetch`，确认远程仅领先 1 个提交 `b0c0be9 111修复`。
+- 同步方式：先临时 stash 已跟踪改动，再 fast-forward 合入 `origin/main`，随后 `stash pop` 恢复本地改动；`HomeView.vue` 自动合并成功，无冲突。
+- 远程变更内容：`HomeView.vue` 在搜索/附近完成后始终渲染地图，并将定位坐标作为 `MapView` 的中心点；`MapView.vue` 新增 `center` prop；`frontend/.gitignore` 忽略 `.env.local`；`package-lock.json` 同步更新。
+- 重新端到端盘点：MySQL80、后端 `http://127.0.0.1:8080/api/health`、前端 `http://127.0.0.1:5174` 均可用；普通用户和管理员浏览器 smoke 覆盖首页地图、详情页、贡献入口、打卡、写评价、个人中心和审核工作台。
+- 截图素材刷新：重新覆盖 `docs/screenshot/01-login.png` ~ `08-admin-dashboard.png`，首页截图已反映远程合入后的地图中心点和 marker 展示。
+- 验证：后端 `.\mvnw.cmd test` 77 passed；前端 `npm run test` 56 passed；前端 `npm run build` 通过；浏览器 smoke 期间未出现 API 4xx/5xx。
+
+## 2026-06-04 产品口径与入口文案对齐
+
+- 用户确认当前贡献模型：打卡 = 我来过 / 可选实时状态反馈，不作为主要共建入口；写评价 / 上传照片 = 主要共建入口，评价、评分、地点图、客观属性都从这里进入，用于沉淀地点长期画像。
+- 决策：打卡暂不支持上传图片，避免牵涉 UI、API 和审核口径扩展；前端文案不得暗示打卡可附图。
+- 前端落地：贡献入口、地点详情贡献 tab、打卡页、写评价页、首页说明和定位失败提示按上述口径调整。
+- 可见系统枚举中文化：新增 `displayLabels` helper，覆盖地点状态、资料量、打卡拥挤/噪音、适合场景、适合久坐和审核状态。
+- 文档同步：README、frontend rules、project overview、feature list 和 operations log 记录该口径，避免后续 agent 将“共建”拆成过多入口。
+- 验证：新增 `displayLabels.test.ts` 并按 TDD 先红后绿；前端 `npm run test` 已通过。
+
+## 2026-06-04 课程实验报告与 V2 说明书草稿
+
+- 用户要求：基于当前项目实现编写课程项目描述文档，突出“服务开发技术”课程关注点；截图暂不放，先保留占位；同时生成第二版软件需求说明书。
+- 已参考：课程实验 PDF 的服务场景、资源规划、URI、资源表述、资源链接、服务反馈、服务实现和演示交付要求；第一版规格书的项目背景与服务资源说明；当前代码和近期文档同步结果。
+- 新增 `docs/service-development-report.md`：按 6 章结构组织课程实验报告，突出服务场景、资源模型、RESTful 服务设计、关键实现、运行展示和测试验证，截图位置均为占位。
+- 新增 `docs/software-requirements-v2.md`：基于当前实现更新需求说明，明确属性共建已并入写评价 / 上传照片，打卡不作为主要共建入口，管理员审核口径为评价和图片。
+- 不修改第一版原始需求文档：`docs/城市学习办公空间共建平台_软件需求说明书.docx`。
+
+### 截图素材补充
+
+- 新增 `docs/screenshot/` 目录并保存 8 张页面截图：登录页、地点发现首页、地点详情概况、地点详情贡献入口、打卡页、写评价 / 上传照片页、个人中心和管理员审核工作台。
+- 已将 `docs/service-development-report.md` 与 `docs/software-requirements-v2.md` 中的页面截图占位替换为 Markdown 图片引用。
+- 数据库核心表关系图仍保留为图表占位，后续可补 ER 图或资源关系图。
+
+## 2026-06-04 文档同步
+
+- 用户要求：当前项目相比最初需求文档已有大量演化，需要先同步 agent 相关记录与当前代码事实。
+- 排查确认：第一版核心 feature 已全部完成；当前代码包含认证、地点发现、详情、打卡、评价/图片、收藏、问大家、评价点赞/回复、个人中心、管理员审核工作台和地图 marker。
+- 已验证：后端测试 77 passed，前端测试 53 passed，前端构建通过；本地 MySQL + 后端 + 前端 smoke 覆盖未登录跳转、演示账号登录、地点详情 seed 数据和详情页 4 个标签。
+- 本轮同步范围：`README.md`、`progress.md`、`docs/frontend-rules.md`、`docs/api/README.md`、`feature_list.json`、`OPERATIONS_LOG.md`。
+- 不修改最初需求文档原文：`docs/城市学习办公空间共建平台_软件需求说明书.docx`。
 
 ## 2026-05-15 E2E 测试报告问题修复
 
@@ -22,11 +70,11 @@ frontend verification
 
 - 用户确认前端业务逻辑不符合直觉，要求从使用者视角重构。
 - 经多轮讨论，确定核心业务逻辑：
-  - 打卡与评价分离：打卡是实时状态（可多次），评价是体验反馈（一般一次）。
-  - 评价是共建和图片的载体：写评价时同时提交客观属性（进入共建审核）和图片（绑定到评价）。
+  - 打卡与评价分离：打卡是到访记录 / 可选实时状态反馈（可多次），不作为主要共建入口。
+  - 评价是共建和图片的载体：写评价 / 上传照片时同时提交长期体验、客观属性（进入共建审核）和图片（绑定到评价）。
   - 全局导航精简为三层：发现/我的/审核（条件渲染）。
   - 地点详情页改为标签页：概况/评价/去贡献。
-  - 贡献流程只有两个入口：打卡反馈 + 写评价。
+  - 贡献流程只有两个入口：打卡 + 写评价 / 上传照片。
 - 拆分为 6 个 feature：frontend-navigation-restructure（P0）、review-image-binding-backend（P0）、review-image-binding-frontend（P1）、user-profile-expansion（P1）、admin-workbench（P1）、home-page-enhancement（P2）。
 - 已创建 worktree `.worktrees/frontend-navigation-restructure`，启动 Feature 1 实施。
 
@@ -34,7 +82,7 @@ frontend verification
 
 - 已合并 `review-image-binding-backend` 到 `main`。
 - 审查确认：`place_images` 表新增 `review_id` 字段及外键约束；`ReviewRequest` 新增 `profileAttributes` 和 `images` 字段；`ReviewResponse` 内嵌 `images` 列表。
-- `POST /places/{placeId}/reviews` 同时写入 `reviews` + `profile_submissions`（如有属性）+ `place_images`（如有图片）。
+- `POST /places/{placeId}/reviews` 当时实现为同时写入 `reviews` + `profile_submissions`（如有属性）+ `place_images`（如有图片）；后续 `backend-reviews-as-contribution` 已将共建属性统一迁移到 `reviews`，当前代码不再使用 `profile_submissions`。
 - `GET /places/{placeId}/reviews` 返回评价及附带图片（LEFT JOIN 聚合）。
 - 现有独立图片上传接口保留兼容。
 - 验证记录：后端测试 45 passed / 0 failures；JSON 校验通过；diff 空白检查通过。
@@ -43,7 +91,7 @@ frontend verification
 
 - 已合并 `review-image-binding-frontend` 到 `main`。
 - 审查确认：`weekendGoApi.ts` 新增 `ProfileAttributeRequest`、`ReviewImageAttachment` 接口；`ReviewRequest`/`Review` 支持 `profileAttributes` 和 `images` 字段。
-- `ContributeReviewView.vue` 新增客观属性折叠区域（最低消费/适合久坐/适合场景多选）和图片添加区域（URL+描述，可添加多张）。
+- `ContributeReviewView.vue` 新增客观属性折叠区域（最低消费/适合久坐/适合场景多选）和图片添加区域；当时为 URL+描述，2026-06-05 远程 `222` 后已升级为文件上传返回 `/uploads/...` 路径再随评价提交。
 - `PlaceDetailView.vue` 评价标签展示每条评价的附带图片缩略图。
 - 验证记录：前端测试 45 passed / 8 test files；构建通过；diff 空白检查通过。
 

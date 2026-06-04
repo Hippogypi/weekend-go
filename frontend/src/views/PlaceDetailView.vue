@@ -4,6 +4,13 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { sessionStore, weekendGoApi } from '../services';
 import type { CurrentStatus, Place, PlaceImage, Review, ReviewReply, PlaceQa } from '../services';
+import {
+  crowdLevelLabel,
+  noiseLevelLabel,
+  sceneLabel,
+  trustLevelLabel,
+  workspaceStatusLabel
+} from '../services/displayLabels';
 import { useAsyncAction, useApiError, useToast } from '../composables';
 
 const route = useRoute();
@@ -317,7 +324,8 @@ watch(activeTab, (tab) => {
             <dl class="meta-list vertical">
               <div><dt>区域</dt><dd>{{ place.city || place.district || '未知' }}</dd></div>
               <div><dt>类型</dt><dd>{{ place.amapType || '未知' }}</dd></div>
-
+              <div><dt>状态</dt><dd>{{ workspaceStatusLabel(place.workspaceStatus) }}</dd></div>
+              <div><dt>地图位置</dt><dd>{{ place.longitude || '-' }}, {{ place.latitude || '-' }}</dd></div>
             </dl>
           </article>
 
@@ -326,8 +334,8 @@ watch(activeTab, (tab) => {
             <p class="metric">{{ currentStatus?.message || '暂无近期反馈' }}</p>
             <dl class="meta-list">
               <div><dt>样本</dt><dd>{{ currentStatus?.sampleCount ?? 0 }}</dd></div>
-              <div><dt>拥挤</dt><dd>{{ currentStatus?.crowdLevel === 'NORMAL' ? '正常' : currentStatus?.crowdLevel === 'CROWDED' ? '拥挤' : currentStatus?.crowdLevel || '-' }}</dd></div>
-              <div><dt>噪音</dt><dd>{{ currentStatus?.noiseLevel === 'RELATIVELY_QUIET' ? '较安静' : currentStatus?.noiseLevel === 'NOISY' ? '吵闹' : currentStatus?.noiseLevel || '-' }}</dd></div>
+              <div><dt>拥挤</dt><dd>{{ crowdLevelLabel(currentStatus?.crowdLevel) }}</dd></div>
+              <div><dt>噪音</dt><dd>{{ noiseLevelLabel(currentStatus?.noiseLevel) }}</dd></div>
               <div><dt>空座</dt><dd>{{ currentStatus?.hasSeat === true ? '有' : currentStatus?.hasSeat === false ? '无' : '-' }}</dd></div>
             </dl>
           </article>
@@ -342,7 +350,7 @@ watch(activeTab, (tab) => {
             <div><dt>Wi-Fi</dt><dd>{{ place.workspaceProfile.wifiScore }}</dd></div>
             <div><dt>插座</dt><dd>{{ place.workspaceProfile.socketScore }}</dd></div>
             <div><dt>座位</dt><dd>{{ place.workspaceProfile.seatScore }}</dd></div>
-            <div><dt>可信度</dt><dd>{{ place.workspaceProfile.trustLevel === 'LOW' ? '低' : place.workspaceProfile.trustLevel === 'MEDIUM' ? '中' : place.workspaceProfile.trustLevel === 'HIGH' ? '高' : place.workspaceProfile.trustLevel }}</dd></div>
+            <div><dt>资料量</dt><dd>{{ trustLevelLabel(place.workspaceProfile.trustLevel) }}</dd></div>
           </dl>
         </article>
 
@@ -400,7 +408,7 @@ watch(activeTab, (tab) => {
                   :key="scene"
                   class="scene-tag"
                 >
-                  {{ scene }}
+                  {{ sceneLabel(scene) }}
                 </span>
               </div>
 
@@ -545,16 +553,16 @@ watch(activeTab, (tab) => {
         <div class="two-column">
           <article class="panel action-card" @click="router.push(`/places/${placeId}/contribute/checkin`)">
             <div class="action-icon">📍</div>
-            <h2>打卡反馈</h2>
-            <p class="muted">告诉其他人这里现在人多不多、吵不吵、有没有座位。</p>
+            <h2>打卡</h2>
+            <p class="muted">记录你到过这里；也可以顺手反馈当前人流、噪音和座位情况。</p>
             <button class="primary-button" type="button">去打卡</button>
           </article>
 
           <article class="panel action-card" @click="router.push(`/places/${placeId}/contribute/review`)">
             <div class="action-icon">⭐</div>
-            <h2>写评价</h2>
-            <p class="muted">分享你的整体体验：环境怎么样、适不适合学习办公。</p>
-            <button class="primary-button" type="button">写评价</button>
+            <h2>写评价 / 上传照片</h2>
+            <p class="muted">分享整体体验，补充地点照片、Wi-Fi、插座和座位等信息。</p>
+            <button class="primary-button" type="button">写评价 / 上传照片</button>
           </article>
         </div>
       </template>

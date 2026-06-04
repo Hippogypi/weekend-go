@@ -1,7 +1,7 @@
 # weekend-go 项目总览
 
 > 本文档描述 weekend-go 项目当前的完整技术架构、模块组织和接口定义。
-> 最后更新：2026-05-11
+> 最后更新：2026-06-05
 
 ---
 
@@ -11,9 +11,9 @@ weekend-go 是一个基于位置服务的**城市学习办公空间共建平台*
 
 ### 核心功能
 
-- **地点发现**：关键词搜索 + 附近定位搜索（高德地图）
+- **地点发现**：关键词搜索 + 附近定位搜索（高德地图）；附近模式定位后以用户位置为地图中心，搜索/附近完成后即使暂无结果也保留地图基础视图。
 - **地点详情**：概况（属性评分）、评价（排序/点赞/回复）、问大家（Q&A）、去贡献
-- **用户共建**：打卡反馈（拥挤度/噪音/空座）、写评价（多维评分+图片）
+- **用户共建**：写评价 / 上传照片是主要共建入口，用于沉淀多维评分、地点照片、客观属性和长期画像；打卡用于记录到访，也可顺手补充拥挤度、噪音和空座等实时状态。
 - **个人中心**：我的收藏、我的打卡、我的评价、昵称编辑
 - **审核工作台**：管理员对待审核评价/图片进行通过/驳回操作
 
@@ -98,7 +98,7 @@ com.weekendgo
 │   ├── WorkspaceProfileService.java
 │   ├── WorkspaceProfile.java / AllowLongStay.java / TrustLevel.java
 │   └── JdbcWorkspaceProfileRepository.java
-├── checkin/               # 打卡反馈
+├── checkin/               # 打卡与实时状态反馈
 │   ├── CheckinController.java
 │   ├── CheckinService.java
 │   ├── CheckinRequest.java / CheckinResponse.java / CurrentStatusResponse.java
@@ -112,6 +112,8 @@ com.weekendgo
 │   ├── PendingAuditItem.java / AuditRequest.java / AuditStats.java
 │   ├── ReviewReply.java / ReviewReplyRequest.java
 │   └── JdbcInteractionRepository.java / InMemoryInteractionRepository.java
+├── upload/                # 文件上传
+│   └── UploadController.java
 ├── qa/                    # 问大家（Q&A）
 │   ├── QaController.java
 │   ├── QaService.java
@@ -132,6 +134,7 @@ com.weekendgo
 ├── common/                # 公共基础设施
 │   ├── api/ApiResponse.java / ErrorResponse.java / PageResult.java
 │   ├── exception/GlobalExceptionHandler.java
+│   ├── config/WebConfig.java
 │   └── data/DataAccessConfiguration.java
 └── health/                # 健康检查
     └── HealthController.java
@@ -195,7 +198,7 @@ frontend/src/
 │   ├── AdminReviewView.vue    # 旧版单条审核（未注册路由）
 │   └── LoginView.vue          # 登录/注册
 ├── components/            # 可复用组件
-│   ├── MapView.vue            # 高德地图封装
+│   ├── MapView.vue            # 高德地图封装，支持定位中心点与 marker 展示
 │   └── ToastContainer.vue     # 全局通知容器
 ├── composables/           # 组合式函数
 │   ├── useAsyncAction.ts      # 异步请求状态封装
@@ -260,7 +263,7 @@ frontend/src/
 | `users` | 用户账号 | `username`, `password_hash`, `role`, `nickname`, `enabled` |
 | `places` | 地点（高德 POI） | `amap_poi_id`, `name`, `address`, `longitude`, `latitude`, `source`, `workspace_status` |
 | `workspace_profiles` | 学习办公聚合属性 | `place_id`, `quiet_score`, `wifi_score`, `socket_score`, `seat_score`, `cost_score`, `score`, `trust_level` |
-| `checkins` | 打卡反馈 | `place_id`, `user_id`, `crowd_level`, `noise_level`, `has_seat`, `remark` |
+| `checkins` | 打卡与实时状态反馈 | `place_id`, `user_id`, `crowd_level`, `noise_level`, `has_seat`, `remark` |
 | `reviews` | 评价（含共建属性） | `place_id`, `user_id`, `quiet_score`, `wifi_score`, `socket_score`, `comfort_score`, `cost_score`, `seat_score`, `content`, `audit_status`, `like_count`, `reply_count` |
 | `review_likes` | 评价点赞 | `review_id`, `user_id` |
 | `review_replies` | 评价回复 | `review_id`, `user_id`, `content` |
@@ -356,8 +359,11 @@ place_tags >─── tags
 
 | 前端方法 | HTTP | 前端路径 | 后端路径 | 说明 |
 |----------|------|----------|----------|------|
+| `uploadFile` | POST | `/upload` | `POST /api/upload` | 上传图片文件，返回 `/uploads/{filename}` |
 | `submitImage` | POST | `/places/{placeId}/images` | `POST /api/places/{placeId}/images` | 提交图片 |
 | `images` | GET | `/places/{placeId}/images` | `GET /api/places/{placeId}/images` | 地点图片列表 |
+
+当前写评价 / 上传照片页先通过 multipart `POST /api/upload` 上传本地图片文件，后端保存到 `backend/uploads/` 并返回 `/uploads/...` 路径；随后前端把该路径和图片描述随评价提交，图片记录仍进入审核流程。`POST /api/places/{placeId}/images` 保留为兼容的独立图片提交接口。
 
 ### 7.6 收藏接口
 
@@ -392,6 +398,8 @@ place_tags >─── tags
 |----------|------|----------|----------|------|
 | `mapMarkers` | GET | `/map/markers` | `GET /api/map/markers` | 地图标记点 |
 
+首页附近模式会调用 `GET /api/map/markers`，并将浏览器定位坐标传给地图组件作为中心点；关键词搜索仍调用 `GET /api/workspaces/search` 发现候选地点。
+
 ---
 
 ## 8. 开发环境配置
@@ -401,6 +409,10 @@ place_tags >─── tags
 ```yaml
 # backend/src/main/resources/application-local.yml
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
     url: jdbc:mysql://localhost:3306/weekend_go?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
@@ -473,7 +485,9 @@ mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u root -p weekend_go -e "source datab
 | 层级 | 测试文件 | 数量 |
 |------|----------|------|
 | 后端单元测试 | `backend/src/test/java/...` | 77 tests |
-| 前端单元测试 | `frontend/src/**/*.test.ts` | 53 tests |
+| 前端单元测试 | `frontend/src/**/*.test.ts` | 56 tests |
+
+最近一次本地端到端 smoke 覆盖普通用户首页地图、地点详情、贡献入口、打卡、写评价、个人中心，以及管理员审核工作台；浏览器流程期间未出现 API 4xx/5xx。
 
 ---
 
@@ -482,5 +496,5 @@ mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u root -p weekend_go -e "source datab
 1. **Token 存储**：后端使用内存存储 Token（`ConcurrentHashMap`），重启后所有登录态失效
 2. **前端 baseUrl**：`VITE_API_BASE_URL` 需包含 `/api` 前缀，与后端 Controller 的 `@RequestMapping` 对应
 3. **审核状态**：公开接口只返回 `APPROVED` 状态的数据，管理员可查看 `PENDING`
-4. **图片存储**：当前使用外部图片 URL（如 CDN），系统只存储 URL 和描述，不托管文件
+4. **图片存储**：当前支持本地文件上传，文件保存到后端 `uploads/` 目录并通过 `/uploads/**` 静态访问；数据库仍保存图片 URL/路径和描述
 5. **Workspace Profile**：代码从 `reviews` 表实时聚合计算，不直接读写 `workspace_profiles` 表

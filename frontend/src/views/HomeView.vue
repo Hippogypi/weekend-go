@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, onMounted } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 
 import { weekendGoApi } from '../services';
 import type { Place } from '../services';
+import { workspaceStatusLabel } from '../services/displayLabels';
 import { useAsyncAction, useApiError } from '../composables';
 import MapView from '../components/MapView.vue';
 
@@ -98,9 +99,9 @@ async function loadMore(): Promise<void> {
     <header class="page-header home-header">
       <div>
         <h1 class="page-title">地点发现</h1>
-        <p class="page-subtitle">搜索适合学习办公的城市空间</p>
+        <p class="page-subtitle">搜索或查看附近适合学习办公的空间。</p>
       </div>
-      <span></span>
+      <span class="status-pill">城市学习办公空间</span>
     </header>
 
     <!-- 搜索卡片 -->
@@ -181,7 +182,7 @@ async function loadMore(): Promise<void> {
             <p class="place-address">📍 {{ place.address || '暂无地址' }}</p>
             <div class="place-tags">
               <span class="tag" :class="place.workspaceStatus ? 'tag-primary' : 'tag-muted'">
-                {{ place.workspaceStatus || '候选' }}
+                {{ workspaceStatusLabel(place.workspaceStatus) }}
               </span>
               <span v-if="place.workspaceProfile?.score" class="tag tag-amber">
                 ⭐ {{ place.workspaceProfile.score }}
