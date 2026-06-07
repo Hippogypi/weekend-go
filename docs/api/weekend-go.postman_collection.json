@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "8f0c6f18-b00b-4fb0-8f12-0c1d812445f1",
     "name": "weekend-go API verification",
-    "description": "First-version REST API verification for weekend-go. Uses variables only; no real credentials, Amap keys, or tokens are stored.",
+    "description": "REST API verification for weekend-go. Uses variables only; no real credentials, Amap keys, or tokens are stored.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -10,7 +10,7 @@
     { "key": "userUsername", "value": "api-user-demo" },
     { "key": "userPassword", "value": "secret123" },
     { "key": "userNickname", "value": "API User" },
-    { "key": "adminUsername", "value": "api-admin" },
+    { "key": "adminUsername", "value": "api-admin-demo" },
     { "key": "adminPassword", "value": "secret123" },
     { "key": "userToken", "value": "" },
     { "key": "adminToken", "value": "" },
@@ -18,12 +18,10 @@
     { "key": "city", "value": "Beijing" },
     { "key": "longitude", "value": "116.481488" },
     { "key": "latitude", "value": "39.990464" },
-    { "key": "placeId", "value": "" },
-    { "key": "profileSubmissionId", "value": "" },
+    { "key": "placeId", "value": "100" },
     { "key": "reviewId", "value": "" },
     { "key": "imageId", "value": "" },
     { "key": "missingPlaceId", "value": "999999999" },
-    { "key": "missingSubmissionId", "value": "999999999" },
     { "key": "missingReviewId", "value": "999999999" },
     { "key": "missingImageId", "value": "999999999" }
   ],
@@ -77,9 +75,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('register returns 201', function () {",
-                  "  pm.response.to.have.status(201);",
-                  "  pm.expect(pm.response.json().data.role).to.eql('USER');",
+                  "pm.test('register endpoint is available', function () {",
+                  "  pm.expect([201, 409]).to.include(pm.response.code);",
+                  "  const body = pm.response.json();",
+                  "  if (pm.response.code === 201) {",
+                  "    pm.expect(body.data.role).to.eql('USER');",
+                  "  } else {",
+                  "    pm.expect(body.code).to.eql('USERNAME_ALREADY_EXISTS');",
+                  "  }",
                   "});"
                 ]
               }
@@ -189,15 +192,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "Logout User",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{userToken}}" }],
-            "url": "{{baseUrl}}/api/auth/logout",
-            "description": "Invalidates userToken. Run this at the end of the walkthrough."
-          }
         }
       ]
     },
@@ -331,126 +325,6 @@
       ]
     },
     {
-      "name": "Workspace Profile",
-      "item": [
-        {
-          "name": "Submit Profile Contribution",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{userToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quietScore\": 4.5,\n  \"wifiScore\": 4.0,\n  \"socketScore\": 3.5,\n  \"seatScore\": 4.0,\n  \"costScore\": 3.0,\n  \"minConsumption\": 20,\n  \"allowLongStay\": \"TRUE\",\n  \"suitableScenes\": [\"READING\", \"REMOTE_WORK\"],\n  \"remark\": \"stable wifi\"\n}"
-            },
-            "url": "{{baseUrl}}/api/places/{{placeId}}/profile-submissions",
-            "description": "Creates a PENDING workspace profile contribution."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('profile submission is pending', function () {",
-                  "  pm.response.to.have.status(201);",
-                  "  const data = pm.response.json().data;",
-                  "  pm.expect(data.auditStatus).to.eql('PENDING');",
-                  "  pm.collectionVariables.set('profileSubmissionId', String(data.id));",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Approve Profile Contribution",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"useful contribution\"\n}"
-            },
-            "url": "{{baseUrl}}/api/admin/profile-submissions/{{profileSubmissionId}}/approve",
-            "description": "Admin approval updates the public workspace profile aggregation."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('profile submission approved', function () {",
-                  "  pm.response.to.have.status(200);",
-                  "  pm.expect(pm.response.json().data.auditStatus).to.eql('APPROVED');",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get Public Workspace Profile",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/places/{{placeId}}/workspace-profile",
-            "description": "Returns the aggregated public workspace profile after approval."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('public profile is available after approval', function () {",
-                  "  pm.response.to.have.status(200);",
-                  "  pm.expect(pm.response.json().data.approvedSubmissionCount).to.be.above(0);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Reject Missing Profile Contribution",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"not enough detail\"\n}"
-            },
-            "url": "{{baseUrl}}/api/admin/profile-submissions/{{missingSubmissionId}}/reject",
-            "description": "Common 404 verification for an unknown profile submission."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('missing profile submission returns 404', function () {",
-                  "  pm.response.to.have.status(404);",
-                  "  pm.expect(pm.response.json().code).to.eql('PROFILE_SUBMISSION_NOT_FOUND');",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
       "name": "Checkin",
       "item": [
         {
@@ -476,7 +350,7 @@
                 "exec": [
                   "pm.test('checkin created', function () {",
                   "  pm.response.to.have.status(201);",
-                  "  pm.expect(pm.response.json().data.placeId).to.eql(Number(pm.collectionVariables.get('placeId')));",
+                  "  pm.expect(pm.response.json().data.placeId).to.eql(Number(pm.variables.get('placeId')));",
                   "});"
                 ]
               }

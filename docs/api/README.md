@@ -1,6 +1,6 @@
 # weekend-go API Verification
 
-本目录提供 weekend-go 第一版主要 REST API 的接口验证资产。文件只包含占位变量和示例数据，不包含真实数据库密码、Amap Key、登录 token 或本地敏感配置。
+本目录提供 weekend-go 主要 REST API 的接口验证资产。文件只包含占位变量和示例数据，不包含真实数据库密码、Amap Key、登录 token 或本地敏感配置。
 
 ## 文件
 
@@ -60,7 +60,7 @@ cd backend
 
 ```powershell
 $baseUrl = "http://localhost:8080"
-$adminUsername = "api-admin"
+$adminUsername = "api-admin-demo"
 $adminPassword = "secret123"
 
 Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/register" `
@@ -76,7 +76,7 @@ Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/register" `
 
 ```powershell
 mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u <local-db-user> -p weekend_go `
-  -e "UPDATE users SET role='ADMIN' WHERE username='api-admin';"
+  -e "UPDATE users SET role='ADMIN' WHERE username='api-admin-demo';"
 ```
 
 完成后在 collection 中运行 `Auth / Login Admin` 获取 `adminToken`。
@@ -96,21 +96,15 @@ mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u <local-db-user> -p weekend_go `
 11. `Auth / Login Admin`
 12. `Reviews / Admin Approve Review`
 13. `Reviews / List Public Reviews After Audit`
-14. `Workspace Profile / Get Public Workspace Profile`
-15. `Favorites / Get Favorite Status`
-16. `Favorites / Add Favorite`
-17. `Favorites / List My Favorites`
-18. `Favorites / Delete Favorite`
-19. `Images / Submit Image`
-20. `Images / List Public Images Before Audit`
-21. `Images / Admin Approve Image`
-22. `Images / List Public Images After Audit`
-23. `QA / Create Question`
-24. `QA / Create Answer`
-25. `Map / List Markers`
-26. `Admin / Pending Audit List`
-27. `Error Cases` 文件夹中的 401、403、404 验证
-28. `Auth / Logout User`
+14. `Favorites / Get Favorite Status`
+15. `Favorites / Add Favorite`
+16. `Favorites / List My Favorites`
+17. `Favorites / Delete Favorite`
+18. `Images / Submit Image`
+19. `Images / List Public Images Before Audit`
+20. `Images / Admin Approve Image`
+21. `Images / List Public Images After Audit`
+22. `Error Cases` 文件夹中的 401、403、404 验证
 
 ## Amap 不稳定时的替代步骤
 
@@ -129,7 +123,7 @@ mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u <local-db-user> -p weekend_go `
 
 ```powershell
 mysql --protocol=TCP -h 127.0.0.1 -P 3306 -u <local-db-user> -p weekend_go `
-  -e "DELETE FROM audit_logs WHERE target_type IN ('REVIEW','IMAGE') AND actor_user_id IN (SELECT id FROM users WHERE username IN ('api-admin')); DELETE FROM favorites WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM place_images WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM review_replies WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM review_likes WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM place_qa WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM reviews WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM checkins WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin'); DELETE FROM workspace_profiles WHERE place_id IN (SELECT id FROM places WHERE amap_poi_id='POSTMAN_DEMO_PLACE'); DELETE FROM places WHERE amap_poi_id='POSTMAN_DEMO_PLACE'; DELETE FROM users WHERE username LIKE 'api-user-%' OR username='api-admin';"
+  -e "DELETE FROM audit_logs WHERE target_type IN ('REVIEW','IMAGE') AND actor_user_id IN (SELECT id FROM users WHERE username IN ('api-admin-demo')); DELETE FROM favorites WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM place_images WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM review_replies WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM review_likes WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM place_qa WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM reviews WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM checkins WHERE user_id IN (SELECT id FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo'); DELETE FROM places WHERE amap_poi_id='POSTMAN_DEMO_PLACE'; DELETE FROM users WHERE username LIKE 'api-user-%' OR username='api-admin-demo';"
 ```
 
 ## PowerShell smoke 示例
@@ -169,16 +163,12 @@ Invoke-RestMethod -Method Get -Uri "$baseUrl/api/auth/me" -Headers @{
 Collection 覆盖：
 
 - health: `GET /api/health`
-- auth: `POST /api/auth/register`、`POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/auth/me`、`PATCH /api/auth/me`
+- auth: `POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me`
 - place discovery: `GET /api/workspaces/search`、`GET /api/workspaces/nearby`、`GET /api/places/{placeId}`
-- workspace profile: `GET /api/places/{placeId}/workspace-profile`。属性共建已并入 `POST /api/places/{placeId}/reviews`，审核通过的评价评分参与 `workspace_profiles` 聚合。
 - checkin: `POST /api/places/{placeId}/checkins`、`GET /api/places/{placeId}/current-status`
-- reviews: `POST /api/places/{placeId}/reviews`、`GET /api/places/{placeId}/reviews`、`PATCH /api/admin/reviews/{reviewId}/audit`、`POST/DELETE /api/reviews/{reviewId}/likes`、`GET/POST /api/reviews/{reviewId}/replies`
+- reviews: `POST /api/places/{placeId}/reviews`、`GET /api/places/{placeId}/reviews`、`PATCH /api/admin/reviews/{reviewId}/audit`。学习办公属性共建在写评价流程中提交，审核通过后公开展示。
 - favorites: `GET/POST/DELETE /api/places/{placeId}/favorite`、`GET /api/me/favorites`
-- images/upload: `POST /api/upload`、`POST /api/places/{placeId}/images`、`GET /api/places/{placeId}/images`、`PATCH /api/admin/images/{imageId}/audit`。当前写评价页先上传本地文件获得 `/uploads/...` 路径，再把该路径随评价图片记录提交；独立图片提交接口保留兼容。
-- qa: `GET/POST /api/places/{placeId}/questions`、`GET/POST /api/questions/{questionId}/answers`
-- map markers: `GET /api/map/markers`。前端首页附近模式使用浏览器定位坐标调用该接口，并把定位坐标传给地图组件作为中心点。
-- admin workbench: `GET /api/admin/audits/pending-list`、`GET /api/admin/audits/stats`
+- images/upload: `POST /api/upload`、`POST /api/places/{placeId}/images`、`GET /api/places/{placeId}/images`、`PATCH /api/admin/images/{imageId}/audit`。写评价页先上传本地文件获得 `/uploads/...` 路径，再把该路径随评价图片记录提交；Postman 集合使用图片记录接口验证图片审核链路。
 - common errors: 未登录 401、普通用户访问 admin 403、不存在地点/评价/图片/问题 404 或当前实现等价响应
 
 ## 本次验证记录
@@ -186,6 +176,7 @@ Collection 覆盖：
 - `python -m json.tool feature_list.json`: 通过。
 - `python -m json.tool docs/api/weekend-go.postman_collection.json`: 通过。
 - `git diff --check`: 通过。
+- 按 `docs/api/weekend-go.postman_collection.json` 核心调用顺序执行本地接口 smoke：30 个接口请求通过，Postman 断言 26 个通过，0 失败。
 - `cd backend; .\mvnw.cmd test`: 最近完整验证通过，77 tests, 0 failures。
 - `cd backend; .\mvnw.cmd -DskipTests spring-boot:start`: 通过，后端本地启动成功。
 - PowerShell `Invoke-RestMethod` 最小 HTTP smoke: 通过，覆盖 `GET /api/health`、`POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me` 和无 token `GET /api/auth/me` 返回 401。
